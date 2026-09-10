@@ -1,0 +1,4650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TN Grama Bank · Security Operations Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   TN Grama Bank - Security Operations Dashboard
+   Design tokens first, then layout, then components.
+   ========================================================================== */
+
+:root {
+  --bg: #eef1f7;
+  --surface: #ffffff;
+  --surface-sunken: #f8f9fb;
+  --surface-muted: #f4f6fa;
+  --line: #e6e9ef;
+  --line-soft: #eceff3;
+  --line-faint: #f0f2f5;
+
+  --ink: #0f172a;
+  --ink-body: #1c2733;
+  --ink-muted: #64748b;
+  --ink-soft: #8a94a1;
+  --ink-faint: #a3acb8;
+
+  --navy: #002172;
+  --navy-deep: #00133f;
+  --gold: #d4a94a;
+  --green: #15803d;
+  --red: #b91c1c;
+  --amber: #b45309;
+
+  --dark-1: #0a1128;
+  --dark-2: #050814;
+  --dark-card: #131c38;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 9px;
+
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, .05);
+  --shadow-lift: 0 8px 20px rgba(15, 23, 42, .10);
+  --shadow-deep: 0 20px 50px rgba(0, 0, 0, .35);
+
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+  --sidebar-w: 264px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink-body);
+  font-family: var(--font-body);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--navy); }
+a:hover { color: #00154f; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cbd4e0; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* ---------- Layout ------------------------------------------------------ */
+
+.shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  background: linear-gradient(180deg, var(--navy-deep), #000a26);
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 2px 8px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  margin-bottom: 14px;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--gold), #a9781f);
+  color: var(--navy-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(212, 169, 74, .3);
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.brand-sub {
+  font-size: 9px;
+  color: #8fa0c9;
+  font-weight: 600;
+  letter-spacing: .03em;
+  margin-top: 1px;
+}
+
+.nav-heading {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  color: #5a6f9c;
+  padding: 8px 10px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #a7b6d6;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: background .15s ease, color .15s ease;
+}
+
+.nav-item:hover { background: rgba(255, 255, 255, .07); color: #d7e0f2; }
+
+.nav-item.is-active { background: rgba(255, 255, 255, .08); color: #fff; }
+
+.nav-chip {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f7ab0;
+  background: rgba(255, 255, 255, .06);
+}
+
+.nav-item.is-active .nav-chip { background: var(--gold); color: #0a1f4d; }
+
+.nav-label { flex: 1; }
+
+.nav-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.sidebar-note {
+  margin-top: auto;
+  padding: 14px 10px 4px;
+  border-top: 1px solid rgba(255, 255, 255, .09);
+  font-size: 9.5px;
+  color: #5a6f9c;
+  line-height: 1.65;
+}
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 32px;
+  border-bottom: 1px solid #e2e6ec;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.topbar h1 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+
+.topbar-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+
+.topbar-right { display: flex; align-items: center; gap: 18px; }
+
+.clock {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  background: var(--surface-muted);
+  border: 1px solid #e2e6ec;
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+
+.clock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.4s infinite;
+}
+
+.overall-pill {
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.content { padding: 28px 32px 60px; flex: 1; min-width: 0; max-width: 1400px; }
+
+/* ---------- Primitives -------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.card-pad { padding: 22px; }
+
+.card-head {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line-soft);
+  background: linear-gradient(135deg, #f8f9fc, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.card-title .muted-count { color: var(--ink-faint); font-weight: 500; }
+
+.card-sub { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+
+.section-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 12px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge.sm { font-size: 10px; padding: 2px 8px; }
+
+.icon-chip {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.icon-chip.sm { width: 32px; height: 32px; flex-basis: 32px; border-radius: 9px; }
+.icon-chip.lg { width: 40px; height: 40px; flex-basis: 40px; border-radius: 11px; }
+
+.text-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e6ec;
+  font-size: 12.5px;
+  font-family: var(--font-body);
+  outline: none;
+  color: var(--ink-body);
+  background: var(--surface-sunken);
+}
+
+.text-input:focus { border-color: var(--navy); background: #fff; }
+.text-input::placeholder { color: var(--ink-faint); }
+
+.close-btn {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  border: 0;
+  font-family: inherit;
+}
+
+.close-btn:hover { background: #e8ecf3; }
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.btn-primary:hover { background: #00154f; }
+
+/* Segmented control used for every view-mode switch. */
+.segmented { display: flex; background: var(--line-faint); border-radius: 10px; padding: 3px; gap: 2px; }
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--ink-soft);
+}
+
+.segmented button.is-active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .12);
+  color: var(--navy);
+}
+
+/* ---------- Grids ------------------------------------------------------- */
+
+.grid { display: grid; gap: 16px; }
+.grid.align-start { align-items: start; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gap-sm { gap: 14px; }
+.mb-lg { margin-bottom: 18px; }
+.mt-lg { margin-top: 18px; }
+.mt-md { margin-top: 16px; }
+
+/* ---------- KPI cards --------------------------------------------------- */
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 16px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.kpi.is-clickable { cursor: pointer; }
+.kpi.is-clickable:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.kpi.is-selected { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy), var(--shadow-lift); }
+
+.kpi-rail { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+
+.kpi-label {
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-top: 14px;
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 4px;
+  letter-spacing: -.01em;
+}
+
+.kpi-value.sm { font-size: 24px; }
+.kpi-hint { font-size: 10.5px; color: var(--ink-faint); margin-top: 3px; }
+.kpi.compact { padding: 16px 18px; }
+.kpi.compact .kpi-label { margin-top: 12px; }
+
+/* ---------- Tables ------------------------------------------------------ */
+
+.table-scroll { overflow-y: auto; overflow-x: auto; }
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+table.data thead tr { background: var(--surface-sunken); }
+
+table.data thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-sunken);
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+table.data thead th.num { text-align: right; }
+table.data thead th.mid { text-align: center; }
+
+table.data tbody td { padding: 10px 12px; border-top: 1px solid var(--line-faint); }
+table.data tbody td.num { text-align: right; font-family: var(--font-mono); }
+table.data tbody td.mid { text-align: center; }
+table.data tbody td.mono { font-family: var(--font-mono); color: var(--ink-muted); }
+table.data tbody td.name { font-weight: 700; color: var(--ink-body); white-space: nowrap; }
+table.data tbody td.sub { color: var(--ink-muted); white-space: nowrap; }
+table.data thead th:first-child, table.data tbody td:first-child { padding-left: 22px; }
+table.data thead th:last-child, table.data tbody td:last-child { padding-right: 22px; }
+table.data tbody tr.is-clickable { cursor: pointer; }
+table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
+
+/* ---------- Overview ---------------------------------------------------- */
+
+.pies { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+.pie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.pie svg { transform: rotate(-90deg); }
+
+.pie-pct {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.pie-title { font-size: 10.5px; color: var(--ink-soft); font-weight: 700; text-align: center; }
+
+.pie-legend { display: flex; gap: 10px; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
+.dot.md { width: 8px; height: 8px; flex-basis: 8px; }
+.dot.lg { width: 11px; height: 11px; flex-basis: 11px; }
+
+.list-scroll { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+
+.row-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+}
+
+.row-item:hover { background: #f6f8fd; }
+.row-item.is-selected { background: #eef1fb; border-color: var(--navy); }
+.row-item-name { font-size: 12.5px; font-weight: 600; color: var(--ink-body); }
+.row-item-sub { font-size: 10.5px; color: var(--ink-soft); }
+.row-item.tight { padding: 8px 10px; }
+.row-item.tight .row-item-name { font-size: 12px; }
+
+.spotlight-grid { display: grid; grid-template-columns: 1.4fr 1fr; align-items: start; }
+.spotlight-left { padding: 20px 22px; border-right: 1px solid var(--line-soft); }
+.spotlight-right { padding: 20px 22px; }
+
+.event-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-sunken);
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+
+.event-line-type { font-size: 12.5px; font-weight: 700; color: var(--ink-body); }
+.event-line-zone { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+.event-line-time { font-size: 11px; color: var(--ink-soft); font-family: var(--font-mono); }
+
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  padding: 10px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.kv-row span:first-child { color: var(--ink-muted); }
+.kv-row span:last-child { color: var(--ink-body); font-weight: 600; text-align: right; word-break: break-word; }
+
+/* ---------- Branch cards ------------------------------------------------ */
+
+.branch-grid {
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.branch-card {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.branch-card:hover { background: #eef1fb; border-color: var(--navy); }
+.branch-card-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.branch-card-district { font-size: 11px; color: var(--ink-soft); margin-top: 1px; }
+
+/* ---------- Chips ------------------------------------------------------- */
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-muted);
+  font-family: inherit;
+}
+
+.chip:hover { border-color: #cfd6e2; }
+.chip-count { opacity: .6; }
+
+.chip.dark {
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .1);
+  color: rgba(255, 255, 255, .7);
+}
+
+/* ---------- Live activities -------------------------------------------- */
+
+.latest-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.latest-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.latest-branch { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--ink); }
+.latest-meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+.feed { max-height: 600px; overflow-y: auto; padding-right: 2px; }
+
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+}
+
+.feed-branch { font-size: 13px; font-weight: 700; color: var(--ink-body); }
+.feed-meta {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time-pill {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.command-panel {
+  background: linear-gradient(160deg, var(--dark-1), var(--dark-2));
+  border-radius: 24px;
+  padding: 28px 30px;
+  box-shadow: var(--shadow-deep);
+}
+
+.command-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.command-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; }
+.command-sub { font-size: 12.5px; color: rgba(255, 255, 255, .5); margin-top: 4px; }
+.command-chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 640px; justify-content: flex-end; }
+
+.feed-row.dark {
+  background: linear-gradient(160deg, var(--dark-card), var(--dark-1));
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .3);
+}
+
+.feed-row.dark .feed-branch { color: #fff; line-height: 1.3; }
+.feed-row.dark .feed-meta { color: rgba(255, 255, 255, .45); }
+
+.feed-time-dark {
+  font-size: 11px;
+  color: rgba(255, 255, 255, .4);
+  font-family: var(--font-mono);
+  flex: 0 0 auto;
+  width: 92px;
+  text-align: right;
+}
+
+/* ---------- Zone status ------------------------------------------------- */
+
+.zone-hero {
+  background: linear-gradient(135deg, #001a5c, #0a3fb8);
+  border-radius: 20px;
+  padding: 32px 36px;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(0, 33, 114, .25);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.zone-hero-name { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+.zone-hero-sub { font-size: 13px; color: rgba(255, 255, 255, .7); margin-top: 4px; }
+.zone-hero-stats { display: flex; gap: 28px; }
+.zone-hero-stat { text-align: center; }
+.zone-hero-num { font-family: var(--font-display); font-size: 32px; font-weight: 700; }
+.zone-hero-cap {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, .65);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 2px;
+}
+
+.zone-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+  transition: transform .15s ease;
+}
+
+.zone-card:hover { transform: translateY(-3px); }
+.zone-card-bar { position: absolute; left: 0; top: 0; right: 0; height: 4px; }
+.zone-card-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 14px;
+  line-height: 1.3;
+  min-height: 34px;
+}
+.zone-num {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  letter-spacing: .04em;
+}
+.zone-card-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-faint);
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.showcase {
+  background: linear-gradient(160deg, var(--dark-1), var(--dark-2));
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: var(--shadow-deep);
+}
+
+.showcase-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.showcase-name { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.showcase-sub { font-size: 13px; color: rgba(255, 255, 255, .5); margin-top: 4px; }
+
+.donut {
+  width: 104px;
+  height: 104px;
+  flex: 0 0 104px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-core {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--dark-1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-pct { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; }
+.donut-cap { font-size: 9px; color: rgba(255, 255, 255, .5); letter-spacing: .04em; }
+
+.showcase-legend { display: flex; flex-direction: column; gap: 7px; }
+.showcase-legend div { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255, 255, 255, .65); }
+
+.zone-card.dark {
+  background: linear-gradient(160deg, var(--dark-card), var(--dark-1));
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+}
+
+.zone-card.dark:hover { transform: none; }
+.zone-card.dark .zone-card-name { color: #fff; font-size: 14px; margin-top: 16px; min-height: 36px; position: relative; z-index: 1; }
+.zone-card.dark .zone-card-foot { border-top-color: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .4); position: relative; z-index: 1; }
+
+.zone-watermark {
+  position: absolute;
+  top: 2px;
+  right: 14px;
+  font-family: var(--font-display);
+  font-size: 50px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .055);
+  line-height: 1;
+}
+
+.district-rail { border-right: 1px solid var(--line-soft); padding: 10px; max-height: 440px; overflow-y: auto; }
+
+.rail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  width: 100%;
+  font-family: inherit;
+}
+
+.rail-row:hover { background: #f6f8fd; }
+.rail-row.is-selected { background: #eef1fb; border-left-color: var(--navy); }
+.rail-row span:first-child { font-size: 12.5px; font-weight: 600; color: var(--ink-body); }
+.rail-row.is-selected span:first-child { font-weight: 700; color: var(--navy); }
+.rail-count { font-size: 10.5px; color: var(--ink-faint); font-family: var(--font-mono); }
+
+.picker-grid {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  max-height: 440px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.picker-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-soft);
+  text-align: left;
+  font-family: inherit;
+}
+
+.picker-tile:hover { border-color: var(--navy); }
+.picker-tile.is-selected { background: #eef1fb; border-color: var(--navy); }
+.picker-tile span:first-child { font-size: 12px; font-weight: 600; color: var(--ink-body); }
+
+.picker-compact {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.picker-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  padding: 7px 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-body);
+  line-height: 1.3;
+}
+
+.picker-chip:hover { border-color: var(--navy); }
+.picker-chip.is-selected { background: #eef1fb; border-color: var(--navy); }
+
+/* ---------- Maps -------------------------------------------------------- */
+
+.map-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  height: 864px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+.map-svg { width: 100%; height: 100%; display: block; background: linear-gradient(180deg, #f7f9fd, #eef2f9); }
+.map-pin { cursor: pointer; }
+.map-pin:hover circle { stroke: var(--navy); stroke-width: 2; }
+
+.map-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(10, 17, 40, .95);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 14px));
+  opacity: 0;
+  transition: opacity .12s ease;
+  z-index: 4;
+}
+
+.map-tooltip.is-visible { opacity: 1; }
+.map-tooltip b { font-size: 12.5px; }
+
+/* ---------- Settings ---------------------------------------------------- */
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.setting-name { font-size: 12.5px; font-weight: 700; color: var(--ink-body); }
+.setting-desc { font-size: 11px; color: var(--ink-soft); margin-top: 1px; }
+
+.toggle-group { display: flex; gap: 16px; }
+
+.toggle-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  font-family: inherit;
+}
+
+.toggle-cap { font-size: 9.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .03em; }
+
+.toggle-track {
+  display: inline-flex;
+  align-items: center;
+  width: 34px;
+  height: 19px;
+  border-radius: 10px;
+  padding: 2px;
+  background: #d8dde5;
+  transition: background .15s ease;
+}
+
+.toggle-track.is-on { background: var(--navy); }
+
+.toggle-knob {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  transition: transform .15s ease;
+}
+
+.toggle-track.is-on .toggle-knob { transform: translateX(15px); }
+
+.threshold-head { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 8px; }
+.threshold-head span:first-child { font-weight: 700; color: var(--ink-body); }
+.threshold-value { font-family: var(--font-mono); color: var(--navy); font-weight: 700; }
+
+input[type="range"] { width: 100%; accent-color: var(--navy); }
+
+.zone-label-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-sunken);
+  border-radius: 10px;
+}
+
+.zone-label-num {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 6px;
+  background: #00217214;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.zone-label-text {
+  font-size: 11.5px;
+  color: var(--ink-body);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Reports ----------------------------------------------------- */
+
+.report-rail {
+  background: var(--surface);
+  align-self: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+.report-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border-radius: 11px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font-family: inherit;
+  color: var(--ink-muted);
+  width: 100%;
+}
+
+.report-item:hover { background: #f4f6fa; }
+.report-item.is-active { background: #eef1fb; color: var(--navy); }
+.report-item-label { font-size: 12.5px; font-weight: 700; }
+.report-item-desc {
+  font-size: 10.5px;
+  opacity: .75;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--ink); }
+.report-desc { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.report-stamp { font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); }
+
+/* ---------- Empty state ------------------------------------------------- */
+
+.empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 70px 30px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.empty-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  color: var(--ink-faint);
+}
+
+/* ---------- Utilities --------------------------------------------------- */
+
+.flex { display: flex; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.flex-center { display: flex; align-items: center; gap: 10px; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.gap-10 { gap: 10px; }
+.gap-12 { gap: 12px; }
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--ink-muted); }
+.soft { color: var(--ink-soft); }
+.nowrap { white-space: nowrap; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden { display: none !important; }
+
+@media (max-width: 1180px) {
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotlight-grid { grid-template-columns: 1fr; }
+  .spotlight-left { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+}
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { padding: 20px 16px 48px; }
+  .topbar { padding: 16px; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<!-- Single-file build. Generated by build/bundle.py from the source
+     tree; edit the files under src/ and rebuild, not this file. -->
+<script>
+/* ==== src/core/utils.js ==== */
+/* Shared primitives: colors, seeded RNG, badge styling, formatting. */
+(function (App) {
+  "use strict";
+
+  var COLORS = {
+    green: "#15803d",
+    red: "#b91c1c",
+    amber: "#b45309",
+    navy: "#002172",
+    grey: "#64748b",
+    slate: "#475569",
+    orange: "#ea580c",
+  };
+
+  /* Deterministic 32-bit PRNG. Same seed always yields the same dashboard,
+     so screenshots, CSV exports and drill-downs stay reproducible. */
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0;
+      seed = (seed + 0x6d2b79f5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* Stable RNG keyed by a string, so a branch always gets the same detail. */
+  function seededRnd(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return mulberry32(h);
+  }
+
+  function pick(rnd, list) {
+    return list[Math.floor(rnd() * list.length)];
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function badgeStyle(color) {
+    return (
+      "background:" + color + "14;color:" + color + ";border-color:" + color + "33;"
+    );
+  }
+
+  function panelStatusColor(status) {
+    if (status === "Armed") return COLORS.green;
+    if (status === "Disarmed") return COLORS.grey;
+    if (status === "Alarm Active") return COLORS.red;
+    if (status === "Fault") return COLORS.amber;
+    if (status === "Tamper Active") return COLORS.orange;
+    return COLORS.slate;
+  }
+
+  function connectivityColor(conn) {
+    return conn === "Online" ? COLORS.green : COLORS.slate;
+  }
+
+  function fmtClock(d) {
+    return (
+      pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds())
+    );
+  }
+
+  function includesCI(haystack, needle) {
+    return String(haystack).toLowerCase().indexOf(needle) !== -1;
+  }
+
+  App.utils = {
+    COLORS: COLORS,
+    mulberry32: mulberry32,
+    seededRnd: seededRnd,
+    pick: pick,
+    pad2: pad2,
+    badgeStyle: badgeStyle,
+    panelStatusColor: panelStatusColor,
+    connectivityColor: connectivityColor,
+    fmtClock: fmtClock,
+    includesCI: includesCI,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/core/icons.js ==== */
+/* Inline SVG icon set. Every icon inherits currentColor so a single
+   parent colour drives the whole glyph. */
+(function (App) {
+  "use strict";
+
+  function svg(body, size) {
+    return (
+      '<svg width="' + (size || 15) + '" height="' + (size || 15) +
+      '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>"
+    );
+  }
+
+  var ICONS = {
+    overview: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>'),
+    branches: svg('<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>'),
+    intrusion: svg('<path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z"/>'),
+    zones: svg('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
+    power: svg('<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>'),
+    activities: svg('<path d="M3 12h4l2 8 4-16 2 8h6"/>'),
+    history: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>'),
+    map: svg('<path d="M12 22s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.4"/>'),
+    alerts: svg('<path d="M12 2L1 21h22L12 2z"/><path d="M12 9v5"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/>'),
+    managers: svg('<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/>'),
+    reports: svg('<path d="M6 2h9l4 4v16H6z"/><path d="M9 12h6M9 16h6M9 8h3"/>'),
+    settings: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'),
+    online: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none"/>'),
+    offline: svg('<circle cx="12" cy="12" r="9" opacity=".45"/><circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none" opacity=".45"/>'),
+    fault: svg('<path d="M12 3.5L22 20H2z"/><path d="M12 9.5v5M12 17.5h.01"/>'),
+    battery: svg('<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4"/><path d="M6 12h3l1.5-2 2 4L14 12h3"/>'),
+    wifi: svg('<path d="M2 8.5a16 16 0 0120 0"/><path d="M5 12.5a11 11 0 0114 0"/><path d="M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>'),
+    bell: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3a1.3 1.3 0 011.3 1.3v.6c2.6.7 4.5 3.1 4.5 6v3.2c0 .6.2 1.2.6 1.7l.7.9c.5.6.1 1.5-.7 1.5H5.6c-.8 0-1.2-.9-.7-1.5l.7-.9c.4-.5.6-1.1.6-1.7V10.9c0-2.9 1.9-5.3 4.5-6v-.6A1.3 1.3 0 0112 3z"/><path d="M9.5 20a2.5 2.5 0 005 0z"/></svg>',
+    lockClosed: svg('<path d="M8 10V7a4 4 0 018 0v3"/><rect x="5" y="10" width="14" height="10" rx="2.5"/><circle cx="12" cy="14.3" r="1.3" fill="currentColor" stroke="none"/><path d="M12 15.6v1.8"/>'),
+    lockOpen: svg('<path d="M17 10V7a4 4 0 00-7.6-1.8M14.5 8.3L17 5.8"/><rect x="5" y="10" width="14" height="10" rx="2.5"/><circle cx="12" cy="14.3" r="1.3" fill="currentColor" stroke="none"/><path d="M12 15.6v1.8"/>'),
+    download: svg('<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>'),
+    search: svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+    info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'),
+    shield: svg('<path d="M12 2L4 5v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/>'),
+  };
+
+  /* Zone-specific glyphs, one per physical zone of the 8-zone panel. */
+  var ZONE_ICONS = [
+    svg('<rect x="5" y="3" width="14" height="18" rx="1"/><circle cx="14" cy="12" r="1"/>', 20),
+    svg('<path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z"/>', 20),
+    svg('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>', 20),
+    svg('<rect x="4" y="3" width="16" height="6" rx="1"/><rect x="4" y="15" width="16" height="6" rx="1"/><circle cx="8" cy="6" r=".8" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r=".8" fill="currentColor" stroke="none"/>', 20),
+    svg('<rect x="5" y="3" width="14" height="18" rx="1"/><circle cx="10" cy="12" r="1"/>', 20),
+    svg('<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>', 20),
+    svg('<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/>', 20),
+    svg('<rect x="4" y="7" width="16" height="13" rx="1"/><path d="M8 7V5a4 4 0 018 0v2"/>', 20),
+  ];
+
+  /* Which glyph represents each event type in feeds and logs. */
+  var EVENT_ICONS = {
+    Arm: ICONS.lockClosed,
+    Disarm: ICONS.lockOpen,
+    Alarm: ICONS.bell,
+    Fault: ICONS.fault,
+    "AC Fail": ICONS.power,
+    "AC Restore": ICONS.power,
+    "Battery Fail": ICONS.battery,
+    "Battery Restore": ICONS.battery,
+    "Tamper Activate": ICONS.zones,
+    "Tamper Restore": ICONS.zones,
+    "Communication Lost": ICONS.wifi,
+    "Communication Restored": ICONS.wifi,
+  };
+
+  App.ICONS = ICONS;
+  App.ZONE_ICONS = ZONE_ICONS;
+  App.EVENT_ICONS = EVENT_ICONS;
+})(window.App = window.App || {});
+
+/* ==== src/core/dom.js ==== */
+/* Minimal DOM builder. `h` is the only thing views need to render markup. */
+(function (App) {
+  "use strict";
+
+  function applyProps(el, props) {
+    Object.keys(props).forEach(function (key) {
+      var val = props[key];
+      if (val === null || val === undefined || val === false) return;
+
+      if (key === "class" || key === "className") {
+        el.className = val;
+      } else if (key === "style") {
+        if (typeof val === "string") el.setAttribute("style", val);
+        else Object.assign(el.style, val);
+      } else if (key === "html") {
+        el.innerHTML = val;
+      } else if (key === "text") {
+        el.textContent = val;
+      } else if (key === "dataset") {
+        Object.assign(el.dataset, val);
+      } else if (key.slice(0, 2) === "on" && typeof val === "function") {
+        el.addEventListener(key.slice(2).toLowerCase(), val);
+      } else if (key === "value") {
+        el.value = val;
+      } else if (key === "checked" || key === "disabled") {
+        el[key] = !!val;
+      } else {
+        el.setAttribute(key, val);
+      }
+    });
+  }
+
+  function append(el, child) {
+    if (child === null || child === undefined || child === false) return;
+    if (Array.isArray(child)) {
+      child.forEach(function (c) { append(el, c); });
+    } else if (child instanceof Node) {
+      el.appendChild(child);
+    } else {
+      el.appendChild(document.createTextNode(String(child)));
+    }
+  }
+
+  /* h("div.card", {onclick: fn}, child, child, ...)
+     The tag accepts an optional `.class.list` suffix for brevity. */
+  function h(tag, props) {
+    var parts = tag.split(".");
+    var el = document.createElement(parts[0] || "div");
+    if (parts.length > 1) el.className = parts.slice(1).join(" ");
+
+    var childStart = 2;
+    if (props && (props instanceof Node || Array.isArray(props) || typeof props !== "object")) {
+      childStart = 1;
+    } else if (props) {
+      var cls = props.class || props.className;
+      applyProps(el, props);
+      if (cls && parts.length > 1) el.className = parts.slice(1).join(" ") + " " + cls;
+    }
+
+    for (var i = childStart; i < arguments.length; i++) append(el, arguments[i]);
+    return el;
+  }
+
+  /* A pill badge tinted by a single colour. */
+  function badge(text, color, extraClass) {
+    return h("span.badge" + (extraClass ? "." + extraClass : ""), {
+      style: App.utils.badgeStyle(color),
+    }, text);
+  }
+
+  /* A square icon chip: solid fill or tinted, both driven by one colour. */
+  function iconChip(iconHtml, color, opts) {
+    opts = opts || {};
+    var style = opts.solid
+      ? "background:" + color + ";color:#fff;border-color:" + color + ";"
+      : "background:" + color + "14;color:" + color + ";border-color:" + color + "33;";
+    if (opts.size) style += "width:" + opts.size + "px;height:" + opts.size + "px;flex:0 0 " + opts.size + "px;";
+    if (opts.radius) style += "border-radius:" + opts.radius + "px;";
+    return h("span.icon-chip" + (opts.class ? "." + opts.class : ""), { style: style, html: iconHtml });
+  }
+
+  function clear(el) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    return el;
+  }
+
+  App.dom = { h: h, badge: badge, iconChip: iconChip, clear: clear };
+})(window.App = window.App || {});
+
+/* ==== src/core/widgets.js ==== */
+/* Reusable building blocks shared by more than one view. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var iconChip = App.dom.iconChip;
+  var u = App.utils;
+
+  /* A KPI tile. Pass `onClick` to make it a drill-down. */
+  function kpiCard(opts) {
+    var classes = ["kpi"];
+    if (opts.compact) classes.push("compact");
+    if (opts.onClick) classes.push("is-clickable");
+    if (opts.selected) classes.push("is-selected");
+
+    return h(
+      "button." + classes.join("."),
+      { type: "button", onclick: opts.onClick || null, disabled: !opts.onClick },
+      h("span.kpi-rail", { style: "background:" + opts.color + ";" }),
+      iconChip(opts.iconHtml, opts.color, { solid: true, class: opts.compact ? "sm" : "" }),
+      h("div.kpi-label", opts.label),
+      h("div.kpi-value" + (opts.compact ? ".sm" : ""), String(opts.value)),
+      opts.hint ? h("div.kpi-hint", opts.hint) : null
+    );
+  }
+
+  /* A row of KPI tiles. */
+  function kpiRow(cards, columns) {
+    return h(
+      "div.grid.gap-sm.grid-" + (columns || 4),
+      cards.map(function (c) { return kpiCard(c); })
+    );
+  }
+
+  /* Debounced-free search box that keeps focus across re-renders by carrying
+     a stable id the renderer restores after each paint. */
+  function searchInput(opts) {
+    return h("input.text-input", {
+      type: "search",
+      id: opts.id,
+      value: opts.value || "",
+      placeholder: opts.placeholder || "Search",
+      style: opts.width ? "width:" + opts.width + ";" : "",
+      oninput: function (e) { opts.onInput(e.target.value); },
+    });
+  }
+
+  /* A table with a sticky header. `columns` entries:
+       { label, key, align, render(row), className } */
+  function dataTable(columns, rows, opts) {
+    opts = opts || {};
+    return h(
+      "table.data",
+      h("thead", h("tr", columns.map(function (c) {
+        return h("th" + (c.align === "right" ? ".num" : c.align === "center" ? ".mid" : ""), c.label);
+      }))),
+      h("tbody", rows.map(function (row, i) {
+        var onClick = opts.onRowClick ? function () { opts.onRowClick(row, i); } : null;
+        return h(
+          "tr" + (onClick ? ".is-clickable" : ""),
+          onClick ? { onclick: onClick } : {},
+          columns.map(function (c) {
+            var cls = "td" +
+              (c.align === "right" ? ".num" : c.align === "center" ? ".mid" : "") +
+              (c.className ? "." + c.className : "");
+            var content = c.render ? c.render(row) : row[c.key];
+            var props = c.style ? { style: c.style(row) } : {};
+            return h(cls, props, content);
+          })
+        );
+      }))
+    );
+  }
+
+  /* The drill-down panel that opens under a KPI row. */
+  function filterPanel(opts) {
+    return h(
+      "div.card.mb-lg",
+      { style: "overflow:hidden;" },
+      h(
+        "div.card-head",
+        h(
+          "div",
+          h("div.card-title", opts.title, " ", h("span.muted-count", "(" + opts.count + ")")),
+          opts.subtitle ? h("div.card-sub", opts.subtitle) : null
+        ),
+        h("button.close-btn", { type: "button", onclick: opts.onClose }, "Close ✕")
+      ),
+      h(
+        "div.table-scroll",
+        { style: "max-height:" + (opts.maxHeight || 380) + "px;" },
+        dataTable(opts.columns, opts.rows, { onRowClick: opts.onRowClick })
+      )
+    );
+  }
+
+  /* A filter chip row driven by a counts map. */
+  function chipRow(opts) {
+    var chips = opts.types.map(function (t) {
+      var color = opts.colors[t];
+      var isActive = opts.active === t;
+      var style = opts.dark
+        ? "background:" + (isActive ? color + "2a" : "rgba(255,255,255,.06)") +
+          ";border-color:" + (isActive ? color + "70" : "rgba(255,255,255,.1)") +
+          ";color:" + (isActive ? "#ffffff" : "rgba(255,255,255,.7)") + ";"
+        : "background:" + (isActive ? color + "18" : "") +
+          ";border-color:" + (isActive ? color + "50" : "") +
+          ";color:" + (isActive ? color : "") + ";";
+
+      return h(
+        "button.chip" + (opts.dark ? ".dark" : ""),
+        { type: "button", style: style, onclick: function () { opts.onPick(t); } },
+        h("span.dot", { style: "background:" + color + ";" }),
+        h("span", t),
+        h("span.chip-count", String(opts.counts[t] || 0))
+      );
+    });
+
+    if (opts.active) {
+      chips.push(h(
+        "button.close-btn",
+        {
+          type: "button",
+          style: opts.dark ? "background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);" : "",
+          onclick: opts.onClear,
+        },
+        "Clear filter ✕"
+      ));
+    }
+
+    return h("div" + (opts.dark ? ".command-chips" : ".chip-row"), chips);
+  }
+
+  /* Header block used by list cards: icon, title, count, subtitle, controls. */
+  function listHeader(opts) {
+    return h(
+      "div.card-head",
+      h(
+        "div.flex-center",
+        opts.iconHtml ? iconChip(opts.iconHtml, opts.color || u.COLORS.navy, { size: 36, radius: 10 }) : null,
+        h(
+          "div",
+          h("div.card-title", opts.title, opts.count !== undefined
+            ? [" ", h("span.muted-count", "(" + opts.count + ")")] : null),
+          opts.subtitle ? h("div.card-sub", opts.subtitle) : null
+        )
+      ),
+      opts.controls || null
+    );
+  }
+
+  /* Segmented view-mode switch. */
+  function segmented(options, active, onPick) {
+    return h("div.segmented", options.map(function (o) {
+      return h(
+        "button" + (o.key === active ? ".is-active" : ""),
+        { type: "button", onclick: function () { onPick(o.key); } },
+        o.label
+      );
+    }));
+  }
+
+  /* Small summary tiles used at the top of secondary views. */
+  function summaryCards(cards, columns) {
+    return h("div.grid.gap-sm.grid-" + (columns || 3) + ".mb-lg", cards.map(function (c) {
+      return h(
+        "div.kpi.compact",
+        h("span.kpi-rail", { style: "background:" + c.color + ";" }),
+        c.iconHtml ? iconChip(c.iconHtml, c.color, { solid: true, class: "sm" }) : null,
+        h("div.kpi-label", c.label),
+        h("div.kpi-value.sm", String(c.value))
+      );
+    }));
+  }
+
+  /* Status badge helpers, so colour rules live in exactly one place. */
+  function panelBadge(status, extraClass) {
+    return badge(status, u.panelStatusColor(status), extraClass);
+  }
+
+  function connBadge(conn, extraClass) {
+    return badge(conn, u.connectivityColor(conn), extraClass);
+  }
+
+  App.widgets = {
+    kpiCard: kpiCard,
+    kpiRow: kpiRow,
+    searchInput: searchInput,
+    dataTable: dataTable,
+    filterPanel: filterPanel,
+    chipRow: chipRow,
+    listHeader: listHeader,
+    segmented: segmented,
+    summaryCards: summaryCards,
+    panelBadge: panelBadge,
+    connBadge: connBadge,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/data/master.js ==== */
+/* Master data: districts, branch roster and the deterministic status mix.
+
+   The whole network is generated from fixed seeds, so every count on the
+   dashboard is backed by a real, drillable list of branches rather than a
+   hard-coded number. Replace this module with your core-banking feed and
+   the rest of the app keeps working unchanged. */
+(function (App) {
+  "use strict";
+
+  var u = App.utils;
+
+  var DISTRICTS = [
+    "Ariyalur", "Chengalpattu", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul",
+    "Erode", "Kallakurichi", "Kancheepuram", "Kanyakumari", "Karur", "Krishnagiri",
+    "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur",
+    "Pudukottai", "Ramanathapuram", "Ranipettai", "Salem", "Sivagangai", "Tenkasi",
+    "Thanjavur", "Theni", "Thiruvallur", "Thiruvarur", "Thoothukudi", "Tiruchirappalli",
+    "Tirunelveli", "Tirupathur", "Tirupattur", "Tiruppur", "Tiruvannamalai", "Vellore",
+    "Villupuram", "Virudhunagar",
+  ];
+
+  /* Approximate district centroids, used by the Location Maps view. */
+  var DISTRICT_COORDS = {
+    Ariyalur: [11.14, 79.08], Chengalpattu: [12.69, 79.98], Coimbatore: [11.02, 76.96],
+    Cuddalore: [11.75, 79.77], Dharmapuri: [12.13, 78.16], Dindigul: [10.36, 77.98],
+    Erode: [11.34, 77.72], Kallakurichi: [11.74, 78.96], Kancheepuram: [12.84, 79.70],
+    Kanyakumari: [8.18, 77.43], Karur: [10.96, 78.08], Krishnagiri: [12.52, 78.21],
+    Madurai: [9.93, 78.12], Mayiladuthurai: [11.10, 79.65], Nagapattinam: [10.77, 79.84],
+    Namakkal: [11.22, 78.17], Nilgiris: [11.41, 76.70], Perambalur: [11.23, 78.88],
+    Pudukottai: [10.38, 78.82], Ramanathapuram: [9.37, 78.83], Ranipettai: [12.93, 79.33],
+    Salem: [11.66, 78.15], Sivagangai: [9.85, 78.48], Tenkasi: [8.96, 77.31],
+    Thanjavur: [10.79, 79.14], Theni: [10.01, 77.48], Thiruvallur: [13.14, 79.91],
+    Thiruvarur: [10.77, 79.64], Thoothukudi: [8.76, 78.13], Tiruchirappalli: [10.79, 78.70],
+    Tirunelveli: [8.71, 77.76], Tirupathur: [9.85, 78.60], Tirupattur: [12.50, 78.57],
+    Tiruppur: [11.10, 77.34], Tiruvannamalai: [12.23, 79.07], Vellore: [12.92, 79.13],
+    Villupuram: [11.94, 79.49], Virudhunagar: [9.57, 77.96],
+  };
+
+  var TARGET_TOTAL_BRANCHES = 680;
+  var HOME_DISTRICT = "Madurai";
+  var HOME_DISTRICT_BRANCHES = 21;
+
+  /* --- Branch counts per district, scaled to hit the network total exactly --- */
+  var countRnd = u.mulberry32(20260907);
+  var rawCounts = DISTRICTS.map(function (name) {
+    return name === HOME_DISTRICT ? null : 10 + Math.floor(countRnd() * 20);
+  });
+  var rawSum = rawCounts.reduce(function (s, v) { return s + (v || 0); }, 0);
+  var counts = rawCounts.map(function (v) {
+    if (v === null) return HOME_DISTRICT_BRANCHES;
+    return Math.max(5, Math.round((v / rawSum) * (TARGET_TOTAL_BRANCHES - HOME_DISTRICT_BRANCHES)));
+  });
+  var countSum = counts.reduce(function (s, v) { return s + v; }, 0);
+  counts[DISTRICTS.findIndex(function (n) { return n !== HOME_DISTRICT; })] +=
+    TARGET_TOTAL_BRANCHES - countSum;
+
+  var REGIONS = DISTRICTS.map(function (name, i) {
+    return { name: name, branchCount: counts[i], coords: DISTRICT_COORDS[name] };
+  }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+
+  /* --- Status mix ---------------------------------------------------------
+     A shuffled pool that sums to exactly 680 branches:
+       350 Armed + 150 Disarmed                        -> 500 Online
+       50 Alarm Active + 20 Fault + 110 plain Offline  -> 180 Offline        */
+  var CATEGORY_MIX = [
+    [350, "Armed", "Online"],
+    [150, "Disarmed", "Online"],
+    [50, "Alarm Active", "Offline"],
+    [20, "Fault", "Offline"],
+    [110, "Offline", "Offline"],
+  ];
+  var CATEGORY_POOL = [];
+  CATEGORY_MIX.forEach(function (row) {
+    for (var i = 0; i < row[0]; i++) {
+      CATEGORY_POOL.push({ panelStatus: row[1], connectivity: row[2] });
+    }
+  });
+  (function shuffle() {
+    var r = u.mulberry32(99887766);
+    for (var i = CATEGORY_POOL.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1));
+      var tmp = CATEGORY_POOL[i];
+      CATEGORY_POOL[i] = CATEGORY_POOL[j];
+      CATEGORY_POOL[j] = tmp;
+    }
+  })();
+
+  var BRANCH_SUFFIXES = [
+    "Main Branch", "Town Branch", "Bazaar Branch", "RS Puram", "Extension Counter",
+    "New Bus Stand", "Market Branch", "College Road", "Old Town", "West Extension",
+  ];
+  var FIRST_NAMES = ["K.", "S.", "R.", "M.", "P.", "V.", "N.", "A.", "T.", "G."];
+  var LAST_NAMES = [
+    "Bhuvaneswari", "Elango", "Saravanan", "Meenakshi", "Gopinath",
+    "Kumar", "Devi", "Rajan", "Priya", "Suresh",
+  ];
+  var SAMPLE_ZONES = [
+    "Main Entrance", "Strong Room", "Cash Counter", "Back Door", "ATM Room",
+  ];
+
+  var ZONE_LABELS = [
+    "Main Entrance", "Strong Room / Vault", "Cash Counter", "Server Room",
+    "Back Door", "ATM Room", "Manager Cabin", "Locker Room",
+  ];
+
+  /* Every generated timestamp falls inside this window. TODAY is the day the
+     dashboard reports as "now" for today-scoped counters. */
+  var MONTH = "2026-09-";
+  var TODAY = "2026-09-08";
+
+  function dayStamp(r, hourBase, hourSpread, minuteTens) {
+    var day = 1 + Math.floor(r() * 7);
+    var hour = hourBase + Math.floor(r() * hourSpread);
+    var minute = minuteTens * 10 + Math.floor(r() * 10);
+    return MONTH + u.pad2(day) + " " + u.pad2(hour) + ":" + u.pad2(minute);
+  }
+
+  function todayStamp(r, hourBase, hourSpread) {
+    return (
+      TODAY + " " + u.pad2(hourBase + Math.floor(r() * hourSpread)) +
+      ":" + u.pad2(Math.floor(r() * 6) * 10)
+    );
+  }
+
+  function branchName(district, i) {
+    var suffix = BRANCH_SUFFIXES[i % BRANCH_SUFFIXES.length];
+    var repeat = i >= BRANCH_SUFFIXES.length
+      ? " " + (Math.floor(i / BRANCH_SUFFIXES.length) + 1)
+      : "";
+    return district + " " + suffix + repeat;
+  }
+
+  function buildEvents(r, panelStatus, connectivity) {
+    var needsAttention = panelStatus === "Alarm Active" || panelStatus === "Fault";
+    var events = [];
+    if (connectivity === "Offline") {
+      events.push({ type: "Communication Lost", time: dayStamp(r, 10, 9, 2) });
+      if (needsAttention) {
+        events.push({
+          type: panelStatus === "Alarm Active" ? "Alarm" : "Fault",
+          zone: "Zone " + (1 + Math.floor(r() * 8)) + " - " + u.pick(r, SAMPLE_ZONES),
+          time: dayStamp(r, 20, 3, 4),
+        });
+      }
+    } else {
+      events.push({
+        type: panelStatus === "Disarmed" ? "Disarm" : "Arm",
+        time: dayStamp(r, 6, 3, 1),
+      });
+    }
+    return events;
+  }
+
+  function buildBranch(district, i, category) {
+    var r = u.seededRnd(district + "#" + i);
+    var panelStatus = category.panelStatus;
+    var connectivity = category.connectivity;
+    var needsAttention = panelStatus === "Alarm Active" || panelStatus === "Fault";
+    var managerName = u.pick(r, FIRST_NAMES) + " " + u.pick(r, LAST_NAMES);
+    var events = buildEvents(r, panelStatus, connectivity);
+    var emailUser = managerName.replace(/[^a-zA-Z]/g, "").toLowerCase() || "manager";
+
+    return {
+      id: district + "-" + i,
+      name: branchName(district, i),
+      branchIdCode: "TNGB-" + (2000 + Math.floor(r() * 7999)),
+      district: district,
+      panelStatus: panelStatus,
+      connectivity: connectivity,
+      status: needsAttention || connectivity === "Offline" ? "Attention" : "Normal",
+      manager: {
+        name: managerName,
+        id: "BM-" + (1000 + Math.floor(r() * 8999)),
+        contact: "+91 9" + String(400000000 + Math.floor(r() * 99999999)).slice(0, 9),
+        email: emailUser + "." + district.toLowerCase().replace(/\s+/g, "") + "@tngb.co.in",
+      },
+      events: events,
+    };
+  }
+
+  /* The head-office reference branch. It carries hand-entered master data
+     instead of generated data, and is pinned Armed / Online below. */
+  var FLAGSHIP = {
+    id: "madurai-melur",
+    name: "Melur Branch",
+    branchIdCode: "TNGB-2041",
+    district: HOME_DISTRICT,
+    isReference: true,
+    manager: {
+      name: "K. Bhuvaneswari",
+      id: "BM-4417",
+      contact: "+91 94421 08877",
+      email: "bhuvaneswari.melur@tngb.co.in",
+    },
+    events: [
+      { type: "Arm", time: "2026-09-08 06:42" },
+      { type: "Alarm", zone: "Zone 2 - Strong Room", time: "2026-09-07 22:16" },
+      { type: "Fault", zone: "Zone 6 - ATM Room", time: "2026-09-07 19:04" },
+      { type: "Disarm", time: "2026-09-07 18:30" },
+    ],
+  };
+
+  var _cache = null;
+
+  function allBranches() {
+    if (_cache) return _cache;
+
+    var list = [];
+    var offset = 0;
+    REGIONS.forEach(function (region) {
+      for (var i = 0; i < region.branchCount; i++) {
+        var category = CATEGORY_POOL[(offset + i) % CATEGORY_POOL.length];
+        list.push(buildBranch(region.name, i, category));
+      }
+      offset += region.branchCount;
+    });
+
+    /* Pin the reference branch to Armed / Online. Whatever category its slot
+       drew is handed to a branch that already held Armed / Online, so network
+       totals stay exactly 350 / 150 / 50 / 20 / 110. */
+    var slot = list.findIndex(function (b) { return b.district === HOME_DISTRICT; });
+    var displaced = {
+      panelStatus: list[slot].panelStatus,
+      connectivity: list[slot].connectivity,
+    };
+    if (displaced.panelStatus !== "Armed" || displaced.connectivity !== "Online") {
+      var donor = list.find(function (b, idx) {
+        return idx !== slot && b.panelStatus === "Armed" && b.connectivity === "Online";
+      });
+      donor.panelStatus = displaced.panelStatus;
+      donor.connectivity = displaced.connectivity;
+      donor.status =
+        donor.panelStatus === "Alarm Active" || donor.panelStatus === "Fault" ||
+        donor.connectivity === "Offline" ? "Attention" : "Normal";
+      donor.events = buildEvents(
+        u.seededRnd(donor.id + "-recategorised"),
+        donor.panelStatus,
+        donor.connectivity
+      );
+    }
+
+    list[slot] = Object.assign({}, FLAGSHIP, {
+      panelStatus: "Armed",
+      connectivity: "Online",
+      status: "Normal",
+    });
+
+    _cache = list;
+    return _cache;
+  }
+
+  function branchById(id) {
+    return allBranches().find(function (b) { return b.id === id; }) || null;
+  }
+
+  function branchesIn(district) {
+    return allBranches().filter(function (b) { return b.district === district; });
+  }
+
+  /* Roll-up counters for one district. */
+  function districtStats(district) {
+    var s = { total: 0, online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0 };
+    branchesIn(district).forEach(function (b) {
+      s.total++;
+      if (b.connectivity === "Online") s.online++; else s.offline++;
+      if (b.panelStatus === "Armed") s.armed++;
+      else if (b.panelStatus === "Disarmed") s.disarmed++;
+      else if (b.panelStatus === "Alarm Active") s.alarm++;
+      else if (b.panelStatus === "Fault") s.fault++;
+    });
+    return s;
+  }
+
+  /* One rule for a district's headline status, used by the region list, the
+     district table and the map, so the three can never disagree. */
+  function districtStatus(stats) {
+    if (stats.alarm > 0) return "Alarm";
+    if (stats.fault > 0) return "Fault";
+    if (stats.offline > 0) return "Attention";
+    return "Normal";
+  }
+
+  var STATUS_COLORS = {
+    Alarm: u.COLORS.red,
+    Fault: u.COLORS.amber,
+    Attention: u.COLORS.slate,
+    Normal: u.COLORS.green,
+  };
+
+  var _stats = null;
+
+  function networkStats() {
+    if (_stats) return _stats;
+    var s = { online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0 };
+    var all = allBranches();
+    all.forEach(function (b) {
+      if (b.connectivity === "Online") s.online++; else s.offline++;
+      if (b.panelStatus === "Armed") s.armed++;
+      else if (b.panelStatus === "Disarmed") s.disarmed++;
+      else if (b.panelStatus === "Alarm Active") s.alarm++;
+      else if (b.panelStatus === "Fault") s.fault++;
+    });
+    s.totalBranches = all.length;
+    s.totalDistricts = REGIONS.length;
+    s.abnormal = s.offline + s.alarm + s.fault;
+    s.normal = s.totalBranches - s.abnormal;
+    _stats = s;
+    return s;
+  }
+
+  App.data = App.data || {};
+  Object.assign(App.data, {
+    DISTRICTS: DISTRICTS,
+    REGIONS: REGIONS,
+    ZONE_LABELS: ZONE_LABELS,
+    SAMPLE_ZONES: SAMPLE_ZONES,
+    FIRST_NAMES: FIRST_NAMES,
+    LAST_NAMES: LAST_NAMES,
+    HOME_DISTRICT: HOME_DISTRICT,
+    TODAY: TODAY,
+    MONTH: MONTH,
+    todayStamp: todayStamp,
+    dayStamp: dayStamp,
+    allBranches: allBranches,
+    branchById: branchById,
+    branchesIn: branchesIn,
+    districtStats: districtStats,
+    districtStatus: districtStatus,
+    STATUS_COLORS: STATUS_COLORS,
+    networkStats: networkStats,
+  });
+})(window.App = window.App || {});
+
+/* ==== src/data/derived.js ==== */
+/* Derived data: per-branch zones, power health, and the event stream.
+
+   Everything here is a pure function of the master roster plus a fixed seed,
+   so any number shown on a card can be drilled into and reconciled against a
+   list of real branch records. */
+(function (App) {
+  "use strict";
+
+  var u = App.utils;
+  var data = App.data;
+  var COLORS = u.COLORS;
+
+  var EVENT_TYPES = [
+    "Arm", "Disarm", "Alarm", "Fault",
+    "AC Fail", "AC Restore", "Battery Fail", "Battery Restore",
+    "Tamper Activate", "Tamper Restore",
+    "Communication Lost", "Communication Restored",
+  ];
+
+  var EVENT_COLORS = {
+    Arm: COLORS.green,
+    Disarm: COLORS.slate,
+    Alarm: COLORS.red,
+    Fault: COLORS.amber,
+    "AC Fail": COLORS.red,
+    "AC Restore": COLORS.green,
+    "Battery Fail": COLORS.red,
+    "Battery Restore": COLORS.green,
+    "Tamper Activate": COLORS.orange,
+    "Tamper Restore": COLORS.green,
+    "Communication Lost": COLORS.slate,
+    "Communication Restored": COLORS.green,
+  };
+
+  /* --- Zones ------------------------------------------------------------- */
+
+  var _zoneCache = {};
+
+  /* Expands a branch into its 8 physical zones. Alarm and fault land on a
+     specific zone so the branch-level status always has a zone that explains
+     it; tamper is independent and rare. */
+  function zonesFor(branch) {
+    if (_zoneCache[branch.id]) return _zoneCache[branch.id];
+
+    var zr = u.seededRnd(branch.id + "-zones8");
+    var events = branch.events || [];
+    var offline = branch.connectivity === "Offline";
+    var disarmed = branch.panelStatus === "Disarmed";
+    var alarmZone = branch.panelStatus === "Alarm Active" ? Math.floor(zr() * 8) : -1;
+    var faultZone = branch.panelStatus === "Fault" ? Math.floor(zr() * 8) : -1;
+
+    var armEvt = events.find(function (e) { return e.type === "Arm" || e.type === "Disarm"; });
+    var alarmEvt = events.find(function (e) { return e.type === "Alarm"; });
+    var faultEvt = events.find(function (e) { return e.type === "Fault"; });
+
+    var rows = data.ZONE_LABELS.map(function (label, i) {
+      var isAlarm = i === alarmZone;
+      var isFault = i === faultZone;
+      var isTamper = !offline && !disarmed && alarmZone < 0 && faultZone < 0 && zr() < 0.012;
+
+      var status = offline ? "Unknown" : disarmed ? "Bypassed" : "Active";
+      var lastTrigger = "--";
+      if (isAlarm && alarmEvt) lastTrigger = alarmEvt.time;
+      else if (isFault && faultEvt) lastTrigger = faultEvt.time;
+      else if (isTamper) lastTrigger = data.dayStamp(zr, 10, 9, 3);
+      else if (armEvt) lastTrigger = armEvt.time;
+
+      var dominantLabel = isTamper ? "Tamper" : isAlarm ? "Alarm" : isFault ? "Fault" : "Normal";
+      var dominant = isTamper ? COLORS.orange
+        : isAlarm ? COLORS.red
+        : isFault ? COLORS.amber
+        : COLORS.green;
+
+      return {
+        id: branch.id + "-z" + (i + 1),
+        num: i + 1,
+        name: "Zone " + (i + 1) + " - " + label,
+        iconHtml: App.ZONE_ICONS[i],
+        status: status,
+        statusColor: status === "Active" ? COLORS.green
+          : status === "Bypassed" ? COLORS.grey : COLORS.slate,
+        condition: isAlarm ? "Alarm" : "Normal",
+        conditionColor: isAlarm ? COLORS.red : COLORS.green,
+        fault: isFault ? "Fault" : "OK",
+        faultColor: isFault ? COLORS.amber : COLORS.green,
+        tamper: isTamper ? "Tamper" : "OK",
+        tamperColor: isTamper ? COLORS.orange : COLORS.green,
+        lastTrigger: lastTrigger,
+        dominant: dominant,
+        dominantLabel: dominantLabel,
+      };
+    });
+
+    _zoneCache[branch.id] = rows;
+    return rows;
+  }
+
+  /* --- Power ------------------------------------------------------------- */
+
+  var _powerCache = {};
+
+  /* AC mains and battery health. Offline panels are overwhelmingly likely to
+     be offline *because* mains failed, which is why the odds differ so much. */
+  function powerFor(branch) {
+    if (_powerCache[branch.id]) return _powerCache[branch.id];
+
+    var pr = u.seededRnd(branch.id + "-power");
+    var offline = branch.connectivity === "Offline";
+    var acFail = offline ? pr() < 0.8 : pr() < 0.02;
+    var acRestoredToday = !acFail && pr() < 0.06;
+    var acRestoredAt = acRestoredToday ? data.todayStamp(pr, 6, 3) : null;
+
+    var batteryStatus = acFail
+      ? (pr() < 0.35 ? "Fail" : "Normal")
+      : (pr() < 0.03 ? "Fail" : "Normal");
+    var batteryRestoredToday = batteryStatus === "Normal" && pr() < 0.05;
+    var batteryRestoredAt = batteryRestoredToday ? data.todayStamp(pr, 7, 3) : null;
+
+    var voltage = batteryStatus === "Fail"
+      ? +(9.5 + pr() * 1.2).toFixed(1)
+      : +(12.4 + pr() * 1.4).toFixed(1);
+
+    var charging = batteryStatus === "Fail" ? "Fault"
+      : acFail ? "Discharging"
+      : voltage >= 13.2 ? "Fully Charged"
+      : "Charging";
+
+    var power = {
+      acStatus: acFail ? "Fail" : "Normal",
+      acRestoredToday: acRestoredToday,
+      acRestoredAt: acRestoredAt,
+      batteryStatus: batteryStatus,
+      batteryRestoredToday: batteryRestoredToday,
+      batteryRestoredAt: batteryRestoredAt,
+      voltage: voltage,
+      chargingStatus: charging,
+      acColor: acFail ? COLORS.red : COLORS.green,
+      batteryColor: batteryStatus === "Fail" ? COLORS.red : COLORS.green,
+      chargingColor: charging === "Fully Charged" ? COLORS.green
+        : charging === "Charging" ? COLORS.navy
+        : charging === "Discharging" ? COLORS.amber
+        : COLORS.red,
+    };
+
+    _powerCache[branch.id] = power;
+    return power;
+  }
+
+  var _powerRows = null;
+  function powerRows() {
+    if (_powerRows) return _powerRows;
+    _powerRows = data.allBranches().map(function (b) {
+      return { branch: b, power: powerFor(b) };
+    });
+    return _powerRows;
+  }
+
+  /* --- Event stream ------------------------------------------------------ */
+
+  /* One branch's contribution to the network event log: panel activity,
+     power transitions and tamper trips, all carrying the same shape. */
+  function eventsFor(branch) {
+    var out = [];
+    var power = powerFor(branch);
+    var cr = u.seededRnd(branch.id + "-comm");
+
+    (branch.events || []).forEach(function (e) {
+      out.push({ type: e.type, time: e.time, zone: e.zone || "" });
+    });
+
+    if (branch.connectivity === "Online" && cr() < 0.05) {
+      out.push({ type: "Communication Restored", time: data.todayStamp(cr, 7, 3) });
+    }
+    if (power.acStatus === "Fail") {
+      out.push({ type: "AC Fail", time: data.dayStamp(cr, 10, 9, 1) });
+    }
+    if (power.acRestoredToday) {
+      out.push({ type: "AC Restore", time: power.acRestoredAt });
+    }
+    if (power.batteryStatus === "Fail") {
+      out.push({ type: "Battery Fail", time: data.dayStamp(cr, 10, 9, 3) });
+    }
+    if (power.batteryRestoredToday) {
+      out.push({ type: "Battery Restore", time: power.batteryRestoredAt });
+    }
+
+    zonesFor(branch).forEach(function (z) {
+      if (z.tamper !== "Tamper") return;
+      out.push({ type: "Tamper Activate", time: z.lastTrigger, zone: z.name });
+      if (cr() < 0.5) out.push({ type: "Tamper Restore", time: z.lastTrigger, zone: z.name });
+    });
+
+    return out;
+  }
+
+  var _allEvents = null;
+
+  /* The whole network event log, newest first. */
+  function allEvents() {
+    if (_allEvents) return _allEvents;
+    var out = [];
+    data.allBranches().forEach(function (b) {
+      eventsFor(b).forEach(function (e) {
+        out.push({
+          type: e.type,
+          time: e.time,
+          zone: e.zone || "",
+          branch: b.name,
+          district: b.district,
+          branchId: b.id,
+        });
+      });
+    });
+    out.sort(function (a, b) { return a.time < b.time ? 1 : a.time > b.time ? -1 : 0; });
+    _allEvents = out;
+    return out;
+  }
+
+  var _eventCounts = null;
+  function eventCounts() {
+    if (_eventCounts) return _eventCounts;
+    var counts = {};
+    EVENT_TYPES.forEach(function (t) { counts[t] = 0; });
+    allEvents().forEach(function (e) {
+      if (counts[e.type] !== undefined) counts[e.type]++;
+    });
+    _eventCounts = counts;
+    return counts;
+  }
+
+  /* --- Currently-open tamper conditions ---------------------------------- */
+
+  var _tamperBranches = null;
+
+  /* Branches with at least one zone still in tamper, plus the zone and the
+     time it tripped, so the Intrusion view can list them rather than show a
+     bare count. */
+  function tamperBranches() {
+    if (_tamperBranches) return _tamperBranches;
+    _tamperBranches = [];
+    data.allBranches().forEach(function (b) {
+      var zone = zonesFor(b).find(function (z) { return z.tamper === "Tamper"; });
+      if (zone) {
+        _tamperBranches.push({ branch: b, zone: zone.name, time: zone.lastTrigger });
+      }
+    });
+    return _tamperBranches;
+  }
+
+  /* --- Cleared-earlier-today incidents ----------------------------------- */
+
+  var _restored = null;
+
+  /* Incidents that fired earlier today and have since cleared. Each one keeps
+     its branch, zone and clear time, so "Alarm Restored: 34" opens a table of
+     34 real records. */
+  function restoredEvents() {
+    if (_restored) return _restored;
+    _restored = { alarm: [], fault: [], tamper: [] };
+    data.allBranches().forEach(function (b) {
+      var rr = u.seededRnd(b.id + "-restored");
+      var add = function (bucket, chance, hourBase) {
+        if (rr() >= chance) return;
+        _restored[bucket].push({
+          branch: b,
+          zone: u.pick(rr, data.SAMPLE_ZONES),
+          time: data.todayStamp(rr, hourBase, 3),
+        });
+      };
+      add("alarm", 0.05, 6);
+      add("fault", 0.06, 7);
+      add("tamper", 0.015, 5);
+    });
+    return _restored;
+  }
+
+  /* --- Report definitions ------------------------------------------------ */
+
+  var REPORT_DEFS = [
+    { key: "daily", label: "Daily Report", desc: "All events logged on the latest day", scope: "events", range: "today", color: COLORS.navy, icon: "history" },
+    { key: "weekly", label: "Weekly Report", desc: "All events over the last 7 days", scope: "events", range: "week", color: COLORS.navy, icon: "history" },
+    { key: "monthly", label: "Monthly Report", desc: "All events this month", scope: "events", range: "month", color: COLORS.navy, icon: "history" },
+    { key: "branchwise", label: "Branch-wise Report", desc: "Per-branch panel and event summary", scope: "branchwise", color: COLORS.navy, icon: "branches" },
+    { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "alerts" },
+    { key: "fault", label: "Fault Report", desc: "Fault conditions network-wide", scope: "events", types: ["Fault"], color: COLORS.amber, icon: "fault" },
+    { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.green, icon: "intrusion" },
+    { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and restores", scope: "events", types: ["AC Fail", "AC Restore"], color: COLORS.red, icon: "power" },
+    { key: "battery", label: "Battery Report", desc: "Battery failures and restores", scope: "events", types: ["Battery Fail", "Battery Restore"], color: COLORS.red, icon: "battery" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "zones" },
+  ];
+
+  Object.assign(App.data, {
+    EVENT_TYPES: EVENT_TYPES,
+    EVENT_COLORS: EVENT_COLORS,
+    REPORT_DEFS: REPORT_DEFS,
+    zonesFor: zonesFor,
+    powerFor: powerFor,
+    powerRows: powerRows,
+    eventsFor: eventsFor,
+    allEvents: allEvents,
+    eventCounts: eventCounts,
+    tamperBranches: tamperBranches,
+    restoredEvents: restoredEvents,
+  });
+})(window.App = window.App || {});
+
+/* ==== src/views/overview.js ==== */
+/* Overview: network KPIs, status split, district list and branch spotlight. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  /* Which branches sit behind each clickable KPI. */
+  var KPI_FILTERS = {
+    online: { title: "Online Panels", match: function (b) { return b.connectivity === "Online"; } },
+    offline: { title: "Offline Panels", match: function (b) { return b.connectivity === "Offline"; } },
+    armed: { title: "Armed Panels", match: function (b) { return b.panelStatus === "Armed"; } },
+    disarmed: { title: "Disarmed Panels", match: function (b) { return b.panelStatus === "Disarmed"; } },
+    alarm: { title: "Alarm Panels", match: function (b) { return b.panelStatus === "Alarm Active"; } },
+    fault: { title: "Fault Panels", match: function (b) { return b.panelStatus === "Fault"; } },
+  };
+
+  /* Two-segment donut drawn with stroke-dasharray on a 100-unit circumference. */
+  function donut(a, b) {
+    var total = a.count + b.count || 1;
+    var aDash = (a.count / total) * 100;
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "88");
+    svg.setAttribute("height", "88");
+    svg.setAttribute("viewBox", "0 0 42 42");
+    svg.innerHTML =
+      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#e6e9ef" stroke-width="6"></circle>' +
+      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="' + a.color +
+        '" stroke-width="6" stroke-dasharray="' + aDash + ' 100" stroke-dashoffset="0"></circle>' +
+      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="' + b.color +
+        '" stroke-width="6" stroke-dasharray="' + (100 - aDash) + ' 100" stroke-dashoffset="' + -aDash + '"></circle>';
+    return { node: svg, pct: Math.round((a.count / total) * 100) };
+  }
+
+  function pie(title, a, b) {
+    var d = donut(a, b);
+    return h(
+      "div.pie",
+      d.node,
+      h("div.pie-pct", d.pct + "%"),
+      h("div.pie-title", title),
+      h(
+        "div.pie-legend",
+        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " " + a.count),
+        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " " + b.count)
+      )
+    );
+  }
+
+  function statusCard(stats) {
+    var normalPct = Math.round((stats.normal / (stats.totalBranches || 1)) * 100);
+    return h(
+      "div.card.card-pad",
+      h(
+        "div.flex-between",
+        { style: "margin-bottom:6px;" },
+        h("div.card-title", "Overall System Status"),
+        badge(normalPct + "% Normal", normalPct >= 90 ? COLORS.green : COLORS.amber)
+      ),
+      h("div", { style: "font-size:11.5px;color:var(--ink-soft);margin-bottom:18px;" },
+        "Live split of branch panels network-wide"),
+      h(
+        "div.pies",
+        pie("Normal / Abnormal",
+          { label: "Normal", count: stats.normal, color: COLORS.green },
+          { label: "Abnormal", count: stats.abnormal, color: COLORS.red }),
+        pie("Online / Offline",
+          { label: "Online", count: stats.online, color: COLORS.green },
+          { label: "Offline", count: stats.offline, color: COLORS.slate }),
+        pie("Armed / Disarmed",
+          { label: "Armed", count: stats.armed, color: COLORS.navy },
+          { label: "Disarmed", count: stats.disarmed, color: COLORS.grey })
+      )
+    );
+  }
+
+  function regionCard(ctx) {
+    var search = (ctx.state.regionSearch || "").toLowerCase();
+    var regions = App.data.REGIONS.filter(function (r) {
+      return !search || u.includesCI(r.name, search);
+    });
+
+    return h(
+      "div.card.card-pad.flex-col",
+      h(
+        "div.flex-between",
+        { style: "margin-bottom:12px;" },
+        h("div.card-title", "All Regions ",
+          h("span.muted-count", "(" + App.data.REGIONS.length + ")")),
+        h("div", { style: "font-size:10px;color:var(--ink-faint);font-weight:600;letter-spacing:.03em;" },
+          "CLICK TO VIEW")
+      ),
+      h("div", { style: "margin-bottom:12px;" }, W.searchInput({
+        id: "region-search",
+        value: ctx.state.regionSearch,
+        placeholder: "Search district…",
+        onInput: function (v) { ctx.setState({ regionSearch: v }); },
+      })),
+      h(
+        "div.list-scroll",
+        { style: "max-height:250px;" },
+        regions.length ? regions.map(function (r) {
+          var s = App.data.districtStats(r.name);
+          var status = App.data.districtStatus(s);
+          var selected = r.name === ctx.state.selectedRegion;
+          return h(
+            "button.row-item" + (selected ? ".is-selected" : ""),
+            {
+              type: "button",
+              onclick: function () {
+                ctx.setState({ selectedRegion: r.name, selectedBranchId: null });
+              },
+            },
+            h(
+              "div",
+              h("div.row-item-name", r.name),
+              h("div.row-item-sub",
+                r.branchCount + " branches · " + s.offline + " offline · " +
+                s.alarm + " alarm · " + s.fault + " fault")
+            ),
+            badge(status, App.data.STATUS_COLORS[status])
+          );
+        }) : h("div.row-item-sub", { style: "padding:12px;" }, "No district matches that search.")
+      )
+    );
+  }
+
+  function branchListCard(ctx, branches, selectedId) {
+    return h(
+      "div.card",
+      { style: "padding:16px;" },
+      h("div.card-title", { style: "margin-bottom:12px;font-size:13.5px;" },
+        "Branches in " + ctx.state.selectedRegion),
+      h(
+        "div.list-scroll",
+        { style: "max-height:480px;" },
+        branches.map(function (b) {
+          return h(
+            "button.row-item.tight" + (b.id === selectedId ? ".is-selected" : ""),
+            { type: "button", onclick: function () { ctx.setState({ selectedBranchId: b.id }); } },
+            h("span.row-item-name", b.name),
+            W.panelBadge(b.panelStatus)
+          );
+        })
+      )
+    );
+  }
+
+  function spotlightCard(branch) {
+    var manager = [
+      ["Manager Name", branch.manager.name],
+      ["ID", branch.manager.id],
+      ["Contact", branch.manager.contact],
+      ["Email", branch.manager.email],
+    ];
+
+    return h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      h(
+        "div.card-head",
+        h(
+          "div",
+          h("div.card-title", { style: "font-size:15px;" }, branch.name),
+          h("div.card-sub.mono", branch.branchIdCode + " · " + branch.district)
+        ),
+        h("div.flex.gap-8", W.connBadge(branch.connectivity), W.panelBadge(branch.panelStatus))
+      ),
+      h(
+        "div.spotlight-grid",
+        h(
+          "div.spotlight-left",
+          h("div.section-label", "Recent Panel Events"),
+          h("div.flex-col", { style: "gap:9px;" }, branch.events.map(function (e) {
+            var color = App.data.EVENT_COLORS[e.type] || COLORS.grey;
+            return h(
+              "div.event-line",
+              h("span.dot.md", { style: "background:" + color + ";" }),
+              h(
+                "div.grow",
+                h("div.event-line-type", e.type),
+                e.zone ? h("div.event-line-zone", e.zone) : null
+              ),
+              h("div.event-line-time", e.time)
+            );
+          }))
+        ),
+        h(
+          "div.spotlight-right",
+          h("div.section-label", "Branch Manager Details"),
+          h("div.flex-col", { style: "gap:8px;" }, manager.map(function (kv) {
+            return h("div.kv-row", h("span", kv[0]), h("span", kv[1]));
+          }))
+        )
+      )
+    );
+  }
+
+  function render(ctx) {
+    var stats = App.data.networkStats();
+
+    var kpiDefs = [
+      { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
+      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.navy, iconHtml: App.ICONS.map, go: "locationMaps" },
+      { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
+      { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.slate, iconHtml: App.ICONS.offline },
+      { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
+      { key: "disarmed", label: "Disarmed Panels", value: stats.disarmed, hint: "Click to view list", color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
+      { key: "alarm", label: "Alarm Panels", value: stats.alarm, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.bell },
+      { key: "fault", label: "Fault Panels", value: stats.fault, hint: "Click to view list", color: COLORS.amber, iconHtml: App.ICONS.fault },
+    ];
+
+    var kpis = kpiDefs.map(function (d) {
+      return {
+        label: d.label, value: d.value, hint: d.hint, color: d.color, iconHtml: d.iconHtml,
+        selected: ctx.state.kpiFilter === d.key,
+        onClick: d.go
+          ? function () { ctx.go(d.go); }
+          : function () {
+              ctx.setState({ kpiFilter: ctx.state.kpiFilter === d.key ? null : d.key });
+            },
+      };
+    });
+
+    var panel = null;
+    if (ctx.state.kpiFilter && KPI_FILTERS[ctx.state.kpiFilter]) {
+      var meta = KPI_FILTERS[ctx.state.kpiFilter];
+      var matches = App.data.allBranches().filter(meta.match);
+      panel = W.filterPanel({
+        title: meta.title,
+        count: matches.length,
+        subtitle: "Click a row to open that branch in the spotlight below",
+        maxHeight: 360,
+        rows: matches.slice(0, 120),
+        columns: [
+          { label: "Branch", key: "name", className: "name" },
+          { label: "District", key: "district", className: "sub" },
+          { label: "Panel Status", render: function (b) { return W.panelBadge(b.panelStatus); } },
+          { label: "Connectivity", render: function (b) { return W.connBadge(b.connectivity); } },
+        ],
+        onRowClick: function (b) {
+          ctx.setState({ selectedRegion: b.district, selectedBranchId: b.id, kpiFilter: null });
+        },
+        onClose: function () { ctx.setState({ kpiFilter: null }); },
+      });
+    }
+
+    var branches = App.data.branchesIn(ctx.state.selectedRegion);
+    var selectedId = ctx.state.selectedBranchId &&
+      branches.some(function (b) { return b.id === ctx.state.selectedBranchId; })
+        ? ctx.state.selectedBranchId
+        : branches[0].id;
+    var selected = branches.find(function (b) { return b.id === selectedId; });
+
+    return h(
+      "div",
+      W.kpiRow(kpis, 4),
+      panel ? h("div.mt-md", panel) : null,
+      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
+        statusCard(stats), regionCard(ctx)),
+      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
+        branchListCard(ctx, branches, selectedId),
+        spotlightCard(selected))
+    );
+  }
+
+  App.views = App.views || {};
+  App.views.overview = {
+    label: "Overview",
+    icon: "overview",
+    title: "Dashboard Overview",
+    subtitle: "Real-time status across all branches, districts and alarm panels",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/branchMonitoring.js ==== */
+/* Branch Monitoring: district roll-up table plus the full branch grid. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  /* District rows carry their own manager contact, drawn from a stable seed
+     so the same district always shows the same regional contact. */
+  function districtRows() {
+    return App.data.REGIONS.map(function (r, i) {
+      var s = App.data.districtStats(r.name);
+      var dr = u.seededRnd(r.name + "-regional-manager");
+      var status = App.data.districtStatus(s);
+      return {
+        name: r.name,
+        code: "TNGB-D" + u.pad2(i + 1),
+        total: r.branchCount,
+        armed: s.armed, disarmed: s.disarmed,
+        online: s.online, offline: s.offline,
+        alarm: s.alarm, fault: s.fault,
+        status: status,
+        managerName: u.pick(dr, App.data.FIRST_NAMES) + " " + u.pick(dr, App.data.LAST_NAMES),
+        contact: "+91 9" + String(400000000 + Math.floor(dr() * 99999999)).slice(0, 9),
+      };
+    });
+  }
+
+  function render(ctx) {
+    var stats = App.data.networkStats();
+
+    var summary = W.summaryCards([
+      { label: "Total Branches", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.branches },
+      { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
+      { label: "Online / Offline", value: stats.online + " / " + stats.offline, color: COLORS.green, iconHtml: App.ICONS.activities },
+      { label: "Armed / Disarmed", value: stats.armed + " / " + stats.disarmed, color: COLORS.navy, iconHtml: App.ICONS.overview },
+    ], 4);
+
+    var rows = districtRows();
+    var numCol = function (key, color) {
+      return {
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        align: "right",
+        render: function (r) {
+          return h("span", { style: color ? "color:" + color + ";font-weight:600;" : "" }, String(r[key]));
+        },
+      };
+    };
+
+    var districtTable = h(
+      "div.card.mb-lg",
+      { style: "overflow:hidden;" },
+      h("div.card-head",
+        h("div",
+          h("div.card-title", "District-wise Summary"),
+          h("div.card-sub", rows.length + " districts · click a row to open its branches"))),
+      h("div.table-scroll", { style: "max-height:420px;" }, W.dataTable([
+        { label: "District", key: "name", className: "name" },
+        { label: "Code", key: "code", className: "mono" },
+        { label: "Total", key: "total", align: "right", className: "name" },
+        numCol("armed", COLORS.green),
+        numCol("disarmed", COLORS.grey),
+        numCol("online", COLORS.green),
+        numCol("offline", COLORS.slate),
+        numCol("alarm", COLORS.red),
+        numCol("fault", COLORS.amber),
+        { label: "Status", render: function (r) { return App.dom.badge(r.status, App.data.STATUS_COLORS[r.status]); } },
+        { label: "Manager", key: "managerName", className: "sub" },
+        { label: "Contact", key: "contact", className: "mono" },
+      ], rows, {
+        onRowClick: function (r) {
+          ctx.setState({ selectedRegion: r.name, selectedBranchId: null });
+          ctx.go("overview");
+        },
+      }))
+    );
+
+    var search = (ctx.state.bmSearch || "").toLowerCase();
+    var matches = App.data.allBranches().filter(function (b) {
+      return !search || u.includesCI(b.name, search) || u.includesCI(b.district, search);
+    });
+
+    var grid = h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      W.listHeader({
+        iconHtml: App.ICONS.branches,
+        title: "All Branches",
+        count: matches.length,
+        subtitle: "Every branch network-wide · click a card for full detail",
+        controls: W.searchInput({
+          id: "bm-search",
+          value: ctx.state.bmSearch,
+          placeholder: "Search branch or district…",
+          width: "280px",
+          onInput: function (v) { ctx.setState({ bmSearch: v }); },
+        }),
+      }),
+      matches.length
+        ? h("div.branch-grid", { style: "max-height:560px;" }, matches.slice(0, 400).map(function (b) {
+            return h(
+              "button.branch-card",
+              {
+                type: "button",
+                onclick: function () {
+                  ctx.setState({ selectedRegion: b.district, selectedBranchId: b.id });
+                  ctx.go("overview");
+                },
+              },
+              h(
+                "div.flex-between",
+                { style: "align-items:flex-start;" },
+                h("div", { style: "min-width:0;" },
+                  h("div.branch-card-name", b.name),
+                  h("div.branch-card-district", b.district)),
+                h("span.dot.md", {
+                  style: "margin-top:4px;background:" + u.connectivityColor(b.connectivity) + ";",
+                })
+              ),
+              h("div.flex.gap-6", { style: "margin-top:10px;" },
+                W.panelBadge(b.panelStatus, "sm"),
+                W.connBadge(b.connectivity, "sm"))
+            );
+          }))
+        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+            "No branch matches that search.")
+    );
+
+    return h("div", summary, districtTable, grid);
+  }
+
+  App.views = App.views || {};
+  App.views.branchMonitoring = {
+    label: "Branch Monitoring",
+    icon: "branches",
+    title: "Branch Monitoring",
+    subtitle: "Per-branch status and details",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/intrusionStatus.js ==== */
+/* Intrusion Status: current arm/alarm/fault/tamper state, plus incidents
+   that already cleared earlier today. Every counter opens the list behind it. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var LIVE_FILTERS = {
+    armed: { title: "Armed Branches", match: function (b) { return b.panelStatus === "Armed"; } },
+    disarmed: { title: "Disarmed Branches", match: function (b) { return b.panelStatus === "Disarmed"; } },
+    alarm: { title: "Alarm Active Branches", match: function (b) { return b.panelStatus === "Alarm Active"; } },
+    fault: { title: "Fault Branches", match: function (b) { return b.panelStatus === "Fault"; } },
+  };
+
+  function openBranch(ctx, branch) {
+    ctx.setState({ selectedRegion: branch.district, selectedBranchId: branch.id });
+    ctx.go("overview");
+  }
+
+  function livePanel(ctx) {
+    var key = ctx.state.liveStatusFilter;
+    if (!key) return null;
+
+    if (key === "tamper") {
+      var tampered = App.data.tamperBranches();
+      return W.filterPanel({
+        title: "Tamper Active Branches",
+        count: tampered.length,
+        subtitle: "Zones reporting an open tamper switch right now",
+        rows: tampered,
+        columns: [
+          { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
+          { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
+          { label: "Zone", className: "sub", render: function (r) { return r.zone; } },
+          { label: "Since", className: "mono", render: function (r) { return r.time; } },
+        ],
+        onRowClick: function (r) { openBranch(ctx, r.branch); },
+        onClose: function () { ctx.setState({ liveStatusFilter: null }); },
+      });
+    }
+
+    var meta = LIVE_FILTERS[key];
+    if (!meta) return null;
+    var rows = App.data.allBranches().filter(meta.match);
+    return W.filterPanel({
+      title: meta.title,
+      count: rows.length,
+      subtitle: "Click a row to open that branch",
+      rows: rows.slice(0, 120),
+      columns: [
+        { label: "Branch", key: "name", className: "name" },
+        { label: "District", key: "district", className: "sub" },
+        { label: "Panel Status", render: function (b) { return W.panelBadge(b.panelStatus); } },
+        { label: "Connectivity", render: function (b) { return W.connBadge(b.connectivity); } },
+      ],
+      onRowClick: function (b) { openBranch(ctx, b); },
+      onClose: function () { ctx.setState({ liveStatusFilter: null }); },
+    });
+  }
+
+  function restoredPanel(ctx) {
+    var key = ctx.state.restoreFilter;
+    if (!key) return null;
+    var titles = { alarm: "Alarm Restored", fault: "Fault Restored", tamper: "Tamper Restored" };
+    var rows = App.data.restoredEvents()[key];
+
+    return W.filterPanel({
+      title: titles[key],
+      count: rows.length,
+      subtitle: "Earlier-today incidents that have already cleared · click a row to open that branch",
+      rows: rows,
+      columns: [
+        { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
+        { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
+        { label: "Zone", className: "sub", render: function (r) { return r.zone; } },
+        {
+          label: "Restored At",
+          render: function (r) {
+            return h("span.mono", { style: "color:" + COLORS.green + ";" }, r.time);
+          },
+        },
+      ],
+      onRowClick: function (r) { openBranch(ctx, r.branch); },
+      onClose: function () { ctx.setState({ restoreFilter: null }); },
+    });
+  }
+
+  /* Branches whose panel is currently in a condition an operator must act on. */
+  function openIncidents() {
+    var rows = App.data.allBranches()
+      .filter(function (b) {
+        return b.panelStatus === "Alarm Active" || b.panelStatus === "Fault";
+      })
+      .map(function (b) {
+        var zoneEvent = (b.events || []).find(function (e) { return e.zone; });
+        return {
+          branch: b,
+          name: b.name,
+          district: b.district,
+          panelStatus: b.panelStatus,
+          zone: zoneEvent ? zoneEvent.zone : "--",
+          since: zoneEvent ? zoneEvent.time : "--",
+        };
+      });
+
+    App.data.tamperBranches().forEach(function (t) {
+      rows.push({
+        branch: t.branch,
+        name: t.branch.name,
+        district: t.branch.district,
+        panelStatus: "Tamper Active",
+        zone: t.zone,
+        since: t.time,
+      });
+    });
+
+    return rows.sort(function (a, b) { return a.since < b.since ? 1 : -1; });
+  }
+
+  function render(ctx) {
+    var stats = App.data.networkStats();
+    var restored = App.data.restoredEvents();
+    var tamperActive = App.data.tamperBranches().length;
+
+    var cardDefs = [
+      { key: "armed", kind: "live", label: "Armed", value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
+      { key: "disarmed", kind: "live", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
+      { key: "alarm", kind: "live", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.alerts },
+      { key: "alarm", kind: "restored", label: "Alarm Restored", value: restored.alarm.length, color: COLORS.green, iconHtml: App.ICONS.alerts },
+      { key: "fault", kind: "live", label: "Fault", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
+      { key: "fault", kind: "restored", label: "Fault Restored", value: restored.fault.length, color: COLORS.green, iconHtml: App.ICONS.fault },
+      { key: "tamper", kind: "live", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.zones },
+      { key: "tamper", kind: "restored", label: "Tamper Restored", value: restored.tamper.length, color: COLORS.green, iconHtml: App.ICONS.zones },
+    ];
+
+    var cards = cardDefs.map(function (d) {
+      var isRestored = d.kind === "restored";
+      var selected = isRestored
+        ? ctx.state.restoreFilter === d.key
+        : ctx.state.liveStatusFilter === d.key;
+      return {
+        compact: true,
+        label: d.label,
+        value: d.value,
+        hint: "Click to verify",
+        color: d.color,
+        iconHtml: d.iconHtml,
+        selected: selected,
+        onClick: function () {
+          if (isRestored) {
+            ctx.setState({
+              restoreFilter: selected ? null : d.key,
+              liveStatusFilter: null,
+            });
+          } else {
+            ctx.setState({
+              liveStatusFilter: selected ? null : d.key,
+              restoreFilter: null,
+            });
+          }
+        },
+      };
+    });
+
+    var incidents = openIncidents();
+
+    return h(
+      "div",
+      h("div.mb-lg", W.kpiRow(cards, 4)),
+      livePanel(ctx),
+      restoredPanel(ctx),
+      h(
+        "div.card",
+        { style: "overflow:hidden;" },
+        h("div.card-head",
+          h("div",
+            h("div.card-title", "Branches Currently in Alarm / Fault / Tamper ",
+              h("span.muted-count", "(" + incidents.length + ")")),
+            h("div.card-sub", "Click a row to view the full branch detail"))),
+        h("div.table-scroll", { style: "max-height:460px;" }, W.dataTable([
+          { label: "Branch", key: "name", className: "name" },
+          { label: "District", key: "district", className: "sub" },
+          { label: "Status", render: function (r) { return W.panelBadge(r.panelStatus); } },
+          { label: "Zone", key: "zone", className: "sub" },
+          { label: "Since", key: "since", className: "mono" },
+        ], incidents, {
+          onRowClick: function (r) { openBranch(ctx, r.branch); },
+        }))
+      )
+    );
+  }
+
+  App.views = App.views || {};
+  App.views.intrusionStatus = {
+    label: "Intrusion Status",
+    icon: "intrusion",
+    title: "Intrusion Status",
+    subtitle: "Arm, alarm, fault and tamper state",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/zoneStatus.js ==== */
+/* Zone Status: pick a branch, then read its 8-zone panel in one of three
+   presentations - grand cards, a dark showcase, or a dense table. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var iconChip = App.dom.iconChip;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var VIEW_MODES = [
+    { key: "grand", label: "Grand View" },
+    { key: "showcase", label: "Showcase View" },
+    { key: "table", label: "Table View" },
+  ];
+
+  var PICKER_MODES = [
+    { key: "district", label: "By District" },
+    { key: "grid", label: "All (Grid)" },
+  ];
+
+  /* The branch the view opens on: the first one actually in alarm, so the
+     default screen shows a panel worth looking at. */
+  function defaultBranch() {
+    var all = App.data.allBranches();
+    return all.find(function (b) { return b.panelStatus === "Alarm Active"; }) || all[0];
+  }
+
+  function heroStats(zones) {
+    var count = function (fn) { return zones.filter(fn).length; };
+    var normal = count(function (z) { return z.dominantLabel === "Normal"; });
+    return {
+      active: count(function (z) { return z.status === "Active"; }),
+      alarm: count(function (z) { return z.condition === "Alarm"; }),
+      fault: count(function (z) { return z.fault === "Fault"; }),
+      tamper: count(function (z) { return z.tamper === "Tamper"; }),
+      healthPct: Math.round((normal / (zones.length || 1)) * 100),
+    };
+  }
+
+  function picker(ctx, selectedId) {
+    var search = (ctx.state.zoneSearch || "").toLowerCase();
+    var pickerMode = ctx.state.zonePickerMode || "district";
+    var body;
+
+    if (pickerMode === "district") {
+      var railDistrict = ctx.state.zonePickerDistrict ||
+        (App.data.branchById(selectedId) || {}).district ||
+        App.data.REGIONS[0].name;
+
+      var rail = h("div.district-rail", App.data.REGIONS.map(function (r) {
+        return h(
+          "button.rail-row" + (r.name === railDistrict ? ".is-selected" : ""),
+          { type: "button", onclick: function () { ctx.setState({ zonePickerDistrict: r.name }); } },
+          h("span", r.name),
+          h("span.rail-count", String(r.branchCount))
+        );
+      }));
+
+      var branches = App.data.branchesIn(railDistrict).filter(function (b) {
+        return !search || u.includesCI(b.name, search);
+      });
+
+      var tiles = h("div.picker-grid", branches.length
+        ? branches.map(function (b) {
+            return h(
+              "button.picker-tile" + (b.id === selectedId ? ".is-selected" : ""),
+              { type: "button", onclick: function () { ctx.setState({ zoneSelectedBranchId: b.id }); } },
+              h("span", b.name),
+              W.panelBadge(b.panelStatus, "sm")
+            );
+          })
+        : h("div.row-item-sub", "No branch in this district matches that search."));
+
+      body = h("div.grid", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
+    } else {
+      var all = App.data.allBranches().filter(function (b) {
+        return !search || u.includesCI(b.name, search) || u.includesCI(b.district, search);
+      });
+      body = h("div.picker-compact", all.map(function (b) {
+        return h(
+          "button.picker-chip" + (b.id === selectedId ? ".is-selected" : ""),
+          { type: "button", onclick: function () { ctx.setState({ zoneSelectedBranchId: b.id }); } },
+          h("span.dot", { style: "background:" + u.panelStatusColor(b.panelStatus) + ";" }),
+          h("span", b.name)
+        );
+      }));
+    }
+
+    return h(
+      "div.card.mb-lg",
+      { style: "overflow:hidden;" },
+      h(
+        "div.card-head",
+        h("div.card-title", "Select a branch ",
+          h("span.muted-count", "(" + App.data.networkStats().totalBranches + " total)")),
+        h(
+          "div.flex-center.flex-wrap",
+          W.segmented(PICKER_MODES, pickerMode, function (m) {
+            ctx.setState({ zonePickerMode: m });
+          }),
+          W.segmented(VIEW_MODES, ctx.state.zoneViewMode || "showcase", function (m) {
+            ctx.setState({ zoneViewMode: m });
+          }),
+          W.searchInput({
+            id: "zone-search",
+            value: ctx.state.zoneSearch,
+            placeholder: "Search branch or district…",
+            width: "220px",
+            onInput: function (v) { ctx.setState({ zoneSearch: v }); },
+          })
+        )
+      ),
+      body
+    );
+  }
+
+  function grandView(branch, zones) {
+    var hero = heroStats(zones);
+    var stat = function (label, value, color) {
+      return h("div.zone-hero-stat",
+        h("div.zone-hero-num", { style: color ? "color:" + color + ";" : "" }, String(value)),
+        h("div.zone-hero-cap", label));
+    };
+
+    var lightBadge = function (text) {
+      return h("span.badge", {
+        style: "background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.3);",
+      }, text);
+    };
+
+    return h(
+      "div",
+      h(
+        "div.zone-hero",
+        h(
+          "div.flex-center",
+          { style: "gap:18px;" },
+          h("span.icon-chip", {
+            style: "width:60px;height:60px;flex:0 0 60px;border-radius:16px;color:#fff;" +
+              "background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);",
+            html: App.ICONS.branches,
+          }),
+          h(
+            "div",
+            h("div.zone-hero-name", branch.name),
+            h("div.zone-hero-sub", branch.district + " · 8-zone burglar alarm panel"),
+            h("div.flex.gap-8", { style: "margin-top:12px;" },
+              lightBadge(branch.panelStatus), lightBadge(branch.connectivity))
+          )
+        ),
+        h("div.zone-hero-stats",
+          stat("Active", hero.active),
+          stat("Alarm", hero.alarm, "#fca5a5"),
+          stat("Fault", hero.fault, "#fcd34d"),
+          stat("Tamper", hero.tamper, "#fdba74"))
+      ),
+      h("div.grid.grid-4", zones.map(function (z) {
+        return h(
+          "div.zone-card",
+          h("span.zone-card-bar", { style: "background:" + z.dominant + ";" }),
+          h("div.flex-between",
+            iconChip(z.iconHtml, z.dominant, { class: "lg" }),
+            h("span.zone-num", "ZONE " + z.num)),
+          h("div.zone-card-name", z.name),
+          h("div", { style: "margin-top:10px;" },
+            h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
+              z.dominantLabel)),
+          h("div.flex.gap-6.flex-wrap", { style: "margin-top:10px;" },
+            badge(z.status, z.statusColor, "sm"),
+            badge(z.fault, z.faultColor, "sm"),
+            badge(z.tamper, z.tamperColor, "sm")),
+          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+        );
+      }))
+    );
+  }
+
+  function showcaseView(branch, zones) {
+    var hero = heroStats(zones);
+    var legend = function (color, text) {
+      return h("div", h("span.dot.md", { style: "background:" + color + ";" }), h("span", text));
+    };
+    var darkBadge = function (text) {
+      return h("span.badge", {
+        style: "background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff;",
+      }, text);
+    };
+
+    return h(
+      "div.showcase",
+      h(
+        "div.showcase-head",
+        h(
+          "div.flex-center",
+          { style: "gap:20px;" },
+          h("span.icon-chip", {
+            style: "width:64px;height:64px;flex:0 0 64px;border-radius:18px;color:#7dd3fc;" +
+              "background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);",
+            html: App.ICONS.branches,
+          }),
+          h(
+            "div",
+            h("div.showcase-name", branch.name),
+            h("div.showcase-sub", branch.district + " · 8-zone burglar alarm panel"),
+            h("div.flex.gap-8", { style: "margin-top:14px;" },
+              darkBadge(branch.panelStatus), darkBadge(branch.connectivity))
+          )
+        ),
+        h(
+          "div.flex-center",
+          { style: "gap:22px;" },
+          h("div.donut", {
+            style: "background:conic-gradient(#22c55e 0deg " + hero.healthPct * 3.6 +
+              "deg, rgba(255,255,255,.14) " + hero.healthPct * 3.6 + "deg 360deg);",
+          }, h("div.donut-core",
+            h("div.donut-pct", hero.healthPct + "%"),
+            h("div.donut-cap", "NORMAL"))),
+          h("div.showcase-legend",
+            legend("#f87171", hero.alarm + " Alarm"),
+            legend("#fbbf24", hero.fault + " Fault"),
+            legend("#fb923c", hero.tamper + " Tamper"))
+        )
+      ),
+      h("div.grid.grid-4", { style: "gap:18px;" }, zones.map(function (z) {
+        var glow = z.dominantLabel === "Normal"
+          ? "border-color:" + z.dominant + "22;"
+          : "border-color:" + z.dominant + "66;box-shadow:0 0 0 1px " + z.dominant +
+            "40, 0 0 30px " + z.dominant + "40, 0 4px 16px rgba(0,0,0,.4);";
+        return h(
+          "div.zone-card.dark",
+          { style: glow },
+          h("div.zone-watermark", String(z.num)),
+          h("span.icon-chip", {
+            style: "width:44px;height:44px;flex:0 0 44px;border-radius:12px;position:relative;z-index:1;" +
+              "background:" + z.dominant + "22;color:" + z.dominant + ";border-color:" + z.dominant + "55;",
+            html: z.iconHtml,
+          }),
+          h("div.zone-card-name", z.name),
+          h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
+            h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
+              z.dominantLabel)),
+          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+        );
+      }))
+    );
+  }
+
+  function tableView(branch, zones) {
+    return h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      W.listHeader({
+        iconHtml: App.ICONS.branches,
+        title: branch.name,
+        subtitle: branch.district + " · 8-zone panel detail",
+        controls: h("div.flex.gap-8",
+          W.panelBadge(branch.panelStatus), W.connBadge(branch.connectivity)),
+      }),
+      h("div.table-scroll", W.dataTable([
+        { label: "Zone Name", key: "name", className: "name" },
+        { label: "Zone Status", render: function (z) { return badge(z.status, z.statusColor); } },
+        { label: "Alarm / Normal", render: function (z) { return badge(z.condition, z.conditionColor); } },
+        { label: "Fault", render: function (z) { return badge(z.fault, z.faultColor); } },
+        { label: "Tamper", render: function (z) { return badge(z.tamper, z.tamperColor); } },
+        { label: "Last Trigger Time", key: "lastTrigger", className: "mono" },
+      ], zones))
+    );
+  }
+
+  function render(ctx) {
+    var fallback = defaultBranch();
+    var branch = App.data.branchById(ctx.state.zoneSelectedBranchId) || fallback;
+    var zones = App.data.zonesFor(branch);
+    var mode = ctx.state.zoneViewMode || "showcase";
+
+    var detail = mode === "grand" ? grandView(branch, zones)
+      : mode === "table" ? tableView(branch, zones)
+      : showcaseView(branch, zones);
+
+    return h("div", picker(ctx, branch.id), detail);
+  }
+
+  App.views = App.views || {};
+  App.views.zoneStatus = {
+    label: "Zone Status",
+    icon: "zones",
+    title: "Zone Status",
+    subtitle: "8-zone panel detail per branch",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/powerStatus.js ==== */
+/* Power Status: AC mains and battery-backup health across the network. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var ROW_LIMIT = 400;
+
+  var FILTERS = {
+    acNormal: { title: "AC Power Normal", side: "ac", match: function (x) { return x.power.acStatus === "Normal"; } },
+    acFail: { title: "AC Fail", side: "ac", match: function (x) { return x.power.acStatus === "Fail"; } },
+    acRestored: { title: "AC Restored Today", side: "ac", restored: true, match: function (x) { return x.power.acRestoredToday; } },
+    batteryNormal: { title: "Battery Normal", side: "battery", match: function (x) { return x.power.batteryStatus === "Normal"; } },
+    batteryFail: { title: "Battery Fail", side: "battery", match: function (x) { return x.power.batteryStatus === "Fail"; } },
+    batteryRestored: { title: "Battery Restored Today", side: "battery", restored: true, match: function (x) { return x.power.batteryRestoredToday; } },
+  };
+
+  function panel(ctx) {
+    var key = ctx.state.powerFilter;
+    if (!key || !FILTERS[key]) return null;
+    var meta = FILTERS[key];
+    var rows = App.data.powerRows().filter(meta.match);
+
+    var columns = [
+      { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
+      { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
+    ];
+
+    if (meta.side === "ac") {
+      columns.push({
+        label: "AC Status",
+        render: function (r) { return badge(r.power.acStatus, r.power.acColor); },
+      });
+    } else {
+      columns.push({
+        label: "Battery",
+        render: function (r) { return badge(r.power.batteryStatus, r.power.batteryColor); },
+      });
+      columns.push({
+        label: "Voltage",
+        align: "right",
+        render: function (r) { return r.power.voltage.toFixed(1) + "V"; },
+      });
+      columns.push({
+        label: "Charging",
+        render: function (r) { return badge(r.power.chargingStatus, r.power.chargingColor); },
+      });
+    }
+
+    if (meta.restored) {
+      columns.push({
+        label: "Restored At",
+        render: function (r) {
+          var at = r.power.acRestoredAt || r.power.batteryRestoredAt || "--";
+          return h("span.mono", { style: "color:" + COLORS.green + ";" }, at);
+        },
+      });
+    }
+
+    return W.filterPanel({
+      title: meta.title,
+      count: rows.length,
+      subtitle: "Click a row to open that branch",
+      maxHeight: 460,
+      rows: rows.slice(0, 200),
+      columns: columns,
+      onRowClick: function (r) {
+        ctx.setState({ selectedRegion: r.branch.district, selectedBranchId: r.branch.id });
+        ctx.go("overview");
+      },
+      onClose: function () { ctx.setState({ powerFilter: null }); },
+    });
+  }
+
+  /* Shown when no counter is selected, so the page is useful on arrival. */
+  function overviewTable(ctx, rows) {
+    var search = (ctx.state.powerSearch || "").toLowerCase();
+    var matches = rows.filter(function (r) {
+      return !search || u.includesCI(r.branch.name, search) || u.includesCI(r.branch.district, search);
+    });
+
+    return h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      W.listHeader({
+        iconHtml: App.ICONS.power,
+        title: "Power Health by Branch",
+        count: matches.length,
+        subtitle: "Pick a counter above to narrow this down · click a row to open the branch",
+        controls: W.searchInput({
+          id: "power-search",
+          value: ctx.state.powerSearch,
+          placeholder: "Search branch or district…",
+          width: "280px",
+          onInput: function (v) { ctx.setState({ powerSearch: v }); },
+        }),
+      }),
+      matches.length
+        ? h("div.table-scroll", { style: "max-height:560px;" }, W.dataTable([
+            { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
+            { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
+            { label: "AC Status", render: function (r) { return badge(r.power.acStatus, r.power.acColor); } },
+            { label: "Battery", render: function (r) { return badge(r.power.batteryStatus, r.power.batteryColor); } },
+            {
+              label: "Voltage", align: "right",
+              render: function (r) { return r.power.voltage.toFixed(1) + "V"; },
+            },
+            {
+              label: "Charging",
+              render: function (r) { return badge(r.power.chargingStatus, r.power.chargingColor); },
+            },
+          ], matches.slice(0, ROW_LIMIT), {
+            onRowClick: function (r) {
+              ctx.setState({ selectedRegion: r.branch.district, selectedBranchId: r.branch.id });
+              ctx.go("overview");
+            },
+          }))
+        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+            "No branch matches that search."),
+      matches.length > ROW_LIMIT
+        ? h("div", {
+            style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
+              "font-size:11.5px;color:var(--ink-faint);",
+          }, "Showing the first " + ROW_LIMIT + " of " + matches.length + " branches.")
+        : null
+    );
+  }
+
+  function render(ctx) {
+    var rows = App.data.powerRows();
+    var count = function (fn) { return rows.filter(fn).length; };
+
+    var cardDefs = [
+      { key: "acNormal", label: "AC Power Normal", value: count(function (x) { return x.power.acStatus === "Normal"; }), color: COLORS.green, iconHtml: App.ICONS.power },
+      { key: "acFail", label: "AC Fail", value: count(function (x) { return x.power.acStatus === "Fail"; }), color: COLORS.red, iconHtml: App.ICONS.power },
+      { key: "acRestored", label: "AC Restored", value: count(function (x) { return x.power.acRestoredToday; }), color: COLORS.green, iconHtml: App.ICONS.power },
+      { key: "batteryNormal", label: "Battery Normal", value: count(function (x) { return x.power.batteryStatus === "Normal"; }), color: COLORS.green, iconHtml: App.ICONS.battery },
+      { key: "batteryFail", label: "Battery Fail", value: count(function (x) { return x.power.batteryStatus === "Fail"; }), color: COLORS.red, iconHtml: App.ICONS.battery },
+      { key: "batteryRestored", label: "Battery Restored", value: count(function (x) { return x.power.batteryRestoredToday; }), color: COLORS.green, iconHtml: App.ICONS.battery },
+    ];
+
+    var cards = cardDefs.map(function (d) {
+      return {
+        compact: true,
+        label: d.label,
+        value: d.value,
+        hint: "Click to verify",
+        color: d.color,
+        iconHtml: d.iconHtml,
+        selected: ctx.state.powerFilter === d.key,
+        onClick: function () {
+          ctx.setState({ powerFilter: ctx.state.powerFilter === d.key ? null : d.key });
+        },
+      };
+    });
+
+    return h(
+      "div",
+      h("div.mb-lg", W.kpiRow(cards, 3)),
+      panel(ctx) || overviewTable(ctx, rows)
+    );
+  }
+
+  App.views = App.views || {};
+  App.views.powerStatus = {
+    label: "Power Status",
+    icon: "power",
+    title: "Power Status",
+    subtitle: "AC and battery backup health",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/liveActivities.js ==== */
+/* Live Activities: the network event feed, in a dark command-centre layout
+   or a lighter classic list. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var iconChip = App.dom.iconChip;
+  var W = App.widgets;
+
+  var FEED_LIMIT = 200;
+
+  var VIEW_MODES = [
+    { key: "command", label: "Command Center" },
+    { key: "classic", label: "Classic View" },
+  ];
+
+  function latestCard(event) {
+    var color = App.data.EVENT_COLORS[event.type];
+    return h(
+      "div.latest-card",
+      {
+        style: "border-color:" + color + "35;border-left:4px solid " + color +
+          ";box-shadow:0 4px 16px " + color + "1a;",
+      },
+      iconChip(App.EVENT_ICONS[event.type], color, { size: 52, radius: 14 }),
+      h(
+        "div.grow",
+        h("div.latest-eyebrow", "Latest Activity"),
+        h("div.flex-center.flex-wrap", { style: "gap:10px;" },
+          h("span.latest-branch", event.branch),
+          badge(event.type, color)),
+        h("div.latest-meta", event.district + " · " + (event.zone || "--"))
+      ),
+      h(
+        "div",
+        { style: "text-align:right;flex:0 0 auto;" },
+        h("span.dot.md", {
+          style: "display:inline-block;margin-right:6px;background:" + color +
+            ";box-shadow:0 0 6px " + color + ";",
+        }),
+        h("span.mono", { style: "font-size:12px;color:var(--ink-muted);" }, event.time)
+      )
+    );
+  }
+
+  function feedRow(event, dark) {
+    var color = App.data.EVENT_COLORS[event.type];
+    return h(
+      "div.feed-row" + (dark ? ".dark" : ""),
+      { style: dark ? "border-color:" + color + "30;" : "border-left:3px solid " + color + ";" },
+      h("span.icon-chip", {
+        style: dark
+          ? "width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:" + color +
+            "22;color:" + color + ";border-color:" + color + "55;"
+          : "width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:" + color +
+            "14;color:" + color + ";border-color:" + color + "30;",
+        html: App.EVENT_ICONS[event.type],
+      }),
+      h(
+        "div.grow",
+        dark
+          ? h("div.feed-branch", event.branch)
+          : h("div.flex-center.flex-wrap", { style: "gap:8px;" },
+              h("span.feed-branch", event.branch), badge(event.type, color)),
+        h("div.feed-meta", event.district + " · " + (event.zone || "--"))
+      ),
+      dark ? badge(event.type, color) : null,
+      dark
+        ? h("div.feed-time-dark", event.time)
+        : h("span.time-pill", {
+            style: "color:" + color + ";background:" + color + "12;",
+          }, event.time)
+    );
+  }
+
+  function render(ctx) {
+    var all = App.data.allEvents();
+    var counts = App.data.eventCounts();
+    var filter = ctx.state.liveActivityFilter;
+    var mode = ctx.state.liveViewMode || "command";
+
+    var filtered = filter
+      ? all.filter(function (e) { return e.type === filter; })
+      : all;
+    var shown = filtered.slice(0, FEED_LIMIT);
+
+    var chipOpts = {
+      types: App.data.EVENT_TYPES,
+      counts: counts,
+      colors: App.data.EVENT_COLORS,
+      active: filter,
+      onPick: function (t) {
+        ctx.setState({ liveActivityFilter: filter === t ? null : t });
+      },
+      onClear: function () { ctx.setState({ liveActivityFilter: null }); },
+    };
+
+    var switcher = h("div.flex", { style: "justify-content:flex-end;margin-bottom:14px;" },
+      W.segmented(VIEW_MODES, mode, function (m) { ctx.setState({ liveViewMode: m }); }));
+
+    var body;
+    if (mode === "command") {
+      body = h(
+        "div.command-panel",
+        h(
+          "div.command-head",
+          h(
+            "div",
+            h("div.command-title", "Live Activity Feed"),
+            h("div.command-sub", filter
+              ? filtered.length + " " + filter + " events · " + all.length + " total today"
+              : all.length + " events across the network today")
+          ),
+          W.chipRow(Object.assign({}, chipOpts, { dark: true }))
+        ),
+        h("div", { style: "max-height:560px;overflow-y:auto;" },
+          shown.map(function (e) { return feedRow(e, true); }))
+      );
+    } else {
+      body = h(
+        "div",
+        W.chipRow(chipOpts),
+        h("div.feed", shown.map(function (e) { return feedRow(e, false); }))
+      );
+    }
+
+    return h(
+      "div",
+      all[0] ? latestCard(all[0]) : null,
+      switcher,
+      body,
+      filtered.length > FEED_LIMIT
+        ? h("div", {
+            style: "text-align:center;font-size:11.5px;color:var(--ink-faint);margin-top:12px;",
+          }, "Showing the newest " + FEED_LIMIT + " of " + filtered.length +
+             " events. Use Event History for the full log.")
+        : null
+    );
+  }
+
+
+  App.views = App.views || {};
+  App.views.liveActivities = {
+    label: "Live Activities",
+    icon: "activities",
+    title: "Live Activities",
+    subtitle: "Real-time panel event feed",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/eventHistory.js ==== */
+/* Event History: the searchable, filterable log of every panel event. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var ROW_LIMIT = 400;
+
+  function render(ctx) {
+    var all = App.data.allEvents();
+    var counts = App.data.eventCounts();
+    var typeFilter = ctx.state.ehTypeFilter;
+    var search = (ctx.state.ehSearch || "").toLowerCase();
+
+    var matches = all.filter(function (e) {
+      if (typeFilter && e.type !== typeFilter) return false;
+      if (!search) return true;
+      return u.includesCI(e.branch, search) || u.includesCI(e.district, search);
+    });
+
+    var busiest = App.data.EVENT_TYPES.slice().sort(function (a, b) {
+      return counts[b] - counts[a];
+    })[0];
+
+    var summary = W.summaryCards([
+      { label: "Total Events Logged", value: all.length, color: COLORS.navy, iconHtml: App.ICONS.history },
+      {
+        label: "Events Today",
+        value: all.filter(function (e) { return e.time.indexOf(App.data.TODAY) === 0; }).length,
+        color: COLORS.navy,
+        iconHtml: App.ICONS.activities,
+      },
+      { label: "Most Frequent Event", value: busiest, color: COLORS.amber, iconHtml: App.ICONS.alerts },
+    ], 3);
+
+    var chips = W.chipRow({
+      types: App.data.EVENT_TYPES,
+      counts: counts,
+      colors: App.data.EVENT_COLORS,
+      active: typeFilter,
+      onPick: function (t) { ctx.setState({ ehTypeFilter: typeFilter === t ? null : t }); },
+      onClear: function () { ctx.setState({ ehTypeFilter: null }); },
+    });
+
+    var table = h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      W.listHeader({
+        title: "Event Log",
+        count: matches.length,
+        subtitle: "Newest first · click a chip to filter by event type",
+        controls: W.searchInput({
+          id: "eh-search",
+          value: ctx.state.ehSearch,
+          placeholder: "Search branch or district…",
+          width: "280px",
+          onInput: function (v) { ctx.setState({ ehSearch: v }); },
+        }),
+      }),
+      matches.length
+        ? h("div.table-scroll", { style: "max-height:600px;" }, W.dataTable([
+            { label: "Time", key: "time", className: "mono" },
+            { label: "Branch", key: "branch", className: "name" },
+            { label: "District", key: "district", className: "sub" },
+            {
+              label: "Event",
+              render: function (e) { return badge(e.type, App.data.EVENT_COLORS[e.type]); },
+            },
+            { label: "Zone", className: "sub", render: function (e) { return e.zone || "--"; } },
+          ], matches.slice(0, ROW_LIMIT), {
+            onRowClick: function (e) {
+              var branch = App.data.branchById(e.branchId);
+              if (!branch) return;
+              ctx.setState({ selectedRegion: branch.district, selectedBranchId: branch.id });
+              ctx.go("overview");
+            },
+          }))
+        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+            "No event matches those filters."),
+      matches.length > ROW_LIMIT
+        ? h("div", {
+            style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
+              "font-size:11.5px;color:var(--ink-faint);",
+          }, "Showing the newest " + ROW_LIMIT + " of " + matches.length +
+             " matching events. Narrow the search or export the report for the rest.")
+        : null
+    );
+
+    return h("div", summary, chips, table);
+  }
+
+  App.views = App.views || {};
+  App.views.eventHistory = {
+    label: "Event History",
+    icon: "history",
+    title: "Event History",
+    subtitle: "Past panel event log",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/locationMaps.js ==== */
+/* Location Maps: every district plotted by its centroid, sized by branch
+   count and coloured by whether it needs attention. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  /* Bounds that comfortably contain mainland Tamil Nadu. */
+  var BOUNDS = { latMin: 7.9, latMax: 13.7, lonMin: 76.1, lonMax: 80.5 };
+  var VIEW = { w: 880, h: 1000, pad: 42 };
+
+  function project(coords) {
+    var innerW = VIEW.w - VIEW.pad * 2;
+    var innerH = VIEW.h - VIEW.pad * 2;
+    var x = VIEW.pad + ((coords[1] - BOUNDS.lonMin) / (BOUNDS.lonMax - BOUNDS.lonMin)) * innerW;
+    var y = VIEW.pad + ((BOUNDS.latMax - coords[0]) / (BOUNDS.latMax - BOUNDS.latMin)) * innerH;
+    return { x: x, y: y };
+  }
+
+  function el(name, attrs) {
+    var node = document.createElementNS(SVG_NS, name);
+    Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    return node;
+  }
+
+  /* Three severity tiers. A flat normal/abnormal split would paint almost
+     every district amber, because 50 alarms and 20 faults spread thinly
+     across 38 districts - the tiers keep the map worth reading. */
+  var TIERS = [
+    { key: "critical", label: "2 or more alarms", color: COLORS.red, test: function (s) { return s.alarm >= 2; } },
+    { key: "watch", label: "1 alarm or any fault", color: COLORS.amber, test: function (s) { return s.alarm > 0 || s.fault > 0; } },
+    { key: "clear", label: "No alarm or fault", color: COLORS.green, test: function () { return true; } },
+  ];
+
+  function districtPoints() {
+    return App.data.REGIONS.map(function (r) {
+      var s = App.data.districtStats(r.name);
+      var tier = TIERS.find(function (t) { return t.test(s); });
+      return {
+        name: r.name,
+        stats: s,
+        pos: project(r.coords),
+        radius: 9 + Math.min(r.branchCount, 40) * 0.42,
+        color: tier.color,
+        tier: tier.key,
+        highlight: tier.key !== "clear",
+      };
+    });
+  }
+
+  function buildMap(ctx, points) {
+    var wrap = h("div.map-wrap");
+    var tooltip = h("div.map-tooltip");
+
+    var svg = el("svg", {
+      class: "map-svg",
+      viewBox: "0 0 " + VIEW.w + " " + VIEW.h,
+      preserveAspectRatio: "xMidYMid meet",
+    });
+
+    /* A faint graticule so the pins read as a map rather than a scatter. */
+    var grid = el("g", { opacity: "0.5" });
+    for (var lon = 77; lon <= 80; lon++) {
+      var gx = project([BOUNDS.latMax, lon]).x;
+      grid.appendChild(el("line", {
+        x1: gx, y1: VIEW.pad, x2: gx, y2: VIEW.h - VIEW.pad,
+        stroke: "#dce3ee", "stroke-width": 1, "stroke-dasharray": "4 6",
+      }));
+    }
+    for (var lat = 8; lat <= 13; lat++) {
+      var gy = project([lat, BOUNDS.lonMin]).y;
+      grid.appendChild(el("line", {
+        x1: VIEW.pad, y1: gy, x2: VIEW.w - VIEW.pad, y2: gy,
+        stroke: "#dce3ee", "stroke-width": 1, "stroke-dasharray": "4 6",
+      }));
+    }
+    svg.appendChild(grid);
+
+    /* District centroids sit close together in the north-east, so a label is
+       dropped when it would collide with one already placed. The pin stays,
+       and hovering still names it. */
+    var overlaps = function (a, b) {
+      return !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2);
+    };
+
+    /* Labels must clear both the other labels and every pin, so start the
+       occupied list with the circles themselves. */
+    var blocked = points.map(function (p) {
+      return {
+        owner: p.name,
+        x1: p.pos.x - p.radius, x2: p.pos.x + p.radius,
+        y1: p.pos.y - p.radius, y2: p.pos.y + p.radius,
+      };
+    });
+
+    function labelFits(p) {
+      var box = {
+        owner: p.name,
+        x1: p.pos.x - p.name.length * 3.2,
+        x2: p.pos.x + p.name.length * 3.2,
+        y1: p.pos.y + p.radius + 4,
+        y2: p.pos.y + p.radius + 17,
+      };
+      var clash = blocked.some(function (b) {
+        return b.owner !== p.name && overlaps(box, b);
+      });
+      if (!clash) blocked.push(box);
+      return !clash;
+    }
+
+    /* Largest pins first, so small ones stay clickable on top. */
+    points.slice().sort(function (a, b) { return b.radius - a.radius; }).forEach(function (p) {
+      var group = el("g", { class: "map-pin" });
+
+      if (p.highlight) {
+        group.appendChild(el("circle", {
+          cx: p.pos.x, cy: p.pos.y, r: p.radius + 6,
+          fill: p.color, opacity: "0.14",
+        }));
+      }
+
+      group.appendChild(el("circle", {
+        cx: p.pos.x, cy: p.pos.y, r: p.radius,
+        fill: p.color, "fill-opacity": "0.85",
+        stroke: "#ffffff", "stroke-width": 1.5,
+      }));
+
+      if (labelFits(p)) {
+        var label = el("text", {
+          x: p.pos.x, y: p.pos.y + p.radius + 13,
+          "text-anchor": "middle",
+          "font-size": "11",
+          "font-weight": "600",
+          fill: "#334155",
+          stroke: "#f2f5fa",
+          "stroke-width": "3.5",
+          "paint-order": "stroke",
+        });
+        label.textContent = p.name;
+        group.appendChild(label);
+      }
+
+      var count = el("text", {
+        x: p.pos.x, y: p.pos.y + 3.5,
+        "text-anchor": "middle",
+        "font-size": "10",
+        "font-weight": "700",
+        fill: "#ffffff",
+      });
+      count.textContent = String(p.stats.total);
+      group.appendChild(count);
+
+      group.addEventListener("mousemove", function (e) {
+        var rect = wrap.getBoundingClientRect();
+        tooltip.innerHTML =
+          "<b>" + p.name + "</b><br>" +
+          p.stats.total + " branches · " + p.stats.online + " online<br>" +
+          p.stats.offline + " offline · " + p.stats.alarm + " alarm · " + p.stats.fault + " fault";
+        tooltip.style.left = e.clientX - rect.left + "px";
+        tooltip.style.top = e.clientY - rect.top + "px";
+        tooltip.classList.add("is-visible");
+      });
+      group.addEventListener("mouseleave", function () {
+        tooltip.classList.remove("is-visible");
+      });
+      group.addEventListener("click", function () {
+        ctx.setState({ selectedRegion: p.name, selectedBranchId: null });
+        ctx.go("overview");
+      });
+
+      svg.appendChild(group);
+    });
+
+    wrap.appendChild(svg);
+    wrap.appendChild(tooltip);
+    return wrap;
+  }
+
+  function render(ctx) {
+    var stats = App.data.networkStats();
+    var points = districtPoints();
+    var normalPct = Math.round((stats.normal / (stats.totalBranches || 1)) * 100);
+    var attention = points.filter(function (p) { return p.highlight; })
+      .sort(function (a, b) {
+        return (b.stats.alarm * 10 + b.stats.fault) - (a.stats.alarm * 10 + a.stats.fault);
+      });
+
+    var legend = h(
+      "div.card",
+      { style: "padding:16px;" },
+      h("div.card-title", { style: "font-size:13px;margin-bottom:10px;" }, "Legend"),
+      h("div.flex-col", { style: "gap:8px;" }, TIERS.map(function (t) {
+        return h("div.flex-center",
+          h("span.dot.lg", { style: "background:" + t.color + ";" }),
+          h("span", { style: "font-size:12px;color:var(--ink-muted);" }, t.label));
+      })),
+      h("div", {
+        style: "font-size:10.5px;color:var(--ink-faint);margin-top:10px;line-height:1.6;",
+      }, "Pin size scales with branch count and the number inside it is that count. " +
+         "Hover for the offline / alarm / fault breakdown, click to open the district.")
+    );
+
+    var headline = h(
+      "div.card",
+      { style: "padding:16px;" },
+      h("div.card-title", { style: "font-size:13px;margin-bottom:4px;" }, normalPct + "% Normal"),
+      h("div", { style: "font-size:11.5px;color:var(--ink-soft);" },
+        "Across " + stats.totalDistricts + " districts and " +
+        stats.totalBranches + " branches network-wide.")
+    );
+
+    var watchlist = h(
+      "div.card",
+      { style: "padding:16px;min-height:0;" },
+      h("div.card-title", { style: "font-size:13px;margin-bottom:10px;" },
+        "Open Incidents by District ", h("span.muted-count", "(" + attention.length + ")")),
+      h("div.list-scroll", { style: "max-height:280px;" }, attention.map(function (p) {
+        return h(
+          "button.row-item",
+          {
+            type: "button",
+            onclick: function () {
+              ctx.setState({ selectedRegion: p.name, selectedBranchId: null });
+              ctx.go("overview");
+            },
+          },
+          h("div",
+            h("div.row-item-name", p.name),
+            h("div.row-item-sub",
+              p.stats.alarm + " alarm · " + p.stats.fault + " fault · " + p.stats.offline + " offline")),
+          App.dom.badge(String(p.stats.total), COLORS.navy)
+        );
+      }))
+    );
+
+
+    /* The map column is capped near the projection's own aspect ratio, so the
+       drawing fills its card instead of floating in white space. */
+    return h(
+      "div.grid",
+      { style: "grid-template-columns:minmax(0,760px) minmax(280px,1fr);align-items:start;" },
+      buildMap(ctx, points),
+      h("div.flex-col", { style: "gap:12px;" }, legend, headline, watchlist)
+    );
+  }
+
+  App.views = App.views || {};
+  App.views.locationMaps = {
+    label: "Location Maps",
+    icon: "map",
+    title: "Location Maps",
+    subtitle: "Geographic branch view",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/managerDetails.js ==== */
+/* Manager Details: one branch-manager record per branch. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var ROW_LIMIT = 400;
+
+  function render(ctx) {
+    var stats = App.data.networkStats();
+    var search = (ctx.state.mgrSearch || "").toLowerCase();
+
+    var matches = App.data.allBranches().filter(function (b) {
+      if (!search) return true;
+      return u.includesCI(b.name, search) ||
+        u.includesCI(b.district, search) ||
+        u.includesCI(b.manager.name, search);
+    });
+
+    var attention = matches.filter(function (b) { return b.status === "Attention"; }).length;
+
+    var summary = W.summaryCards([
+      { label: "Total Managers", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.managers },
+      { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
+      { label: "Branches Needing Attention", value: attention, color: COLORS.amber, iconHtml: App.ICONS.alerts },
+    ], 3);
+
+    var shown = matches.slice(0, ROW_LIMIT);
+
+    var table = h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      W.listHeader({
+        iconHtml: App.ICONS.managers,
+        color: "#4338ca",
+        title: "Branch Manager Directory",
+        count: matches.length,
+        subtitle: "One manager record per branch · showing " + shown.length,
+        controls: W.searchInput({
+          id: "mgr-search",
+          value: ctx.state.mgrSearch,
+          placeholder: "Search branch, district or manager…",
+          width: "300px",
+          onInput: function (v) { ctx.setState({ mgrSearch: v }); },
+        }),
+      }),
+      matches.length
+        ? h("div.table-scroll", { style: "max-height:600px;" }, W.dataTable([
+            { label: "Branch", key: "name", className: "name" },
+            { label: "District", key: "district", className: "sub" },
+            {
+              label: "Manager Name",
+              className: "sub",
+              render: function (b) {
+                return h("span", { style: "color:var(--ink-body);font-weight:600;" }, b.manager.name);
+              },
+            },
+            { label: "Manager ID", className: "mono", render: function (b) { return b.manager.id; } },
+            { label: "Contact", className: "mono", render: function (b) { return b.manager.contact; } },
+            { label: "Email", className: "sub", render: function (b) { return b.manager.email; } },
+            {
+              label: "Branch Status",
+              render: function (b) {
+                return badge(b.status, b.status === "Attention" ? COLORS.amber : COLORS.green);
+              },
+            },
+          ], shown, {
+            onRowClick: function (b) {
+              ctx.setState({ selectedRegion: b.district, selectedBranchId: b.id });
+              ctx.go("overview");
+            },
+          }))
+        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+            "No manager matches that search.")
+    );
+
+    return h("div", summary, table);
+  }
+
+  App.views = App.views || {};
+  App.views.managerDetails = {
+    label: "Manager Details",
+    icon: "managers",
+    title: "Manager Details",
+    subtitle: "Branch manager directory",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/reports.js ==== */
+/* Reports: ten canned reports over the same event store, each exportable
+   as CSV. Report definitions live in src/data/derived.js. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var badge = App.dom.badge;
+  var iconChip = App.dom.iconChip;
+  var W = App.widgets;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  var ROW_LIMIT = 400;
+
+  /* The most recent day present in the log; every range is measured from it. */
+  function latestDate(events) {
+    return events.reduce(function (acc, e) {
+      var d = e.time.slice(0, 10);
+      return d > acc ? d : acc;
+    }, events.length ? events[0].time.slice(0, 10) : App.data.TODAY);
+  }
+
+  function shiftDays(dateStr, delta) {
+    var d = new Date(dateStr + "T00:00:00");
+    d.setDate(d.getDate() + delta);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function scopeEvents(def, all) {
+    var latest = latestDate(all);
+    var rows = all;
+    if (def.range === "today") {
+      rows = rows.filter(function (e) { return e.time.slice(0, 10) === latest; });
+    } else if (def.range === "week") {
+      var from = shiftDays(latest, -6);
+      rows = rows.filter(function (e) { return e.time.slice(0, 10) >= from; });
+    } else if (def.range === "month") {
+      rows = rows.filter(function (e) { return e.time.slice(0, 7) === latest.slice(0, 7); });
+    }
+    if (def.types) {
+      rows = rows.filter(function (e) { return def.types.indexOf(e.type) !== -1; });
+    }
+    return rows;
+  }
+
+  /* Per-branch event tallies for the branch-wise report. */
+  function branchRollup(all) {
+    var byBranch = {};
+    all.forEach(function (e) {
+      var c = byBranch[e.branchId] ||
+        (byBranch[e.branchId] = { total: 0, alarm: 0, fault: 0, tamper: 0 });
+      c.total++;
+      if (e.type === "Alarm") c.alarm++;
+      else if (e.type === "Fault") c.fault++;
+      else if (e.type === "Tamper Activate") c.tamper++;
+    });
+
+    return App.data.allBranches().map(function (b) {
+      var c = byBranch[b.id] || { total: 0, alarm: 0, fault: 0, tamper: 0 };
+      return {
+        name: b.name, district: b.district, status: b.status,
+        total: c.total, alarm: c.alarm, fault: c.fault, tamper: c.tamper,
+      };
+    }).sort(function (a, b) { return b.total - a.total; });
+  }
+
+  function csvCell(value) {
+    var s = value === null || value === undefined ? "" : String(value);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function downloadCsv(filename, header, rows) {
+    var lines = [header.join(",")];
+    rows.forEach(function (r) { lines.push(r.map(csvCell).join(",")); });
+    var blob = new Blob(["﻿" + lines.join("\r\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function render(ctx) {
+    var defs = App.data.REPORT_DEFS;
+    var activeKey = ctx.state.reportType || defs[0].key;
+    var def = defs.find(function (d) { return d.key === activeKey; }) || defs[0];
+    var all = App.data.allEvents();
+    var isBranchwise = def.scope === "branchwise";
+
+    var branchRows = isBranchwise ? branchRollup(all) : [];
+    var eventRows = isBranchwise ? [] : scopeEvents(def, all);
+
+    var rail = h("div.report-rail", defs.map(function (d) {
+      return h(
+        "button.report-item" + (d.key === activeKey ? ".is-active" : ""),
+        { type: "button", onclick: function () { ctx.setState({ reportType: d.key }); } },
+        iconChip(App.ICONS[d.icon], d.color, { class: "sm" }),
+        h("div", { style: "min-width:0;" },
+          h("div.report-item-label", d.label),
+          h("div.report-item-desc", d.desc))
+      );
+    }));
+
+    var exportRows = isBranchwise
+      ? branchRows.map(function (r) {
+          return [r.name, r.district, r.total, r.alarm, r.fault, r.tamper, r.status];
+        })
+      : eventRows.map(function (e) {
+          return [e.time, e.branch, e.district, e.type, e.zone || ""];
+        });
+    var exportHeader = isBranchwise
+      ? ["Branch", "District", "Total Events", "Alarm", "Fault", "Tamper", "Status"]
+      : ["Time", "Branch", "District", "Event", "Zone"];
+
+    var toolbar = h(
+      "div.card",
+      { style: "padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;" },
+      h("div",
+        h("div.report-title", def.label),
+        h("div.report-desc", def.desc)),
+      h(
+        "div.flex-center",
+        { style: "gap:14px;" },
+        h("div.report-stamp", "Generated " + latestDate(all) + " " +
+          u.fmtClock(ctx.state.now).slice(0, 5)),
+        h("button.btn-primary", {
+          type: "button",
+          onclick: function () {
+            downloadCsv(def.key + "-report.csv", exportHeader, exportRows);
+          },
+        }, h("span", { html: App.ICONS.download, style: "display:flex;" }), "Download CSV")
+      )
+    );
+
+    var summary = isBranchwise
+      ? [
+          { label: "Branches Covered", value: branchRows.length, color: COLORS.navy },
+          {
+            label: "Branches Needing Attention",
+            value: branchRows.filter(function (r) { return r.status === "Attention"; }).length,
+            color: COLORS.amber,
+          },
+          {
+            label: "Total Events Logged",
+            value: branchRows.reduce(function (s, r) { return s + r.total; }, 0),
+            color: COLORS.navy,
+          },
+        ]
+      : [
+          { label: "Total Records", value: eventRows.length, color: def.color },
+          {
+            label: "Branches Involved",
+            value: new Set(eventRows.map(function (e) { return e.branchId; })).size,
+            color: COLORS.navy,
+          },
+          {
+            label: "Districts Involved",
+            value: new Set(eventRows.map(function (e) { return e.district; })).size,
+            color: COLORS.navy,
+          },
+        ];
+
+    var table = isBranchwise
+      ? W.dataTable([
+          { label: "Branch", key: "name", className: "name" },
+          { label: "District", key: "district", className: "sub" },
+          { label: "Total Events", key: "total", align: "right", className: "name" },
+          {
+            label: "Alarm", align: "right",
+            render: function (r) { return h("span", { style: "color:" + COLORS.red + ";" }, String(r.alarm)); },
+          },
+          {
+            label: "Fault", align: "right",
+            render: function (r) { return h("span", { style: "color:" + COLORS.amber + ";" }, String(r.fault)); },
+          },
+          {
+            label: "Tamper", align: "right",
+            render: function (r) { return h("span", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
+          },
+          {
+            label: "Status",
+            render: function (r) {
+              return badge(r.status, r.status === "Attention" ? COLORS.amber : COLORS.green);
+            },
+          },
+        ], branchRows.slice(0, ROW_LIMIT))
+      : W.dataTable([
+          { label: "Time", key: "time", className: "mono" },
+          { label: "Branch", key: "branch", className: "name" },
+          { label: "District", key: "district", className: "sub" },
+          { label: "Event", render: function (e) { return badge(e.type, App.data.EVENT_COLORS[e.type]); } },
+          { label: "Zone", className: "sub", render: function (e) { return e.zone || "--"; } },
+        ], eventRows.slice(0, ROW_LIMIT));
+
+    var totalCount = isBranchwise ? branchRows.length : eventRows.length;
+
+    var body = h(
+      "div.flex-col",
+      { style: "gap:16px;min-width:0;" },
+      toolbar,
+      h("div.grid.gap-sm.grid-3", summary.map(function (c) {
+        return h("div.kpi.compact",
+          h("span.kpi-rail", { style: "background:" + c.color + ";" }),
+          h("div.kpi-label", { style: "margin-top:0;" }, c.label),
+          h("div.kpi-value.sm", String(c.value)));
+      })),
+      h(
+        "div.card",
+        { style: "overflow:hidden;" },
+        h("div.card-head",
+          h("div.card-title", isBranchwise ? "Branch-wise Breakdown" : "Event Records", " ",
+            h("span.muted-count", "(" + totalCount + ")"))),
+        totalCount
+          ? h("div.table-scroll", { style: "max-height:520px;" }, table)
+          : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+              "No records fall inside this report's range."),
+        totalCount > ROW_LIMIT
+          ? h("div", {
+              style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
+                "font-size:11.5px;color:var(--ink-faint);",
+            }, "Preview shows the first " + ROW_LIMIT + " rows. The CSV export contains all " +
+               totalCount + ".")
+          : null
+      )
+    );
+
+    return h("div.grid", { style: "grid-template-columns:250px minmax(0,1fr);" }, rail, body);
+  }
+
+  App.views = App.views || {};
+  App.views.reports = {
+    label: "Reports",
+    icon: "reports",
+    title: "Reports",
+    subtitle: "Scheduled and on-demand reports",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/views/systemSetting.js ==== */
+/* System Setting: notification routing, escalation timers, the standard zone
+   layout, and the role matrix. All four panels write straight to app state. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var W = App.widgets;
+
+  var NOTIF_DEFS = [
+    { key: "critical", label: "Critical (Alarm / Tamper)", desc: "Intrusion and tamper events" },
+    { key: "warning", label: "Warning (Fault / Power)", desc: "AC fail, battery fail, panel fault" },
+    { key: "info", label: "Informational (Arm / Disarm)", desc: "Routine open/close activity" },
+  ];
+
+  var THRESHOLD_DEFS = [
+    { key: "alarm", label: "Alarm Active" },
+    { key: "fault", label: "Fault Condition" },
+    { key: "offline", label: "Panel Offline" },
+  ];
+
+  var ROLES = [
+    { role: "Head Office Admin", view: true, ack: true, configure: true, export: true },
+    { role: "Regional Manager", view: true, ack: true, configure: false, export: true },
+    { role: "Branch Manager", view: true, ack: true, configure: false, export: false },
+    { role: "Viewer", view: true, ack: false, configure: false, export: false },
+  ];
+
+  function toggle(isOn, onClick, caption) {
+    return h(
+      "button.toggle-cell",
+      { type: "button", onclick: onClick, "aria-pressed": String(isOn) },
+      h("span.toggle-cap", caption),
+      h("span.toggle-track" + (isOn ? ".is-on" : ""), h("span.toggle-knob"))
+    );
+  }
+
+  function notificationsCard(ctx) {
+    var channels = ctx.state.notifChannels;
+    return h(
+      "div.card.card-pad",
+      { style: "padding:20px 22px;" },
+      h("div.card-title", { style: "margin-bottom:4px;" }, "Notification Channels"),
+      h("div.card-sub", { style: "margin-bottom:16px;" },
+        "Choose how each severity level reaches the ops team"),
+      h("div.flex-col", { style: "gap:10px;" }, NOTIF_DEFS.map(function (d) {
+        var row = channels[d.key];
+        var flip = function (field) {
+          return function () {
+            var next = Object.assign({}, channels);
+            next[d.key] = Object.assign({}, row);
+            next[d.key][field] = !row[field];
+            ctx.setState({ notifChannels: next });
+          };
+        };
+        return h(
+          "div.setting-row",
+          h("div",
+            h("div.setting-name", d.label),
+            h("div.setting-desc", d.desc)),
+          h("div.toggle-group",
+            toggle(row.email, flip("email"), "Email"),
+            toggle(row.sms, flip("sms"), "SMS"))
+        );
+      }))
+    );
+  }
+
+  function thresholdsCard(ctx) {
+    var thresholds = ctx.state.escalationThresholds;
+    return h(
+      "div.card",
+      { style: "padding:20px 22px;" },
+      h("div.card-title", { style: "margin-bottom:4px;" }, "Alert Escalation Thresholds"),
+      h("div.card-sub", { style: "margin-bottom:16px;" },
+        "Minutes before an unresolved condition escalates to the regional office"),
+      h("div.flex-col", { style: "gap:16px;" }, THRESHOLD_DEFS.map(function (d) {
+        return h(
+          "div",
+          h("div.threshold-head",
+            h("span", d.label),
+            h("span.threshold-value", thresholds[d.key] + " min")),
+          h("input", {
+            type: "range", min: 1, max: 60, value: thresholds[d.key],
+            oninput: function (e) {
+              var next = Object.assign({}, thresholds);
+              next[d.key] = Number(e.target.value);
+              ctx.setState({ escalationThresholds: next });
+            },
+          })
+        );
+      }))
+    );
+  }
+
+  function zoneLabelsCard() {
+    var total = App.data.networkStats().totalBranches;
+    return h(
+      "div.card",
+      { style: "padding:20px 22px;" },
+      h("div.card-title", { style: "margin-bottom:4px;" }, "Zone Labels"),
+      h("div.card-sub", { style: "margin-bottom:16px;" },
+        "Standard 8-zone layout applied across all " + total + " branches"),
+      h("div.grid.grid-2", { style: "gap:8px;" }, App.data.ZONE_LABELS.map(function (label, i) {
+        return h("div.zone-label-cell",
+          h("span.zone-label-num", String(i + 1)),
+          h("span.zone-label-text", label));
+      }))
+    );
+  }
+
+  function rolesCard() {
+    var tick = function (allowed) {
+      return h("span", {
+        style: "color:" + (allowed ? "var(--green)" : "var(--ink-faint)") + ";font-weight:700;",
+      }, allowed ? "✓" : "—");
+    };
+    return h(
+      "div.card",
+      { style: "overflow:hidden;" },
+      h("div", { style: "padding:20px 22px 4px;" },
+        h("div.card-title", { style: "margin-bottom:4px;" }, "Access & Roles"),
+        h("div.card-sub", { style: "margin-bottom:12px;" }, "Who can see and act on what")),
+      W.dataTable([
+        { label: "Role", key: "role", className: "name" },
+        { label: "View", align: "center", render: function (r) { return tick(r.view); } },
+        { label: "Acknowledge", align: "center", render: function (r) { return tick(r.ack); } },
+        { label: "Configure", align: "center", render: function (r) { return tick(r.configure); } },
+        { label: "Export", align: "center", render: function (r) { return tick(r.export); } },
+      ], ROLES)
+    );
+  }
+
+  function render(ctx) {
+    return h(
+      "div.grid.grid-2",
+      { style: "align-items:start;" },
+      notificationsCard(ctx),
+      thresholdsCard(ctx),
+      zoneLabelsCard(),
+      rolesCard()
+    );
+  }
+
+  App.views = App.views || {};
+  App.views.systemSetting = {
+    label: "System Setting",
+    icon: "settings",
+    title: "System Setting",
+    subtitle: "Branch, zone and alert configuration",
+    render: render,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/app.js ==== */
+/* Application shell: state, navigation, and the render loop.
+
+   State is a single plain object. `setState` merges a patch and repaints the
+   content region; nothing else in the app touches the DOM outside its own
+   render function. */
+(function (App) {
+  "use strict";
+
+  var h = App.dom.h;
+  var u = App.utils;
+  var COLORS = u.COLORS;
+
+  /* Sidebar order. Each key must have a matching module in src/views. */
+  var NAV_ORDER = [
+    "overview", "branchMonitoring", "intrusionStatus", "zoneStatus", "powerStatus",
+    "liveActivities", "eventHistory", "locationMaps", "managerDetails", "reports",
+    "systemSetting",
+  ];
+
+  var state = {
+    active: "overview",
+    now: new Date(),
+
+    /* Overview */
+    regionSearch: "",
+    selectedRegion: App.data.HOME_DISTRICT,
+    selectedBranchId: null,
+    kpiFilter: null,
+
+    /* Branch monitoring */
+    bmSearch: "",
+
+    /* Intrusion */
+    liveStatusFilter: null,
+    restoreFilter: null,
+
+    /* Zones */
+    zoneSearch: "",
+    zoneSelectedBranchId: null,
+    zoneViewMode: "showcase",
+    zonePickerMode: "district",
+    zonePickerDistrict: null,
+
+    /* Power */
+    powerFilter: null,
+    powerSearch: "",
+
+    /* Live activities */
+    liveActivityFilter: null,
+    liveViewMode: "command",
+
+    /* Event history */
+    ehSearch: "",
+    ehTypeFilter: null,
+
+    /* Managers */
+    mgrSearch: "",
+
+    /* Reports */
+    reportType: "daily",
+
+    /* Settings */
+    notifChannels: {
+      critical: { email: true, sms: true },
+      warning: { email: true, sms: false },
+      info: { email: false, sms: false },
+    },
+    escalationThresholds: { alarm: 5, fault: 30, offline: 15 },
+  };
+
+  var refs = {};
+
+  function setState(patch) {
+    Object.assign(state, patch);
+    render();
+  }
+
+  function go(key) {
+    if (!App.views[key]) return;
+    state.active = key;
+    if (window.location.hash.slice(1) !== key) {
+      window.history.replaceState(null, "", "#" + key);
+    }
+    render();
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  var ctx = {
+    get state() { return state; },
+    setState: setState,
+    go: go,
+  };
+
+  /* ---- Chrome ---------------------------------------------------------- */
+
+  function buildSidebar() {
+    var nav = h("nav.sidebar",
+      h(
+        "div.brand",
+        h("span.brand-mark", { html: App.ICONS.shield }),
+        h("div", { style: "min-width:0;" },
+          h("div.brand-name", "TN GRAMA BANK"),
+          h("div.brand-sub", "HEAD OFFICE, SALEM · SECURITY OPS"))
+      ),
+      h("div.nav-heading", "DASHBOARD")
+    );
+
+    refs.navButtons = {};
+    NAV_ORDER.forEach(function (key) {
+      var view = App.views[key];
+      if (!view) return;
+      var button = h(
+        "button.nav-item",
+        { type: "button", onclick: function () { go(key); } },
+        h("span.nav-chip", { html: App.ICONS[view.icon] }),
+        h("span.nav-label", view.label),
+        h("span.nav-dot", { style: "visibility:hidden;" })
+      );
+      refs.navButtons[key] = button;
+      nav.appendChild(button);
+    });
+
+    nav.appendChild(h("div.sidebar-note",
+      "Structure follows the bank's security-ops mind map, cross-checked against " +
+      "the Tamil Nadu district list. Sample data — point src/data at the real feed."));
+
+    return nav;
+  }
+
+  function overallPill(stats) {
+    if (stats.alarm > 0) {
+      return { label: "ALERT — ALARM ACTIVE", bg: "#fdeeee", color: COLORS.red, border: "#f3c9c9" };
+    }
+    if (stats.fault > 0) {
+      return { label: "WARNING — FAULT PRESENT", bg: "#fdf3e4", color: COLORS.amber, border: "#f0dcb3" };
+    }
+    return { label: "SECURE — ALL NORMAL", bg: "#e9f6ee", color: COLORS.green, border: "#bfe3cc" };
+  }
+
+  function buildTopbar() {
+    refs.title = h("h1");
+    refs.subtitle = h("div.topbar-sub");
+    refs.clock = h("span", u.fmtClock(state.now));
+    refs.pill = h("div.overall-pill");
+
+    return h(
+      "header.topbar",
+      h("div", refs.title, refs.subtitle),
+      h("div.topbar-right",
+        h("div.clock", h("span.clock-dot"), refs.clock),
+        refs.pill)
+    );
+  }
+
+  /* ---- Render ---------------------------------------------------------- */
+
+  /* Repainting the content region blows away focus, so remember which input
+     the operator was typing in and restore it plus the caret afterwards. */
+  function captureFocus() {
+    var el = document.activeElement;
+    if (!el || !el.id || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) return null;
+    return {
+      id: el.id,
+      start: el.selectionStart,
+      end: el.selectionEnd,
+    };
+  }
+
+  function restoreFocus(snapshot) {
+    if (!snapshot) return;
+    var el = document.getElementById(snapshot.id);
+    if (!el) return;
+    el.focus();
+    if (el.setSelectionRange && snapshot.start !== null && el.type !== "range") {
+      try { el.setSelectionRange(snapshot.start, snapshot.end); } catch (err) { /* type has no selection */ }
+    }
+  }
+
+  function render() {
+    var view = App.views[state.active] || App.views.overview;
+    var stats = App.data.networkStats();
+    var pill = overallPill(stats);
+    var focus = captureFocus();
+
+    refs.title.textContent = view.title;
+    refs.subtitle.textContent = view.subtitle;
+    refs.pill.textContent = pill.label;
+    refs.pill.setAttribute(
+      "style",
+      "background:" + pill.bg + ";color:" + pill.color + ";border-color:" + pill.border + ";"
+    );
+
+    Object.keys(refs.navButtons).forEach(function (key) {
+      var isActive = key === state.active;
+      refs.navButtons[key].classList.toggle("is-active", isActive);
+      refs.navButtons[key].lastChild.style.visibility = isActive ? "visible" : "hidden";
+    });
+
+    App.dom.clear(refs.content);
+    refs.content.appendChild(view.render(ctx));
+    restoreFocus(focus);
+  }
+
+  /* ---- Boot ------------------------------------------------------------ */
+
+  function start() {
+    var root = document.getElementById("app");
+    refs.content = h("main.content");
+
+    var main = h("div.main", buildTopbar(), refs.content);
+    root.appendChild(h("div.shell", buildSidebar(), main));
+
+    var hash = window.location.hash.slice(1);
+    if (App.views[hash]) state.active = hash;
+
+    window.addEventListener("hashchange", function () {
+      var key = window.location.hash.slice(1);
+      if (App.views[key] && key !== state.active) {
+        state.active = key;
+        render();
+      }
+    });
+
+    /* The header clock is the only thing that ticks; repainting the whole
+       content region every second would fight with scrolling and typing. */
+    setInterval(function () {
+      state.now = new Date();
+      refs.clock.textContent = u.fmtClock(state.now);
+    }, 1000);
+
+    render();
+  }
+
+  App.start = start;
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})(window.App = window.App || {});
+
+</script>
+</body>
+</html>

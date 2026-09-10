@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TN Grama Bank · Security Operations Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<!-- Plain scripts in dependency order, so the page runs from the file system
+     with no build step and no module/CORS restrictions. -->
+<script src="src/core/utils.js"></script>
+<script src="src/core/icons.js"></script>
+<script src="src/core/dom.js"></script>
+<script src="src/core/widgets.js"></script>
+
+<script src="src/data/master.js"></script>
+<script src="src/data/derived.js"></script>
+
+<script src="src/views/overview.js"></script>
+<script src="src/views/branchMonitoring.js"></script>
+<script src="src/views/intrusionStatus.js"></script>
+<script src="src/views/zoneStatus.js"></script>
+<script src="src/views/powerStatus.js"></script>
+<script src="src/views/liveActivities.js"></script>
+<script src="src/views/eventHistory.js"></script>
+<script src="src/views/locationMaps.js"></script>
+<script src="src/views/managerDetails.js"></script>
+<script src="src/views/reports.js"></script>
+<script src="src/views/systemSetting.js"></script>
+
+<script src="src/app.js"></script>
+</body>
+</html>

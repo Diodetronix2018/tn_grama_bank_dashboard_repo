@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>TN Grama Bank dashboard - self test</title>
+<link rel="stylesheet" href="../assets/styles.css">
+</head><body>
+<!-- Loads the real dashboard, drives it through every view and interaction,
+     and prints a pass/fail report below. Open this file in a browser, or run
+     it headless - see README. -->
+<div id="app"></div>
+<pre id="report" style="background:#111;color:#0f0;padding:12px;font-size:13px;"></pre>
+
+<script src="../src/core/utils.js"></script>
+<script src="../src/core/icons.js"></script>
+<script src="../src/core/dom.js"></script>
+<script src="../src/core/widgets.js"></script>
+<script src="../src/data/master.js"></script>
+<script src="../src/data/derived.js"></script>
+<script src="../src/views/overview.js"></script>
+<script src="../src/views/branchMonitoring.js"></script>
+<script src="../src/views/intrusionStatus.js"></script>
+<script src="../src/views/zoneStatus.js"></script>
+<script src="../src/views/powerStatus.js"></script>
+<script src="../src/views/liveActivities.js"></script>
+<script src="../src/views/eventHistory.js"></script>
+<script src="../src/views/locationMaps.js"></script>
+<script src="../src/views/managerDetails.js"></script>
+<script src="../src/views/reports.js"></script>
+<script src="../src/views/systemSetting.js"></script>
+<script src="../src/app.js"></script>
+
+<script>
+var out = [];
+var fails = 0;
+function ok(name, cond, extra) {
+  if (!cond) fails++;
+  out.push((cond ? "PASS " : "FAIL ") + name + (extra ? "  [" + extra + "]" : ""));
+}
+window.addEventListener("error", function (e) {
+  out.push("JSERROR " + e.message + " @ " + e.filename + ":" + e.lineno);
+  fails++;
+});
+
+function content() { return document.querySelector("main.content"); }
+function text() { return content().textContent; }
+function navBtn(label) {
+  return Array.prototype.find.call(document.querySelectorAll(".nav-item"), function (b) {
+    return b.textContent.trim() === label;
+  });
+}
+function findByText(sel, needle) {
+  return Array.prototype.find.call(document.querySelectorAll(sel), function (n) {
+    return n.textContent.indexOf(needle) !== -1;
+  });
+}
+
+setTimeout(function () {
+  try {
+    // --- nav ---------------------------------------------------------------
+    var labels = ["Overview","Branch Monitoring","Intrusion Status","Zone Status","Power Status",
+      "Live Activities","Event History","Location Maps","Manager Details","Reports","System Setting"];
+    labels.forEach(function (l) {
+      var b = navBtn(l);
+      ok("nav exists: " + l, !!b);
+      if (b) {
+        b.click();
+        ok("nav renders: " + l, text().length > 500, text().length + " chars");
+        ok("nav marks active: " + l, b.classList.contains("is-active"));
+      }
+    });
+
+    // --- overview KPI drill-down -------------------------------------------
+    navBtn("Overview").click();
+    var kpis = content().querySelectorAll(".kpi");
+    ok("overview has 8 KPIs", kpis.length === 8, kpis.length + "");
+    ok("total branches = 680", text().indexOf("680") !== -1);
+
+    kpis[2].click(); // Online Panels
+    var panelTitle = findByText(".card-title", "Online Panels");
+    ok("online drill-down opens", !!panelTitle, panelTitle ? panelTitle.textContent.trim() : "missing");
+    var rows = content().querySelectorAll("table.data tbody tr");
+    ok("online drill-down has rows", rows.length > 0, rows.length + " rows");
+    rows[0].click(); // jump to that branch
+    ok("row click closes panel", !findByText(".card-title", "Online Panels"));
+    kpis = content().querySelectorAll(".kpi");
+    kpis[0].click(); // Total Branches -> navigates
+    ok("KPI navigates to Branch Monitoring", text().indexOf("District-wise Summary") !== -1);
+
+    // --- region select + spotlight -----------------------------------------
+    navBtn("Overview").click();
+    function regionCard() {
+      return Array.prototype.find.call(content().querySelectorAll(".card"), function (c) {
+        return c.textContent.indexOf("All Regions") !== -1;
+      });
+    }
+    function regionItems() { return regionCard().querySelectorAll(".row-item"); }
+    var regionRows = regionItems();
+    ok("region list has 38 districts", regionRows.length === 38, regionRows.length + "");
+    regionRows[2].click();
+    ok("spotlight follows region", text().indexOf("Branch Manager Details") !== -1);
+
+    // --- overview search ----------------------------------------------------
+    var search = document.getElementById("region-search");
+    search.focus();
+    search.value = "coimb";
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+    ok("region search filters to one district", regionItems().length === 1, regionItems().length + "");
+    ok("search keeps focus", document.activeElement && document.activeElement.id === "region-search",
+      document.activeElement ? document.activeElement.id : "none");
+    search.value = "";
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+    ok("clearing search restores list", regionItems().length === 38, regionItems().length + "");
+
+    // --- intrusion ----------------------------------------------------------
+    navBtn("Intrusion Status").click();
+    var icards = content().querySelectorAll(".kpi");
+    ok("intrusion has 8 cards", icards.length === 8, icards.length + "");
+    var restoredValue = icards[3].querySelector(".kpi-value").textContent;
+    icards[3].click(); // Alarm Restored
+    var rrows = content().querySelectorAll("table.data tbody tr").length;
+    var alarmRestoredHeader = findByText(".card-title", "Alarm Restored");
+    ok("alarm restored panel opens", !!alarmRestoredHeader);
+    ok("restored count matches its list", alarmRestoredHeader &&
+      alarmRestoredHeader.textContent.indexOf("(" + restoredValue + ")") !== -1,
+      "card=" + restoredValue + " header=" + (alarmRestoredHeader ? alarmRestoredHeader.textContent.trim() : "?"));
+    icards[6].click(); // Tamper Active
+    ok("tamper active lists branches", !!findByText(".card-title", "Tamper Active Branches"));
+
+    // --- power --------------------------------------------------------------
+    navBtn("Power Status").click();
+    var pcards = content().querySelectorAll(".kpi");
+    ok("power has 6 cards", pcards.length === 6, pcards.length + "");
+    ok("power lands on a populated table",
+      content().querySelectorAll("table.data tbody tr").length > 0 &&
+      text().indexOf("Power Health by Branch") !== -1);
+    var acFail = pcards[1].querySelector(".kpi-value").textContent;
+    pcards[1].click();
+    var ph = findByText(".card-title", "AC Fail");
+    ok("AC Fail panel count matches card", ph && ph.textContent.indexOf("(" + acFail + ")") !== -1,
+      "card=" + acFail + " header=" + (ph ? ph.textContent.trim() : "?"));
+    pcards[4].click(); // Battery Fail -> battery columns
+    ok("battery panel shows voltage column", text().indexOf("Voltage") !== -1);
+
+    // --- zones --------------------------------------------------------------
+    navBtn("Zone Status").click();
+    ok("zone showcase is default", !!content().querySelector(".showcase"));
+    ok("zone shows 8 zone cards", content().querySelectorAll(".zone-card").length === 8,
+      content().querySelectorAll(".zone-card").length + "");
+    findByText(".segmented button", "Grand View").click();
+    ok("grand view renders", !!content().querySelector(".zone-hero"));
+    findByText(".segmented button", "Table View").click();
+    ok("table view renders 8 rows", content().querySelectorAll("table.data tbody tr").length === 8);
+    findByText(".segmented button", "All (Grid)").click();
+    ok("grid picker renders", content().querySelectorAll(".picker-chip").length > 100,
+      content().querySelectorAll(".picker-chip").length + "");
+    var firstChip = content().querySelector(".picker-chip");
+    var chipName = firstChip.textContent.trim();
+    firstChip.click();
+    ok("picking a branch updates detail", text().indexOf(chipName) !== -1, chipName);
+
+    // --- live activities -----------------------------------------------------
+    navBtn("Live Activities").click();
+    ok("command centre is default", !!content().querySelector(".command-panel"));
+    ok("latest activity card present", !!content().querySelector(".latest-card"));
+    var chip = findByText(".command-chips .chip", "Alarm");
+    chip.click();
+    var feedRows = content().querySelectorAll(".feed-row").length;
+    ok("event chip filters feed", feedRows > 0, feedRows + " rows");
+    findByText(".segmented button", "Classic View").click();
+    ok("classic view renders", content().querySelectorAll(".feed .feed-row").length > 0);
+
+    // --- event history -------------------------------------------------------
+    navBtn("Event History").click();
+    var ehRows = content().querySelectorAll("table.data tbody tr").length;
+    ok("event log renders", ehRows > 0, ehRows + " rows");
+    var ehSearch = document.getElementById("eh-search");
+    ehSearch.value = "Salem";
+    ehSearch.dispatchEvent(new Event("input", { bubbles: true }));
+    var after = content().querySelectorAll("table.data tbody tr").length;
+    ok("event search narrows log", after > 0 && after < ehRows, ehRows + " -> " + after);
+
+    // --- managers ------------------------------------------------------------
+    navBtn("Manager Details").click();
+    ok("manager table renders", content().querySelectorAll("table.data tbody tr").length > 0);
+    var mgr = document.getElementById("mgr-search");
+    mgr.value = "zzzzzz";
+    mgr.dispatchEvent(new Event("input", { bubbles: true }));
+    ok("empty manager search shows message", text().indexOf("No manager matches") !== -1);
+
+    // --- reports -------------------------------------------------------------
+    navBtn("Reports").click();
+    var items = content().querySelectorAll(".report-item");
+    ok("10 report definitions", items.length === 10, items.length + "");
+    var counts = [];
+    items.forEach(function (it) {
+      it.click();
+      counts.push(content().querySelectorAll("table.data tbody tr").length);
+    });
+    ok("every report renders rows or an empty note",
+      counts.every(function (c, i) { return c > 0 || text().indexOf("No records") !== -1; }),
+      counts.join(","));
+    findByText(".report-item", "Branch-wise").click();
+    ok("branch-wise report has tamper column", text().indexOf("Tamper") !== -1);
+
+    // --- maps ----------------------------------------------------------------
+    navBtn("Location Maps").click();
+    var pins = content().querySelectorAll(".map-pin").length;
+    ok("map draws a pin per district", pins === 38, pins + "");
+    ok("watchlist present", text().indexOf("Open Incidents by District") !== -1);
+
+    // --- settings ------------------------------------------------------------
+    navBtn("System Setting").click();
+    var tracks = content().querySelectorAll(".toggle-track");
+    ok("6 notification toggles", tracks.length === 6, tracks.length + "");
+    var wasOn = tracks[0].classList.contains("is-on");
+    content().querySelectorAll(".toggle-cell")[0].click();
+    var nowOn = content().querySelectorAll(".toggle-track")[0].classList.contains("is-on");
+    ok("toggle flips", wasOn !== nowOn, wasOn + " -> " + nowOn);
+    var range = content().querySelector('input[type="range"]');
+    range.value = "42";
+    range.dispatchEvent(new Event("input", { bubbles: true }));
+    ok("threshold slider updates label", text().indexOf("42 min") !== -1);
+    ok("role matrix renders 4 roles", content().querySelectorAll("table.data tbody tr").length === 4);
+  } catch (err) {
+    out.push("EXCEPTION " + err.message + "\n" + err.stack);
+    fails++;
+  }
+
+  finish();
+}, 400);
+
+/* CSV export: intercept the blob the download path creates and read it back. */
+function finish() {
+  var captured = null;
+  var realCreate = URL.createObjectURL;
+  var realRevoke = URL.revokeObjectURL;
+  URL.createObjectURL = function (blob) { captured = blob; return "blob:stub"; };
+  URL.revokeObjectURL = function () {};
+  var realClick = HTMLAnchorElement.prototype.click;
+  var clickedName = null;
+  HTMLAnchorElement.prototype.click = function () { clickedName = this.download; };
+
+  var done = function () {
+    URL.createObjectURL = realCreate;
+    URL.revokeObjectURL = realRevoke;
+    HTMLAnchorElement.prototype.click = realClick;
+    out.push("");
+    out.push("RESULT: " + (fails === 0 ? "ALL PASS" : fails + " FAILURE(S)"));
+    document.getElementById("report").textContent = out.join("\n");
+  };
+
+  try {
+    navBtn("Reports").click();
+    findByText(".report-item", "Branch-wise").click();
+    var totalRows = Number(
+      findByText(".card-title", "Branch-wise Breakdown").textContent.replace(/\D+/g, "")
+    );
+    findByText("button", "Download CSV").click();
+    ok("CSV export names the file", clickedName === "branchwise-report.csv", clickedName + "");
+    ok("CSV export produced a blob", !!captured && captured.size > 0);
+    captured.text().then(function (csv) {
+      var lines = csv.trim().split(/\r?\n/);
+      ok("CSV header is correct",
+        lines[0].replace(/^﻿/, "") === "Branch,District,Total Events,Alarm,Fault,Tamper,Status",
+        lines[0]);
+      ok("CSV holds every row, not just the preview", lines.length === totalRows + 1,
+        "rows=" + (lines.length - 1) + " expected=" + totalRows);
+      ok("CSV rows have 7 columns", lines[1].split(",").length === 7, lines[1]);
+      done();
+    }, function (err) { ok("CSV readable", false, err.message); done(); });
+  } catch (err) {
+    ok("CSV export", false, err.message);
+    done();
+  }
+}
+</script>
+</body></html>

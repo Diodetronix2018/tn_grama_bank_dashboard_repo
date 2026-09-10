@@ -203,8 +203,9 @@
 
   /* ---- Boot ------------------------------------------------------------ */
 
-  function start() {
+  function boot() {
     var root = document.getElementById("app");
+    App.dom.clear(root);
     refs.content = h("main.content");
 
     var main = h("div.main", buildTopbar(), refs.content);
@@ -229,6 +230,50 @@
     }, 1000);
 
     render();
+  }
+
+  function renderBootState(title, detail, isError, onRetry) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+    var card = h(
+      "div.boot-card",
+      isError ? null : h("div.boot-spinner"),
+      h("div.boot-title" + (isError ? ".is-error" : ""), title),
+      h("div.boot-detail", detail)
+    );
+    if (isError) {
+      card.appendChild(
+        h("button.boot-retry", { type: "button", onclick: onRetry }, "Retry")
+      );
+    }
+    root.appendChild(h("div.boot-state", card));
+  }
+
+  /* If src/data/liveSource.js is loaded (see index.html), App.data.load
+     fetches branch records from the backend before anything renders. Without
+     it (as in tests/selftest.html) the dashboard boots straight into the
+     generated sample data, exactly as before. */
+  function start() {
+    if (!App.data.load) {
+      boot();
+      return;
+    }
+
+    renderBootState(
+      "Loading branch data",
+      "Fetching the live feed from the branch data service…",
+      false
+    );
+
+    App.data.load().then(boot, function (err) {
+      renderBootState(
+        "Could not reach the branch data service",
+        (err && err.message ? err.message : "Request failed") +
+          ". Confirm the backend is running (see backend/README.md), then retry.",
+        true,
+        start
+      );
+    });
   }
 
   App.start = start;

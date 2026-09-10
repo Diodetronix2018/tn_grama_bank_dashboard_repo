@@ -201,8 +201,20 @@
   };
 
   var _cache = null;
+  var _externalCache = null;
+
+  /* Called by src/data/liveSource.js once the backend responds. Every other
+     function in this module and in src/data/derived.js reads branches
+     through allBranches(), so pointing that one function at fetched data is
+     enough to make the whole dashboard live -- nothing else changes. */
+  function setBranches(list) {
+    _externalCache = list;
+    _cache = null;
+    _stats = null;
+  }
 
   function allBranches() {
+    if (_externalCache) return _externalCache;
     if (_cache) return _cache;
 
     var list = [];
@@ -322,6 +334,7 @@
     todayStamp: todayStamp,
     dayStamp: dayStamp,
     allBranches: allBranches,
+    setBranches: setBranches,
     branchById: branchById,
     branchesIn: branchesIn,
     districtStats: districtStats,

@@ -1176,3 +1176,64 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   .topbar { padding: 16px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---- Boot states: shown while liveSource.js is fetching branch data ---- */
+.boot-state {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.boot-card {
+  max-width: 380px;
+  text-align: center;
+  padding: 32px;
+}
+
+.boot-spinner {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--navy);
+  animation: boot-spin 0.8s linear infinite;
+}
+
+@keyframes boot-spin {
+  to { transform: rotate(360deg); }
+}
+
+.boot-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.boot-detail {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.boot-card .boot-title.is-error { color: var(--red); }
+
+.boot-retry {
+  margin-top: 16px;
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.boot-retry:hover { background: var(--navy-deep); }

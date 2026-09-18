@@ -15,6 +15,12 @@
     apiKey: "dev-local-key-change-me",
   };
 
+  /* The upstream telemetry table gets a new record roughly every 5 minutes;
+     poll on the same cadence so the dashboard picks it up without a reload. */
+  var POLL_INTERVAL_MS = 5 * 60 * 1000;
+  var pollTimer = null;
+  var inFlight = false;
+
   function applyRegionCounts(branches) {
     var counts = {};
     branches.forEach(function (b) {
@@ -46,5 +52,32 @@
       });
   }
 
+  /* One tick of the background refresh. Skips this tick rather than queuing
+     if the previous fetch hasn't settled yet -- avoids overlapping requests
+     if the backend is briefly slow. A failed poll rejects inside load()
+     before setBranches() runs, so it never disturbs the data already on
+     screen; it only reports itself via App.reportRefresh so app.js can show
+     a low-key indicator instead of the full-page boot-error screen. */
+  function poll() {
+    if (inFlight) return;
+    inFlight = true;
+    load().then(
+      function () {
+        inFlight = false;
+        if (App.reportRefresh) App.reportRefresh(true);
+      },
+      function (err) {
+        inFlight = false;
+        if (App.reportRefresh) App.reportRefresh(false, err && err.message);
+      }
+    );
+  }
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+  }
+
   App.data.load = load;
+  App.data.startPolling = startPolling;
 })(window.App = window.App || {});

@@ -211,6 +211,7 @@
     _externalCache = list;
     _cache = null;
     _stats = null;
+    if (App.data.invalidateDerived) App.data.invalidateDerived();
   }
 
   function allBranches() {

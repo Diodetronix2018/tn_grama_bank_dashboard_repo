@@ -20,6 +20,8 @@
   var state = {
     active: "overview",
     now: new Date(),
+    lastUpdated: null,
+    refreshError: null,
 
     /* Overview */
     regionSearch: "",
@@ -72,6 +74,19 @@
 
   function setState(patch) {
     Object.assign(state, patch);
+    render();
+  }
+
+  /* Called by src/data/liveSource.js after every background poll -- success
+     bumps the freshness timestamp and clears any earlier error; failure
+     leaves the last-good data on screen and just flags it as delayed. */
+  function reportRefresh(ok, message) {
+    if (ok) {
+      state.lastUpdated = new Date();
+      state.refreshError = null;
+    } else {
+      state.refreshError = message || "Background refresh failed";
+    }
     render();
   }
 
@@ -142,11 +157,13 @@
     refs.subtitle = h("div.topbar-sub");
     refs.clock = h("span", u.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
+    refs.freshness = h("span.freshness");
 
     return h(
       "header.topbar",
       h("div", refs.title, refs.subtitle),
       h("div.topbar-right",
+        refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
         refs.pill)
     );
@@ -190,6 +207,13 @@
       "background:" + pill.bg + ";color:" + pill.color + ";border-color:" + pill.border + ";"
     );
 
+    refs.freshness.classList.toggle("is-stale", !!state.refreshError);
+    refs.freshness.textContent = !state.lastUpdated
+      ? ""
+      : state.refreshError
+      ? "Live feed delayed — showing data from " + u.fmtClock(state.lastUpdated)
+      : "Updated " + u.fmtClock(state.lastUpdated);
+
     Object.keys(refs.navButtons).forEach(function (key) {
       var isActive = key === state.active;
       refs.navButtons[key].classList.toggle("is-active", isActive);
@@ -230,6 +254,10 @@
     }, 1000);
 
     render();
+
+    /* No-op wherever src/data/liveSource.js isn't loaded (e.g. selftest.html,
+       which deliberately runs on generated sample data only). */
+    if (App.data.startPolling) App.data.startPolling();
   }
 
   function renderBootState(title, detail, isError, onRetry) {
@@ -265,7 +293,10 @@
       false
     );
 
-    App.data.load().then(boot, function (err) {
+    App.data.load().then(function () {
+      state.lastUpdated = new Date();
+      boot();
+    }, function (err) {
       renderBootState(
         "Could not reach the branch data service",
         (err && err.message ? err.message : "Request failed") +
@@ -277,6 +308,7 @@
   }
 
   App.start = start;
+  App.reportRefresh = reportRefresh;
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
   } else {

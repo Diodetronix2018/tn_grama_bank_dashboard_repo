@@ -289,6 +289,20 @@
     { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "zones" },
   ];
 
+  /* Every cache above is keyed off the branch roster at the time it was first
+     read. Called whenever that roster is replaced (see master.js's
+     setBranches) so zone/power/event views recompute against the new data
+     instead of silently keeping figures derived from the old one. */
+  function invalidateDerived() {
+    _zoneCache = {};
+    _powerCache = {};
+    _powerRows = null;
+    _allEvents = null;
+    _eventCounts = null;
+    _tamperBranches = null;
+    _restored = null;
+  }
+
   Object.assign(App.data, {
     EVENT_TYPES: EVENT_TYPES,
     EVENT_COLORS: EVENT_COLORS,
@@ -301,5 +315,6 @@
     eventCounts: eventCounts,
     tamperBranches: tamperBranches,
     restoredEvents: restoredEvents,
+    invalidateDerived: invalidateDerived,
   });
 })(window.App = window.App || {});

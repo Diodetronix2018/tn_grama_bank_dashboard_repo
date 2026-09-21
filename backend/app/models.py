@@ -6,7 +6,7 @@ tngb-dashboard/README.md, "Connecting real data". Every data source
 needs to know which one is behind the API.
 """
 
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -24,7 +24,7 @@ class Manager(BaseModel):
 class BranchEvent(BaseModel):
     type: str
     time: str
-    zone: Optional[str] = None
+    zone: str | None = None
 
 
 class Branch(BaseModel):

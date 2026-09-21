@@ -21,7 +21,12 @@ def list_branches(
     settings: Settings = Depends(get_settings),
 ) -> BranchListResponse:
     branches = source.list_branches()
-    logger.info("branches_served count=%d source=%s", len(branches), settings.data_source)
+    cache_age_s = getattr(source, "cache_age_seconds", None)
+    request_id = getattr(request.state, "request_id", "-")
+    logger.info(
+        "branches_served count=%d source=%s cache_age_s=%s request_id=%s",
+        len(branches), settings.data_source, cache_age_s, request_id,
+    )
     return BranchListResponse(branches=branches, count=len(branches), source=settings.data_source)
 
 

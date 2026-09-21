@@ -1,0 +1,9 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 115
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection pattern is Depends(...) as an argument
+# default -- that's the framework's own idiom, not the mutable-default-arg
+# bug B008 exists to catch.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]

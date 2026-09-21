@@ -157,9 +157,7 @@ anticipated) was issued: `dynamodb:GetItem`/`Query`/`Scan`/`BatchGetItem`/
 `927656030687`), no write/delete access anywhere. Credentials are stored in
 `backend/.env` (gitignored, never committed) and connectivity/authorization is
 verified end-to-end via `backend/scripts/check_aws_connection.py` (see
-`backend/README.md`, "Verify real AWS credentials"). `DATA_SOURCE` stays
-`mock` — this only proves the backend *can* reach the real table, not that it
-serves from it yet.
+`backend/README.md`, "Verify real AWS credentials").
 
 Also learned in this pass: `dtx_tngrama_telemetry` stores one row per *event*,
 not one row per branch, and a `DeviceStatus` table (one row per panel's
@@ -168,15 +166,41 @@ below isn't just a field-rename in `_map_item` — it needs to decide how to
 derive "current status per branch" from an event log (aggregate the latest
 event per branch, or wait for `DeviceStatus`).
 
+## Update (2026-09-21) — Real data connected, backend hardened
+
+`dynamodb_source.py` was rewritten to map the real event log (`thingName` =
+device serial, grouped and folded into a current snapshot + capped event
+history; `panelStatus`/`connectivity` derived from raw flags; documented as
+best-effort pending vendor confirmation of exact `trigger_type` semantics).
+`DATA_SOURCE=dynamodb` is now live — the dashboard serves real data (today: 2
+devices, one fully assigned to a branch, one not).
+
+Backend then hardened for production traffic: `/docs`/`/redoc`/`/openapi.json`
+gated behind `ENVIRONMENT` (default exposes them; `production` disables);
+global exception handler (generic JSON 500, no leaked detail); fail-fast
+startup validation for `DATA_SOURCE=dynamodb` (refuses to boot on missing
+config instead of 500ing on first request); an in-process TTL cache in front
+of `list_branches()` (default 60s, well under the dashboard's 5-minute poll);
+request-ID correlation through all log lines; a proxy-trust-aware
+`get_client_ip()` for rate limiting/auth logs (off by default, documented
+single-hop assumption when enabled); four standard security response headers;
+`ruff`+`bandit` added to CI. Test suite made hermetic (`tests/conftest.py`
+forces `DATA_SOURCE=mock` before any import, so `pytest` never depends on or
+touches a developer's local `.env`/real AWS). Full detail and rationale in
+each touched file's docstring/comments, and `backend/README.md`'s
+"Known limitations" and "Before any non-local deployment" sections.
+
 ## What's still blocked
 
-- **Schema mapping** — a real sample item (or `dashboard_data_access_guide.md`,
-  referenced in the handoff but not yet shared) is still needed before
-  `dynamodb_source.py`'s `_map_item()`/`list_branches()` can be rewritten
-  against the real event shape, and before `DATA_SOURCE=dynamodb` can be
-  safely turned on.
+- **Vendor confirmation** of the real telemetry table's `trigger_type`/event
+  semantics — the current mapping is a documented best-effort guess from raw
+  flags, not confirmed with the device vendor.
+- **Secrets management** — credentials remain in `.env`/environment
+  variables; moving to AWS Secrets Manager/SSM needs new IAM permissions not
+  yet granted to `tngrama_dashboard_reader`.
 - **Phase 7 decision** — which AWS account this deploys into, and the
-  dashboard's own login/identity mechanism, both still open questions.
+  dashboard's own login/identity mechanism, both still open questions. No
+  actual deployment target is chosen yet (still local-only).
 - **Phase 11** — go-live checklist, which depends on all of the above.
 
 Everything else in the original 12-phase plan that didn't depend on those

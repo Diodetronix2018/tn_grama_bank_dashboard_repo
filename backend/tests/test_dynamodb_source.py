@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.data.dynamodb_source import (
     STALE_AFTER_MINUTES,
@@ -14,14 +14,14 @@ BASE_TS = 1_789_799_000_000  # arbitrary epoch-ms anchor for fixture rows
 
 def row(ts_offset_ms=0, **fields):
     ts = BASE_TS + ts_offset_ms
-    dt = datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    dt = datetime.fromtimestamp(ts / 1000, tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
     base = {"timestamp": str(ts), "datetime": dt, "thingName": "DTX1"}
     base.update(fields)
     return base
 
 
 def now_at(ts_offset_ms=0):
-    return datetime.fromtimestamp((BASE_TS + ts_offset_ms) / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp((BASE_TS + ts_offset_ms) / 1000, tz=UTC)
 
 
 def test_full_snapshot_maps_assigned_branch():
@@ -112,11 +112,11 @@ def test_grouping_picks_latest_per_thing_name():
 
     # list_branches() derives connectivity against the real wall clock, so
     # these rows must be "recent" regardless of when the test actually runs.
-    real_now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    real_now_ms = int(datetime.now(UTC).timestamp() * 1000)
 
     def recent_row(offset_ms, **fields):
         ts = real_now_ms - 2000 + offset_ms
-        dt = datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        dt = datetime.fromtimestamp(ts / 1000, tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
         base = {"timestamp": str(ts), "datetime": dt}
         base.update(fields)
         return base

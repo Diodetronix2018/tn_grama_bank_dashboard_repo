@@ -19,7 +19,8 @@ deliberately not derived yet -- branch-level only for this pass.
 
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 import boto3
 from botocore.exceptions import ClientError
@@ -99,7 +100,7 @@ class DynamoDBDataSource(DataSource):
                 continue
             groups[thing_name].append(item)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         branches: list[Branch] = []
         for thing_name, rows in groups.items():
             try:
@@ -120,7 +121,7 @@ def _event_time(row: dict) -> str:
     time_str = (row.get("datetime") or "")[:16]
     if time_str:
         return time_str
-    ts = datetime.fromtimestamp(int(row["timestamp"]) / 1000, tz=timezone.utc)
+    ts = datetime.fromtimestamp(int(row["timestamp"]) / 1000, tz=UTC)
     return ts.strftime("%Y-%m-%d %H:%M")
 
 
@@ -155,7 +156,7 @@ def _fold_state_and_events(rows_sorted: list[dict]) -> tuple[dict, list[BranchEv
 
 def _comm_events_from_gaps(rows_sorted: list[dict], threshold_minutes: int) -> list[BranchEvent]:
     events: list[BranchEvent] = []
-    for prev_row, row in zip(rows_sorted, rows_sorted[1:]):
+    for prev_row, row in pairwise(rows_sorted):
         gap_minutes = (int(row["timestamp"]) - int(prev_row["timestamp"])) / 60000
         if gap_minutes > threshold_minutes:
             events.append(BranchEvent(type="Communication Lost", time=_event_time(prev_row)))
@@ -164,7 +165,7 @@ def _comm_events_from_gaps(rows_sorted: list[dict], threshold_minutes: int) -> l
 
 
 def _derive_connectivity(latest_ts_ms: int, now: datetime) -> Connectivity:
-    last_seen = datetime.fromtimestamp(latest_ts_ms / 1000, tz=timezone.utc)
+    last_seen = datetime.fromtimestamp(latest_ts_ms / 1000, tz=UTC)
     if (now - last_seen) <= timedelta(minutes=STALE_AFTER_MINUTES):
         return "Online"
     return "Offline"

@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Security static analysis (bandit)
+        run: bandit -r app -ll
+
       - name: Run tests
         run: pytest -q
 

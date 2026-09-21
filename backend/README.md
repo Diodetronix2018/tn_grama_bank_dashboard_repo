@@ -1,9 +1,9 @@
 # TN Grama Bank — Branch Data API
 
-Serves branch-security records to the dashboard at `../tngb-dashboard`. Runs
-against deterministic mock data today; swaps to the real DynamoDB table by
-changing one setting once the client-provided AWS details land (see
-`/IMPLEMENTATION.md` at the repo root for the full picture).
+Serves branch-security records to the dashboard at `../tngb-dashboard`. Can
+run against deterministic mock data or the real DynamoDB table
+(`DATA_SOURCE`, see Configuration below) — see `/IMPLEMENTATION.md` at the
+repo root for the full picture.
 
 ## Run it locally
 
@@ -23,6 +23,20 @@ that folder) — it's already configured to fetch from `http://127.0.0.1:8787`.
 pytest -q
 ```
 
+The suite is hermetic — `tests/conftest.py` forces `DATA_SOURCE=mock` before
+anything imports the app, regardless of what's in your local `.env`, so
+running tests never makes a real AWS call.
+
+## Lint and security scan
+
+```
+ruff check .
+bandit -r app -ll
+```
+
+Both run in CI (`.github/workflows/backend-ci.yml`) alongside `pytest` and
+`pip-audit`.
+
 ## Check for known-vulnerable dependencies
 
 ```
@@ -39,6 +53,30 @@ Copy `.env.example` to `.env` and adjust. Key settings:
 | `API_KEYS` | Comma-separated keys the dashboard must send as `X-API-Key` |
 | `CORS_ALLOW_ORIGIN` | The one origin allowed to call this API |
 | `AWS_REGION`, `DYNAMODB_TABLE_NAME` | Only read when `DATA_SOURCE=dynamodb` |
+| `ENVIRONMENT` | `development` (default, exposes `/docs`) or `production` (disables `/docs`/`/redoc`/`/openapi.json`) |
+| `TRUST_PROXY_HEADERS` | `false` (default). Only set `true` once a specific single-hop reverse proxy/load balancer is confirmed in front of this app — see `app/security.py`'s `get_client_ip()`. |
+| `BRANCHES_CACHE_TTL_SECONDS` | How long `list_branches()` results are cached in-process (default `60`) before re-querying the data source |
+
+## Known limitations (deliberate)
+
+- **Rate limiting and the branches cache are both in-memory, single-process.**
+  Neither coordinates across multiple uvicorn workers or multiple instances
+  behind a load balancer — accepted for now since no multi-instance
+  deployment target is chosen yet. Revisit (e.g. a shared Redis store) only
+  once one is.
+- **Secrets live in `.env`/environment variables**, not AWS Secrets Manager
+  or SSM Parameter Store. The current IAM user (`tngrama_dashboard_reader`)
+  only has DynamoDB permissions — moving secrets to a managed store needs
+  new IAM permissions granted first. `SecretStr` (see `app/config.py`) keeps
+  the raw value out of accidental logs/reprs in the meantime.
+
+## Before any non-local deployment
+
+1. Set `ENVIRONMENT=production` (disables `/docs`, `/redoc`, `/openapi.json`).
+2. Confirm `TRUST_PROXY_HEADERS` matches the actual network topology — only
+   `true` if exactly one trusted reverse proxy/load balancer sits directly
+   in front of this app.
+3. Rotate `API_KEYS` off the local-dev default.
 
 ## Verify real AWS credentials (one-off)
 

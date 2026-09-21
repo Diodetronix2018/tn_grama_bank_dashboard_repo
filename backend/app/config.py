@@ -35,12 +35,32 @@ class Settings(BaseSettings):
     aws_region: str = ""
     dynamodb_table_name: str = ""
 
-    # Read only by scripts/check_aws_connection.py today -- DynamoDBDataSource
-    # itself is not wired to use these yet (deferred to the schema-mapping
-    # phase). SecretStr keeps the raw value out of any accidental repr/log;
-    # call .get_secret_value() at the one point that actually needs it.
+    # Static IAM-user key pair, used by DynamoDBDataSource and
+    # scripts/check_aws_connection.py. SecretStr keeps the raw value out of
+    # any accidental repr/log; call .get_secret_value() at the one point
+    # that actually needs it.
     aws_access_key_id: str = ""
     aws_secret_access_key: SecretStr = SecretStr("")
+
+    # "development" (default) exposes /docs, /redoc, /openapi.json.
+    # "production" disables all three -- set explicitly before any
+    # non-local deployment (see README, "Before any non-local deployment").
+    environment: Literal["development", "production"] = "development"
+
+    # False (default, safe) trusts only the direct TCP peer for rate
+    # limiting/logging. Flip to True only once a specific reverse proxy/load
+    # balancer is confirmed to sit directly in front of this app as exactly
+    # one hop -- get_client_ip() then trusts the *last* X-Forwarded-For
+    # entry (the one the proxy itself appended), not the first (which is
+    # fully client-controlled). Re-derive, don't just flip, if a future
+    # topology adds more hops (e.g. CDN + load balancer + app).
+    trust_proxy_headers: bool = False
+
+    # How long list_branches() results are cached in-process before the
+    # data source is re-queried. 60s leaves a large margin under the
+    # dashboard's 5-minute poll cadence while collapsing bursts of
+    # concurrent/rapid requests into a single scan.
+    branches_cache_ttl_seconds: float = 60.0
 
     @property
     def api_key_set(self) -> set[str]:

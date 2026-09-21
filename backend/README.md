@@ -40,13 +40,34 @@ Copy `.env.example` to `.env` and adjust. Key settings:
 | `CORS_ALLOW_ORIGIN` | The one origin allowed to call this API |
 | `AWS_REGION`, `DYNAMODB_TABLE_NAME` | Only read when `DATA_SOURCE=dynamodb` |
 
+## Verify real AWS credentials (one-off)
+
+Once real credentials are in `.env` (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`AWS_REGION`, `DYNAMODB_TABLE_NAME`), confirm they actually work before doing
+anything else with them:
+
+```
+python -m scripts.check_aws_connection
+```
+
+This checks the identity (`sts:GetCallerIdentity`) and table access
+(`dynamodb:DescribeTable`) and prints a clear pass/fail message — it does not
+start a server, does not read `DATA_SOURCE`, and has no effect on the running
+app either way. Add `--sample-item` to also print one real row (for the
+separate, later schema-mapping work) — off by default.
+
 ## Switching to the real DynamoDB table
 
-1. Set `DATA_SOURCE=dynamodb`, `AWS_REGION`, and `DYNAMODB_TABLE_NAME`.
-2. Confirm the IAM role attached to wherever this runs has read access
-   (`GetItem` / `Query` / `Scan`) to that table only.
-3. Open `app/data/dynamodb_source.py` and adjust `_map_item` if the table's
-   real attribute names differ from the shape in `app/models.py`.
+1. Set `DATA_SOURCE=dynamodb`, `AWS_REGION`, `DYNAMODB_TABLE_NAME`, and (for a
+   static IAM-user key pair, as opposed to an attached role) `AWS_ACCESS_KEY_ID`
+   / `AWS_SECRET_ACCESS_KEY` in `.env`.
+2. Restart the process — `get_settings()`/`get_data_source()` are cached
+   singletons, so an already-running server won't pick up an edited `.env`.
+3. The real table's mapping is already implemented in
+   `app/data/dynamodb_source.py` — its module docstring documents exactly
+   what's derived, what's a best-effort/provisional assumption (event/status
+   derivation from raw flags, the 15-minute staleness threshold), and what's
+   deliberately not mapped yet (zone-level detail).
 
 No other file changes — the API layer, auth, and the frontend are all
 already written against the `DataSource` interface, not against DynamoDB

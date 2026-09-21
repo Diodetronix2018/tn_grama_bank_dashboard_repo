@@ -16,5 +16,7 @@ def get_data_source() -> DataSource:
         return DynamoDBDataSource(
             table_name=settings.dynamodb_table_name,
             region=settings.aws_region,
+            access_key_id=settings.aws_access_key_id,
+            secret_access_key=settings.aws_secret_access_key.get_secret_value(),
         )
     return MockDataSource()

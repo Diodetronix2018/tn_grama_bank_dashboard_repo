@@ -9,6 +9,7 @@ here.
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,6 +34,13 @@ class Settings(BaseSettings):
     # Only read when data_source == "dynamodb".
     aws_region: str = ""
     dynamodb_table_name: str = ""
+
+    # Read only by scripts/check_aws_connection.py today -- DynamoDBDataSource
+    # itself is not wired to use these yet (deferred to the schema-mapping
+    # phase). SecretStr keeps the raw value out of any accidental repr/log;
+    # call .get_secret_value() at the one point that actually needs it.
+    aws_access_key_id: str = ""
+    aws_secret_access_key: SecretStr = SecretStr("")
 
     @property
     def api_key_set(self) -> set[str]:

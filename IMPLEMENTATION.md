@@ -149,14 +149,32 @@ at the top of that file.
 - CI workflow added (`.github/workflows/backend-ci.yml`): runs `pytest`
   and `pip-audit` on every push touching `backend/`.
 
+## Update (2026-09-21) — AWS credentials received and verified
+
+A read-only IAM user (`tngrama_dashboard_reader`, not a role as originally
+anticipated) was issued: `dynamodb:GetItem`/`Query`/`Scan`/`BatchGetItem`/
+`DescribeTable` on `dtx_tngrama_telemetry` (region `ap-south-1`, account
+`927656030687`), no write/delete access anywhere. Credentials are stored in
+`backend/.env` (gitignored, never committed) and connectivity/authorization is
+verified end-to-end via `backend/scripts/check_aws_connection.py` (see
+`backend/README.md`, "Verify real AWS credentials"). `DATA_SOURCE` stays
+`mock` — this only proves the backend *can* reach the real table, not that it
+serves from it yet.
+
+Also learned in this pass: `dtx_tngrama_telemetry` stores one row per *event*,
+not one row per branch, and a `DeviceStatus` table (one row per panel's
+current state) doesn't exist yet. This means the deferred schema-mapping work
+below isn't just a field-rename in `_map_item` — it needs to decide how to
+derive "current status per branch" from an event log (aggregate the latest
+event per branch, or wait for `DeviceStatus`).
+
 ## What's still blocked
 
-Unchanged from the approved plan:
-
-- **Phase 0 / Phase 1** — the real DynamoDB table name, region, key
-  structure, a sample item, and the IAM role ARN. Until these arrive,
-  `dynamodb_source.py` is written and wired but never selected
-  (`DATA_SOURCE=mock` stays the default).
+- **Schema mapping** — a real sample item (or `dashboard_data_access_guide.md`,
+  referenced in the handoff but not yet shared) is still needed before
+  `dynamodb_source.py`'s `_map_item()`/`list_branches()` can be rewritten
+  against the real event shape, and before `DATA_SOURCE=dynamodb` can be
+  safely turned on.
 - **Phase 7 decision** — which AWS account this deploys into, and the
   dashboard's own login/identity mechanism, both still open questions.
 - **Phase 11** — go-live checklist, which depends on all of the above.

@@ -6,7 +6,12 @@
   "use strict";
 
   function apiBaseUrl() {
-    return (App.data && App.data.apiBaseUrl) || "http://localhost:8787";
+    // Not "||" -- App.data.apiBaseUrl is deliberately "" for a same-origin
+    // deployment (see liveSource.js), and "" is falsy in JS, so "||" would
+    // silently fall back to the hardcoded localhost URL below even when
+    // same-origin is exactly what's wanted.
+    var base = App.data && App.data.apiBaseUrl;
+    return base !== undefined && base !== null ? base : "http://localhost:8787";
   }
 
   function postJson(path, body) {

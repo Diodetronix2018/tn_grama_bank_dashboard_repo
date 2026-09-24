@@ -1,11 +1,11 @@
-"""API-key auth and rate limiting.
+"""Session-cookie auth and rate limiting.
 
-This is the interim access-control layer called for in the implementation
-plan's Phase 5: it stops casual scraping and unauthenticated access, but a
-key shipped to a browser is visible to anyone who opens dev tools. It is
-not a substitute for a real identity provider (Cognito, etc.) -- that
-decision is still open, tracked as a Phase 0 item. Treat this key the way
-you'd treat a "staging" credential, not a production secret.
+Access to /api/branches (and everything else that matters) requires a valid
+session cookie, issued by /api/auth/login after a real Cognito check (see
+app/auth/session.py and app/routers/auth.py). The earlier X-API-Key model
+was always an explicit stopgap for exactly this; it's been removed rather
+than kept alongside sessions, since a static never-expiring key would be a
+strictly weaker parallel front door.
 
 Rate limiting (via slowapi's Limiter below) is in-memory and single-process
 -- it does not coordinate across multiple uvicorn workers or multiple
@@ -16,10 +16,11 @@ multi-instance topology exists.
 
 import logging
 
-from fastapi import Header, HTTPException, Request, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from app.auth.session import verify_session_token
 from app.config import get_settings
 
 logger = logging.getLogger("app.security")
@@ -44,18 +45,29 @@ def get_client_ip(request: Request) -> str:
 limiter = Limiter(key_func=get_client_ip)
 
 
-async def require_api_key(
+def _log_auth_failed(request: Request, reason: str) -> None:
+    client_ip = get_client_ip(request)
+    request_id = getattr(request.state, "request_id", "-")
+    logger.warning(
+        "auth_failed reason=%s client_ip=%s path=%s request_id=%s",
+        reason, client_ip, request.url.path, request_id,
+    )
+
+
+async def require_session(
     request: Request,
-    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    tngb_session: str | None = Cookie(default=None),
 ) -> None:
     settings = get_settings()
-    if not x_api_key or x_api_key not in settings.api_key_set:
-        client_ip = get_client_ip(request)
-        request_id = getattr(request.state, "request_id", "-")
-        logger.warning(
-            "auth_failed client_ip=%s path=%s request_id=%s", client_ip, request.url.path, request_id
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid API key",
-        )
+    claims = verify_session_token(tngb_session, settings) if tngb_session else None
+    if claims is None:
+        _log_auth_failed(request, "invalid_or_missing_session")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    request.state.session_claims = claims
+
+
+async def require_admin(request: Request, _: None = Depends(require_session)) -> None:
+    groups = request.state.session_claims.get("groups") or []
+    if "admins" not in groups:
+        _log_auth_failed(request, "not_admin")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")

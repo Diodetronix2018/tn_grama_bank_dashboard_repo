@@ -2,17 +2,20 @@ import logging
 import re
 import time
 import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.auth.cognito import get_cognito_client
 from app.config import Settings, get_settings
 from app.data import get_data_source
 from app.logging_config import configure_logging
-from app.routers import branches, health
+from app.routers import auth, branches, health
 from app.security import limiter
 
 settings = get_settings()
@@ -39,7 +42,22 @@ def _validate_dynamodb_settings(settings: Settings) -> None:
         )
 
 
+def _validate_session_secret(settings: Settings) -> None:
+    # Pure settings check, no AWS call -- safe to run eagerly at import time
+    # (unlike Cognito-client construction, which is deliberately lazy; see
+    # app/auth/cognito.py's module docstring).
+    if settings.environment != "production":
+        return
+    secret = settings.session_secret_key.get_secret_value()
+    if secret == "dev-local-session-secret-change-me" or len(secret) < 32:
+        raise RuntimeError(
+            "SESSION_SECRET_KEY must be set to a long random value before running with "
+            "ENVIRONMENT=production (see .env.example)"
+        )
+
+
 _validate_dynamodb_settings(settings)
+_validate_session_secret(settings)
 try:
     get_data_source()  # eager construction -- surfaces bad config now, not on first request
 except Exception as exc:
@@ -66,9 +84,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.cors_allow_origin],
-    allow_credentials=False,
-    allow_methods=["GET"],
-    allow_headers=["X-API-Key"],
+    allow_credentials=True,  # required for the session cookie; safe since allow_origins is one exact origin, never "*"
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -124,12 +142,32 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
     response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
     response.headers["Access-Control-Allow-Origin"] = settings.cors_allow_origin
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["X-Request-ID"] = request_id
     return response
 
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(branches.router)
+
+if settings.demo_mode:
+    # login()'s cognito dependency (Depends(get_cognito_client)) would
+    # otherwise raise RuntimeError on every request, since demo mode is only
+    # ever turned on precisely when Cognito isn't provisioned. Overriding it
+    # to None here is the same mechanism the test suite uses to fake Cognito
+    # (see tests/test_auth_router.py); login()'s demo branch never touches
+    # this value. Real (non-demo) behavior is completely unaffected -- this
+    # block does nothing unless DEMO_MODE=true.
+    app.dependency_overrides[get_cognito_client] = lambda: None
+
+if settings.serve_dashboard_static:
+    # V1-demo-only: serves tngb-dashboard as one deployable unit with this
+    # API instead of hosting it separately. Registered last and mounted at
+    # "/" so it never shadows the routes above -- Starlette matches routes
+    # in registration order, and this only catches what nothing else claimed.
+    _dashboard_dir = Path(__file__).resolve().parent.parent.parent / "tngb-dashboard"
+    app.mount("/", StaticFiles(directory=_dashboard_dir, html=True), name="dashboard")
 
 logger.info(
     "startup data_source=%s cors_origin=%s environment=%s", settings.data_source, settings.cors_allow_origin, settings.environment

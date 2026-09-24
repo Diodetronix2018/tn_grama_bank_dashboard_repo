@@ -6,11 +6,11 @@ from app.config import Settings, get_settings
 from app.data import get_data_source
 from app.data.base import DataSource
 from app.models import Branch, BranchListResponse
-from app.security import limiter, require_api_key
+from app.security import limiter, require_session
 
 logger = logging.getLogger("app.routers.branches")
 
-router = APIRouter(prefix="/api", dependencies=[Depends(require_api_key)])
+router = APIRouter(prefix="/api", dependencies=[Depends(require_session)])
 
 
 @router.get("/branches", response_model=BranchListResponse)

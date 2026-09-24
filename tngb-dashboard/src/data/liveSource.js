@@ -4,15 +4,29 @@
    exactly as it did before (src/data/master.js generates its own sample
    set, same as tests/selftest.html still does).
 
-   CONFIG below is a local-development convenience, not how a real
-   deployment should hold its key -- see backend/.env.example and
-   IMPLEMENTATION.md for the production note on this. */
+   apiBaseUrl below is a local-development convenience, not how a real
+   deployment should hold it -- see backend/.env.example and
+   IMPLEMENTATION.md for the production note on this.
+
+   Auth is now a signed session cookie (see src/data/authSource.js), not an
+   API key -- every fetch here sends credentials:"include" so the browser
+   attaches it. apiBaseUrl is deliberately "localhost", not "127.0.0.1":
+   the session cookie is Secure+SameSite=Strict, and browsers treat
+   localhost/127.0.0.1 as different *sites* even though they're the same
+   machine -- SameSite=Strict would silently withhold the cookie across
+   that mismatch. Serve this dashboard via `python -m http.server 8000`
+   (http://localhost:8000), not as a file:// page, for the same reason. */
 (function (App) {
   "use strict";
 
+  /* Port 8000 is this repo's documented local-dev static-file-server port
+     (see README): frontend and backend run as two separate processes there,
+     so the API needs an absolute URL. Anywhere else (a single combined
+     deployment serving both from one origin -- see backend/app/main.py's
+     serve_dashboard_static), a relative path targets whatever origin this
+     page was actually loaded from. */
   var CONFIG = {
-    apiBaseUrl: "http://127.0.0.1:8787",
-    apiKey: "dev-local-key-change-me",
+    apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
   };
 
   /* The upstream telemetry table gets a new record roughly every 5 minutes;
@@ -33,9 +47,14 @@
 
   function load() {
     return fetch(CONFIG.apiBaseUrl + "/api/branches", {
-      headers: { "X-API-Key": CONFIG.apiKey },
+      credentials: "include",
     })
       .then(function (res) {
+        if (res.status === 401) {
+          var authErr = new Error("Session expired");
+          authErr.isAuthError = true;
+          throw authErr;
+        }
         if (!res.ok) {
           throw new Error("Branch data service returned HTTP " + res.status);
         }
@@ -56,8 +75,10 @@
      if the previous fetch hasn't settled yet -- avoids overlapping requests
      if the backend is briefly slow. A failed poll rejects inside load()
      before setBranches() runs, so it never disturbs the data already on
-     screen; it only reports itself via App.reportRefresh so app.js can show
-     a low-key indicator instead of the full-page boot-error screen. */
+     screen. A session-expiry failure is reported distinctly (via
+     App.onSessionExpired) from any other failure (App.reportRefresh's
+     low-key "feed delayed" indicator) -- a timed-out session needs the
+     operator to sign in again, not just a retry. */
   function poll() {
     if (inFlight) return;
     inFlight = true;
@@ -68,6 +89,10 @@
       },
       function (err) {
         inFlight = false;
+        if (err && err.isAuthError && App.onSessionExpired) {
+          App.onSessionExpired();
+          return;
+        }
         if (App.reportRefresh) App.reportRefresh(false, err && err.message);
       }
     );
@@ -78,6 +103,14 @@
     pollTimer = setInterval(poll, POLL_INTERVAL_MS);
   }
 
+  function stopPolling() {
+    if (!pollTimer) return;
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  App.data.apiBaseUrl = CONFIG.apiBaseUrl;
   App.data.load = load;
   App.data.startPolling = startPolling;
+  App.data.stopPolling = stopPolling;
 })(window.App = window.App || {});

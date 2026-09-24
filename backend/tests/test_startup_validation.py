@@ -2,7 +2,7 @@ import pytest
 from pydantic import SecretStr
 
 from app.config import Settings
-from app.main import _validate_dynamodb_settings
+from app.main import _validate_dynamodb_settings, _validate_session_secret
 
 
 def _settings(**overrides) -> Settings:
@@ -56,3 +56,25 @@ def test_dynamodb_with_all_fields_passes():
         aws_secret_access_key=SecretStr("dummy-secret"),
     )
     _validate_dynamodb_settings(settings)  # must not raise
+
+
+def test_session_secret_not_checked_in_development():
+    settings = Settings(environment="development", session_secret_key=SecretStr("dev-local-session-secret-change-me"))
+    _validate_session_secret(settings)  # must not raise
+
+
+def test_session_secret_rejects_dev_default_in_production():
+    settings = Settings(environment="production", session_secret_key=SecretStr("dev-local-session-secret-change-me"))
+    with pytest.raises(RuntimeError):
+        _validate_session_secret(settings)
+
+
+def test_session_secret_rejects_short_value_in_production():
+    settings = Settings(environment="production", session_secret_key=SecretStr("too-short"))
+    with pytest.raises(RuntimeError):
+        _validate_session_secret(settings)
+
+
+def test_session_secret_accepts_long_random_value_in_production():
+    settings = Settings(environment="production", session_secret_key=SecretStr("x" * 40))
+    _validate_session_secret(settings)  # must not raise

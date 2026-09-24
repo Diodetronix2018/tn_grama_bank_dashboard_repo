@@ -1,0 +1,71 @@
+name: backend-deploy
+
+# Deploys backend/template.yaml (Lambda + API Gateway) via AWS SAM.
+#
+# Cannot run successfully today -- it needs, all currently nonexistent:
+#   - AWS_DEPLOY_ROLE_ARN: an IAM role trusting token.actions.githubusercontent.com,
+#     scoped by `sub` to this repo, with permission to run the CloudFormation
+#     stack operations and create the Lambda/API Gateway/execution-role
+#     resources this template needs. New AWS-admin work.
+#   - repo secrets: AWS_REGION, COGNITO_USER_POOL_ID, COGNITO_APP_CLIENT_ID,
+#     COGNITO_APP_CLIENT_SECRET, SESSION_SECRET_KEY, CORS_ALLOW_ORIGIN,
+#     DYNAMODB_TABLE_NAME. The Cognito three are blocked on the same
+#     Cognito-provisioning step already blocking login (see IMPLEMENTATION.md);
+#     the rest are known values just not yet placed as secrets.
+#
+# Written and reviewable now; becomes runnable the moment those exist --
+# same "build now, blocked on external access" pattern as the rest of this
+# project. See backend/README.md, "Deploying" for the manual equivalent.
+
+on:
+  push:
+    tags: ["backend-v*"]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Deployment stage"
+        default: "prod"
+
+permissions:
+  id-token: write # required for OIDC -- no long-lived AWS keys in this repo
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials (OIDC, no static keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: sam build
+        run: sam build --use-container
+
+      - name: sam deploy
+        run: |
+          sam deploy \
+            --no-confirm-changeset --no-fail-on-empty-changeset \
+            --stack-name tngb-branch-data-api \
+            --capabilities CAPABILITY_IAM \
+            --resolve-s3 \
+            --parameter-overrides \
+              Stage=${{ inputs.stage || 'prod' }} \
+              CognitoUserPoolId=${{ secrets.COGNITO_USER_POOL_ID }} \
+              CognitoAppClientId=${{ secrets.COGNITO_APP_CLIENT_ID }} \
+              CognitoAppClientSecret=${{ secrets.COGNITO_APP_CLIENT_SECRET }} \
+              SessionSecretKey=${{ secrets.SESSION_SECRET_KEY }} \
+              CorsAllowOrigin=${{ secrets.CORS_ALLOW_ORIGIN }} \
+              DynamoDbTableName=${{ secrets.DYNAMODB_TABLE_NAME }}

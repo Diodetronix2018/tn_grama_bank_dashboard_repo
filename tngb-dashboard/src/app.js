@@ -22,6 +22,7 @@
     now: new Date(),
     lastUpdated: null,
     refreshError: null,
+    userEmail: null,
 
     /* Overview */
     regionSearch: "",
@@ -158,6 +159,13 @@
     refs.clock = h("span", u.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
     refs.freshness = h("span.freshness");
+    refs.userChip = h("span", state.userEmail || "");
+
+    var signOut = h(
+      "div.user-chip",
+      refs.userChip,
+      h("button.sign-out-btn", { type: "button", onclick: signOut }, "Sign out")
+    );
 
     return h(
       "header.topbar",
@@ -165,7 +173,8 @@
       h("div.topbar-right",
         refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
-        refs.pill)
+        refs.pill,
+        signOut)
     );
   }
 
@@ -214,6 +223,8 @@
       ? "Live feed delayed — showing data from " + u.fmtClock(state.lastUpdated)
       : "Updated " + u.fmtClock(state.lastUpdated);
 
+    if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
+
     Object.keys(refs.navButtons).forEach(function (key) {
       var isActive = key === state.active;
       refs.navButtons[key].classList.toggle("is-active", isActive);
@@ -227,6 +238,8 @@
 
   /* ---- Boot ------------------------------------------------------------ */
 
+  var chromeInitialized = false;
+
   function boot() {
     var root = document.getElementById("app");
     App.dom.clear(root);
@@ -238,20 +251,28 @@
     var hash = window.location.hash.slice(1);
     if (App.views[hash]) state.active = hash;
 
-    window.addEventListener("hashchange", function () {
-      var key = window.location.hash.slice(1);
-      if (App.views[key] && key !== state.active) {
-        state.active = key;
-        render();
-      }
-    });
+    /* One-time setup only -- boot() can now run more than once per page
+       load (e.g. after a session expires and the operator signs back in),
+       and re-registering these each time would stack up duplicate timers
+       and listeners. */
+    if (!chromeInitialized) {
+      chromeInitialized = true;
 
-    /* The header clock is the only thing that ticks; repainting the whole
-       content region every second would fight with scrolling and typing. */
-    setInterval(function () {
-      state.now = new Date();
-      refs.clock.textContent = u.fmtClock(state.now);
-    }, 1000);
+      window.addEventListener("hashchange", function () {
+        var key = window.location.hash.slice(1);
+        if (App.views[key] && key !== state.active) {
+          state.active = key;
+          render();
+        }
+      });
+
+      /* The header clock is the only thing that ticks; repainting the whole
+         content region every second would fight with scrolling and typing. */
+      setInterval(function () {
+        state.now = new Date();
+        refs.clock.textContent = u.fmtClock(state.now);
+      }, 1000);
+    }
 
     render();
 
@@ -277,16 +298,12 @@
     root.appendChild(h("div.boot-state", card));
   }
 
-  /* If src/data/liveSource.js is loaded (see index.html), App.data.load
-     fetches branch records from the backend before anything renders. Without
-     it (as in tests/selftest.html) the dashboard boots straight into the
-     generated sample data, exactly as before. */
-  function start() {
-    if (!App.data.load) {
-      boot();
-      return;
-    }
-
+  /* Fetches branch data and boots the dashboard shell, or shows a blocking
+     retry screen on failure -- shared by the initial page load and by a
+     fresh login after a session expired. A 401 mid-fetch (session expired
+     between checking /me and this actually running) falls back to the
+     login screen rather than the generic retry screen. */
+  function loadThenBoot() {
     renderBootState(
       "Loading branch data",
       "Fetching the live feed from the branch data service…",
@@ -297,18 +314,299 @@
       state.lastUpdated = new Date();
       boot();
     }, function (err) {
+      if (err && err.isAuthError) {
+        renderLoginScreen("Your session expired — sign in again.");
+        return;
+      }
       renderBootState(
         "Could not reach the branch data service",
         (err && err.message ? err.message : "Request failed") +
           ". Confirm the backend is running (see backend/README.md), then retry.",
         true,
-        start
+        loadThenBoot
       );
+    });
+  }
+
+  /* ---- Auth ------------------------------------------------------------- */
+
+  function renderLoginScreen(message) {
+    if (App.data.stopPolling) App.data.stopPolling();
+
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var usernameInput = h("input.text-input", {
+      type: "text", id: "login-username", placeholder: "Email", autocomplete: "username",
+    });
+    var passwordInput = h("input.text-input", {
+      type: "password", id: "login-password", placeholder: "Password", autocomplete: "current-password",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var username = usernameInput.value.trim();
+      var password = passwordInput.value;
+      if (!username || !password) {
+        errorBox.textContent = "Enter your email and password.";
+        return;
+      }
+      errorBox.textContent = "Signing in…";
+      App.auth.login(username, password).then(function (res) {
+        if (res.status === "new_password_required") {
+          renderNewPasswordScreen(username, res.session);
+          return;
+        }
+        if (res.status === "mfa_required") {
+          renderMfaScreen(username, res.mfa_type, res.session);
+          return;
+        }
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderLoginScreen((err && err.message) || "Sign-in failed.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    usernameInput.onkeydown = onEnter;
+    passwordInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "TN Grama Bank — Sign in"),
+      h("div.login-field", h("label", { for: "login-username" }, "Email"), usernameInput),
+      h("div.login-field", h("label", { for: "login-password" }, "Password"), passwordInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Sign in"),
+      h("button.forgot-password-link", { type: "button", onclick: function () { renderForgotPasswordScreen(); } }, "Forgot password?")
+    );
+    root.appendChild(h("div.boot-state", card));
+    usernameInput.focus();
+  }
+
+  /* Admin-created accounts get a temporary password and must set a real one
+     on first login -- Cognito's NEW_PASSWORD_REQUIRED challenge, surfaced by
+     /api/auth/login as {status:"new_password_required", session}. */
+  function renderNewPasswordScreen(username, cognitoSession, message) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var newPasswordInput = h("input.text-input", {
+      type: "password", id: "new-password", placeholder: "New password", autocomplete: "new-password",
+    });
+    var confirmInput = h("input.text-input", {
+      type: "password", id: "confirm-password", placeholder: "Confirm new password", autocomplete: "new-password",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var newPassword = newPasswordInput.value;
+      if (!newPassword || newPassword !== confirmInput.value) {
+        errorBox.textContent = "Passwords must match and cannot be empty.";
+        return;
+      }
+      errorBox.textContent = "Setting your password…";
+      App.auth.completeNewPassword(username, newPassword, cognitoSession).then(function (res) {
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderNewPasswordScreen(username, cognitoSession, (err && err.message) || "Could not set your password.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    newPasswordInput.onkeydown = onEnter;
+    confirmInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Set a new password"),
+      h("div.boot-detail", "First sign-in for " + username + " — choose a password only you know."),
+      h("div.login-field", h("label", { for: "new-password" }, "New password"), newPasswordInput),
+      h("div.login-field", h("label", { for: "confirm-password" }, "Confirm new password"), confirmInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Set password and sign in")
+    );
+    root.appendChild(h("div.boot-state", card));
+    newPasswordInput.focus();
+  }
+
+  /* Cognito's SMS_MFA / SOFTWARE_TOKEN_MFA challenge -- only appears for
+     accounts that have MFA enrolled (the pool is MfaConfiguration=OPTIONAL,
+     not required), so a non-MFA account's login is completely unaffected. */
+  function renderMfaScreen(username, mfaType, cognitoSession, message) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var codeInput = h("input.text-input", {
+      type: "text", id: "mfa-code", placeholder: "6-digit code", autocomplete: "one-time-code",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var code = codeInput.value.trim();
+      if (!code) {
+        errorBox.textContent = "Enter the code from your authenticator.";
+        return;
+      }
+      errorBox.textContent = "Verifying…";
+      App.auth.completeMfa(username, mfaType, code, cognitoSession).then(function (res) {
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderMfaScreen(username, mfaType, cognitoSession, (err && err.message) || "Invalid code.");
+      });
+    }
+
+    codeInput.onkeydown = function (e) { if (e.key === "Enter") submit(); };
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Verification code"),
+      h("div.boot-detail", "Enter the verification code for " + username + "."),
+      h("div.login-field", h("label", { for: "mfa-code" }, "Code"), codeInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Verify")
+    );
+    root.appendChild(h("div.boot-state", card));
+    codeInput.focus();
+  }
+
+  /* Cognito's self-service reset: step 1 (this screen) emails a code and
+     always shows the same message whether or not the account exists (the
+     backend guarantees that -- this screen never learns which). Step 2 is
+     renderResetPasswordScreen. */
+  function renderForgotPasswordScreen() {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var usernameInput = h("input.text-input", {
+      type: "text", id: "forgot-username", placeholder: "Email", autocomplete: "username",
+    });
+    var errorBox = h("div.login-error", "");
+
+    function submit() {
+      var username = usernameInput.value.trim();
+      if (!username) {
+        errorBox.textContent = "Enter your email.";
+        return;
+      }
+      errorBox.textContent = "Sending…";
+      var fallbackDetail = "If that account exists, a reset code has been sent to its email.";
+      App.auth.forgotPassword(username).then(function (res) {
+        renderResetPasswordScreen(username, res.detail || fallbackDetail);
+      }, function () {
+        renderResetPasswordScreen(username, fallbackDetail);
+      });
+    }
+
+    usernameInput.onkeydown = function (e) { if (e.key === "Enter") submit(); };
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Reset your password"),
+      h("div.login-field", h("label", { for: "forgot-username" }, "Email"), usernameInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Send reset code"),
+      h("button.forgot-password-link", { type: "button", onclick: function () { renderLoginScreen(); } }, "Back to sign in")
+    );
+    root.appendChild(h("div.boot-state", card));
+    usernameInput.focus();
+  }
+
+  function renderResetPasswordScreen(username, detail, error) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var codeInput = h("input.text-input", {
+      type: "text", id: "reset-code", placeholder: "Reset code", autocomplete: "one-time-code",
+    });
+    var newPasswordInput = h("input.text-input", {
+      type: "password", id: "reset-new-password", placeholder: "New password", autocomplete: "new-password",
+    });
+    var confirmInput = h("input.text-input", {
+      type: "password", id: "reset-confirm-password", placeholder: "Confirm new password", autocomplete: "new-password",
+    });
+    var errorBox = h("div.login-error", error || "");
+
+    function submit() {
+      var code = codeInput.value.trim();
+      var newPassword = newPasswordInput.value;
+      if (!code || !newPassword || newPassword !== confirmInput.value) {
+        errorBox.textContent = "Enter the code and matching new passwords.";
+        return;
+      }
+      errorBox.textContent = "Resetting…";
+      App.auth.confirmForgotPassword(username, code, newPassword).then(function () {
+        renderLoginScreen("Password reset — sign in with your new password.");
+      }, function (err) {
+        renderResetPasswordScreen(username, detail, (err && err.message) || "Could not reset your password.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    codeInput.onkeydown = onEnter;
+    newPasswordInput.onkeydown = onEnter;
+    confirmInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Enter reset code"),
+      h("div.boot-detail", detail || ""),
+      h("div.login-field", h("label", { for: "reset-code" }, "Reset code"), codeInput),
+      h("div.login-field", h("label", { for: "reset-new-password" }, "New password"), newPasswordInput),
+      h("div.login-field", h("label", { for: "reset-confirm-password" }, "Confirm new password"), confirmInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Reset password")
+    );
+    root.appendChild(h("div.boot-state", card));
+    codeInput.focus();
+  }
+
+  function signOut() {
+    App.auth.logout().then(afterSignOut, afterSignOut);
+  }
+
+  function afterSignOut() {
+    state.userEmail = null;
+    state.lastUpdated = null;
+    state.refreshError = null;
+    renderLoginScreen();
+  }
+
+  /* Called by src/data/liveSource.js when a background poll gets a 401 --
+     the session timed out mid-use. Distinct from a network hiccup
+     (reportRefresh's low-key "feed delayed" indicator): this needs the
+     operator to sign in again, not just a retry. */
+  function onSessionExpired() {
+    state.userEmail = null;
+    renderLoginScreen("Your session expired — sign in again.");
+  }
+
+  /* If src/data/liveSource.js is loaded (see index.html), a session check
+     runs before anything renders: a valid session loads branch data and
+     boots straight in (silent resume); no session shows the login screen.
+     Without liveSource.js/authSource.js (as in tests/selftest.html) the
+     dashboard boots straight into the generated sample data, exactly as
+     before -- unauthenticated dashboard views are never part of that path. */
+  function start() {
+    if (!App.data.load || !App.auth) {
+      boot();
+      return;
+    }
+
+    App.auth.me().then(function (res) {
+      state.userEmail = res.email;
+      loadThenBoot();
+    }, function () {
+      renderLoginScreen();
     });
   }
 
   App.start = start;
   App.reportRefresh = reportRefresh;
+  App.onSessionExpired = onSessionExpired;
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
   } else {

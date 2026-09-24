@@ -3,40 +3,41 @@ import logging
 from fastapi.testclient import TestClient
 from starlette.requests import Request
 
+from app.auth.session import create_session_token
 from app.config import get_settings
 from app.main import app
 from app.security import get_client_ip
 
 client = TestClient(app)
-HEADERS = {"X-API-Key": "dev-local-key-change-me"}
 
 
-def test_missing_key_is_rejected():
+def test_missing_session_is_rejected():
     response = client.get("/api/branches")
     assert response.status_code == 401
 
 
-def test_wrong_key_is_rejected():
-    response = client.get("/api/branches", headers={"X-API-Key": "not-the-right-key"})
+def test_invalid_session_cookie_is_rejected():
+    response = client.get("/api/branches", cookies={"tngb_session": "not-a-real-token"})
     assert response.status_code == 401
 
 
+def test_valid_session_cookie_is_accepted():
+    token = create_session_token("alice@example.com", [], get_settings())
+    response = client.get("/api/branches", cookies={"tngb_session": token})
+    assert response.status_code == 200
+
+
 def test_cors_blocks_other_origins():
-    response = client.get(
-        "/api/branches",
-        headers={"X-API-Key": "dev-local-key-change-me", "Origin": "https://not-the-dashboard.example"},
-    )
+    response = client.get("/health", headers={"Origin": "https://not-the-dashboard.example"})
     # The request still succeeds server-side (CORS is enforced by the browser,
     # not the server) but the response must not grant that origin access.
     assert "access-control-allow-origin" not in response.headers
 
 
 def test_cors_allows_configured_origin():
-    response = client.get(
-        "/api/branches",
-        headers={"X-API-Key": "dev-local-key-change-me", "Origin": "http://localhost:8000"},
-    )
+    response = client.get("/health", headers={"Origin": "http://localhost:8000"})
     assert response.headers.get("access-control-allow-origin") == "http://localhost:8000"
+    assert response.headers.get("access-control-allow-credentials") == "true"
 
 
 def test_security_headers_present():

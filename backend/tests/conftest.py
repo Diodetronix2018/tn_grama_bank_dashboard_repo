@@ -11,6 +11,7 @@ os.environ["DATA_SOURCE"] = "mock"
 import pytest
 
 from app.config import get_settings
+from app.security import limiter
 
 
 @pytest.fixture(autouse=True)
@@ -21,3 +22,14 @@ def _reset_settings_cache():
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """slowapi's Limiter is in-memory and keyed by client IP -- every
+    TestClient request looks like it comes from the same IP, so without
+    this a login-rate-limit test would leak its count into every other
+    test in the same process that happens to hit a rate-limited route."""
+    limiter.reset()
+    yield
+    limiter.reset()

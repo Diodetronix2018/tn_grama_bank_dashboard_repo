@@ -20,10 +20,6 @@ class Settings(BaseSettings):
     # "dynamodb" reads the real table via the granted IAM role.
     data_source: Literal["mock", "dynamodb"] = "mock"
 
-    # Comma-separated list of accepted API keys. Rotate by adding a new key
-    # and removing the old one on the next deploy -- never reuse a leaked key.
-    api_keys: str = "dev-local-key-change-me"
-
     # Dashboard origin allowed to call this API. Never "*" outside local dev.
     cors_allow_origin: str = "http://localhost:8000"
 
@@ -62,9 +58,42 @@ class Settings(BaseSettings):
     # concurrent/rapid requests into a single scan.
     branches_cache_ttl_seconds: float = 60.0
 
-    @property
-    def api_key_set(self) -> set[str]:
-        return {k.strip() for k in self.api_keys.split(",") if k.strip()}
+    # Cognito identity provider. Empty by default -- local dev and the test
+    # suite never touch Cognito (see app/auth/cognito.py's module docstring).
+    cognito_user_pool_id: str = ""
+    cognito_app_client_id: str = ""
+    cognito_app_client_secret: SecretStr = SecretStr("")
+
+    # HMAC key for OUR OWN session cookie (app/auth/session.py) -- not a
+    # Cognito credential. Rotating this immediately logs out every active
+    # session. Must be a long random value in any real deployment; the dev
+    # default below is intentionally obvious and checked for at startup
+    # (see main.py's _validate_session_secret) when environment=production.
+    session_secret_key: SecretStr = SecretStr("dev-local-session-secret-change-me")
+
+    # How long a session cookie is valid. Short on purpose: there is no
+    # server-side revocation (see app/auth/session.py's module docstring),
+    # so this TTL is what bounds a stolen-cookie exposure window.
+    session_ttl_minutes: int = 30
+
+    # Tighter than the general rate_limit -- /api/auth/login is the one
+    # endpoint brute-forcing/credential-stuffing actually gains anything from.
+    login_rate_limit: str = "5/minute"
+
+    # Demo-only shortcut for showing the dashboard before a real Cognito
+    # pool exists (see app/routers/auth.py's _demo_login). False by default
+    # -- must be explicitly turned on for a demo deployment, never in a real
+    # one. Delete this and _demo_login once Cognito is provisioned; nothing
+    # else in the auth code changes.
+    demo_mode: bool = False
+    demo_username: str = ""
+    demo_password: SecretStr = SecretStr("")
+
+    # Serves tngb-dashboard's static files from this same FastAPI app when
+    # true, so a demo can be deployed as one service instead of two. See
+    # main.py. Independent of demo_mode (you could serve the real dashboard
+    # this way too), but in practice only turned on together for the V1 demo.
+    serve_dashboard_static: bool = False
 
 
 @lru_cache

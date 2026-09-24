@@ -31,6 +31,7 @@ def test_docs_disabled_when_environment_is_production(monkeypatch):
     from app.data import get_data_source
 
     monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("SESSION_SECRET_KEY", "x" * 40)  # else _validate_session_secret blocks the reload
     get_settings.cache_clear()
     try:
         importlib.reload(main_module)

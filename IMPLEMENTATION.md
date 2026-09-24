@@ -190,6 +190,96 @@ touches a developer's local `.env`/real AWS). Full detail and rationale in
 each touched file's docstring/comments, and `backend/README.md`'s
 "Known limitations" and "Before any non-local deployment" sections.
 
+## Update (2026-09-23) — Login/logout built (backend + dashboard), blocked on Cognito provisioning
+
+The dashboard now requires signing in. `/api/branches` and every other route
+needs a valid session, issued by a new `/api/auth/login` after checking
+credentials against AWS Cognito (`AdminInitiateAuth`) — no self-registration,
+accounts are admin-created (`POST /api/auth/users`). The earlier `X-API-Key`
+model is fully removed, not kept alongside it.
+
+Session is a short-lived (30 min), backend-signed, httpOnly/Secure/
+SameSite=Strict cookie — Cognito's own tokens never reach the browser, and
+there's no server-side session store (a deliberate choice: this app's
+anticipated deployment target is Lambda, where in-memory/DynamoDB session
+state adds real complexity for a benefit — instant revocation — this
+internal tool doesn't need at a 30-minute TTL). Signing uses stdlib
+`hmac`/`hashlib` only, no new dependency. Full rationale in
+`backend/app/auth/session.py`'s module docstring.
+
+**Nothing about Cognito exists in AWS yet** — same shape of blocker as the
+original DynamoDB access. All the code (`backend/app/auth/`,
+`backend/app/routers/auth.py`, the dashboard's login/new-password screens,
+sign-out) is built, tested (30+ new backend tests against a fake Cognito
+client, no real AWS needed), and verified end-to-end against the real
+running backend/dashboard — confirmed live that `/api/auth/login` correctly
+returns a safe, generic error today (Cognito not configured) rather than
+crashing or leaking anything, and that a real session cookie correctly
+grants dashboard access once minted. What's missing is real Cognito to mint
+that cookie from an actual login.
+
+**To unblock:** a Cognito User Pool + App Client need to be provisioned and
+handed over (see `backend/README.md`, "Login (Cognito)"). Specifically:
+
+- Sign-in by email, self-registration disabled (admin-create only),
+  password policy 12+ chars with upper/lower/number/symbol, MFA provisioned
+  as `OPTIONAL` (login flow already handles the `SMS_MFA`/`SOFTWARE_TOKEN_MFA`
+  challenge — see the 2026-09-24 update below — so this activates automatically
+  for any user who has MFA enrolled, no further code changes needed).
+- App Client: confidential (has a secret — the browser never talks to
+  Cognito directly), only `ALLOW_ADMIN_USER_PASSWORD_AUTH` enabled, no
+  Hosted UI.
+- IAM, scoped to that one User Pool's ARN: `AdminInitiateAuth`,
+  `AdminRespondToAuthChallenge`, `AdminCreateUser`, `AdminAddUserToGroup`,
+  `AdminListGroupsForUser`, `AdminDisableUser`, `AdminEnableUser`,
+  `ListUsers`, `ListUsersInGroup`, `DescribeUserPool`, `DescribeUserPoolClient`.
+  (`ForgotPassword`/`ConfirmForgotPassword` deliberately excluded — Cognito
+  evaluates no IAM policy for those two client-level actions at all.)
+- The User Pool ID, App Client ID, and App Client Secret themselves.
+
+A real end-to-end login (including the first-login forced password change
+for a freshly admin-created account) is a go-live checklist item once those
+land — not something mockable past with a fake client.
+
+## Update (2026-09-24) — Forgot-password, admin user management, MFA, and a deploy template
+
+Everything remaining that was buildable without real AWS access has now
+been built:
+
+- **Forgot-password** (`POST /api/auth/forgot-password`,
+  `POST /api/auth/confirm-forgot-password`) — Cognito's self-service reset.
+  Verified: an unknown username gets the exact same response as a known one
+  (no enumeration oracle), whether the underlying Cognito call actually
+  succeeds or fails for any reason — confirmed live against the real
+  backend (Cognito still unconfigured, so the call fails server-side, and
+  the dashboard correctly shows the identical generic message either way).
+- **Admin user management** — `GET /api/auth/users` (list),
+  `POST /api/auth/users/{username}/disable`, `.../enable`. API-only, no
+  dashboard UI this pass (documented with `curl` examples in
+  `backend/README.md`) — the existing "role matrix" panel in
+  `systemSetting.js` is static mock data with nothing to extend, and a real
+  admin screen is meaningfully bigger scope than everything else here.
+- **MFA challenge handling** — the login flow now handles Cognito's
+  `SMS_MFA`/`SOFTWARE_TOKEN_MFA` challenges (new `POST /api/auth/complete-mfa`
+  + a dashboard verification-code screen), activating automatically for any
+  user who has MFA enrolled once the pool exists; zero effect on accounts
+  without it.
+- **`backend/template.yaml`** (AWS SAM) and
+  **`.github/workflows/backend-deploy.yml`** — a complete, reviewable
+  deployment definition for the Lambda + API Gateway target
+  `lambda_handler.py` already anticipated. Scoped tightly (DynamoDB
+  read-only + the exact Cognito actions above, nothing else); deliberately
+  provisions no Cognito/DynamoDB/domain/TLS resources of its own.
+  **Cannot run today** — needs a GitHub OIDC deploy role and several
+  secrets that don't exist yet (see the workflow file's own header comment
+  for the exact list). Validated as syntactically correct YAML; not yet
+  runnable end-to-end since there's no AWS deploy access to test it against.
+
+All of this follows the same shape as everything before it: code complete,
+tested wherever a fake Cognito client makes that possible, and clearly
+marked wherever real AWS access is the only thing left standing between
+"built" and "verified live."
+
 ## What's still blocked
 
 - **Vendor confirmation** of the real telemetry table's `trigger_type`/event
@@ -198,9 +288,12 @@ each touched file's docstring/comments, and `backend/README.md`'s
 - **Secrets management** — credentials remain in `.env`/environment
   variables; moving to AWS Secrets Manager/SSM needs new IAM permissions not
   yet granted to `tngrama_dashboard_reader`.
-- **Phase 7 decision** — which AWS account this deploys into, and the
-  dashboard's own login/identity mechanism, both still open questions. No
-  actual deployment target is chosen yet (still local-only).
+- **Cognito provisioning** — see above. Login/logout (including forgot-password
+  and MFA) is fully built and blocked purely on this.
+- **Deployment** — `template.yaml`/`backend-deploy.yml` are ready; actually
+  running them needs a chosen AWS account, a GitHub OIDC deploy role, and
+  the deployment secrets listed in the workflow file. No actual deployment
+  target is chosen yet (still local-only).
 - **Phase 11** — go-live checklist, which depends on all of the above.
 
 Everything else in the original 12-phase plan that didn't depend on those

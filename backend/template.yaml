@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TN Grama Bank -- Branch Data API (Lambda + API Gateway HTTP API).
+
+  Deploys the application layer that already exists in this repo
+  (lambda_handler.py wraps app.main.app with Mangum). Does NOT provision:
+  the Cognito User Pool/App Client, the DynamoDB table, a custom
+  domain/TLS certificate, or CloudFront -- those stay the AWS admin's
+  responsibility, per IMPLEMENTATION.md's request list at the repo root.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    Description: API Gateway stage name.
+
+  CognitoUserPoolId:
+    Type: String
+    Description: Existing Cognito User Pool ID (provisioned separately -- see IMPLEMENTATION.md).
+
+  CognitoAppClientId:
+    Type: String
+    Description: Existing Cognito App Client ID (ALLOW_ADMIN_USER_PASSWORD_AUTH, has a secret).
+
+  CognitoAppClientSecret:
+    Type: String
+    NoEcho: true
+    Description: >
+      The App Client's secret. NoEcho hides it from CloudFormation
+      console/CLI output, but it's still visible in plain text via
+      lambda:GetFunctionConfiguration to anyone with that IAM permission --
+      the same exposure level backend/.env already has today to anyone with
+      access to the dev box. A Secrets Manager upgrade is a clean follow-on
+      once secretsmanager:GetSecretValue is granted (see backend/README.md,
+      "Known limitations") -- not required for this template to be usable.
+
+  SessionSecretKey:
+    Type: String
+    NoEcho: true
+    Description: >
+      HMAC key for the dashboard's own session cookie (app/auth/session.py)
+      -- NOT a Cognito credential. Generate with:
+      python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+  CorsAllowOrigin:
+    Type: String
+    Description: The one origin allowed to call this API (the deployed dashboard's URL).
+
+  DynamoDbTableName:
+    Type: String
+    Description: The real branch-telemetry table name (see IMPLEMENTATION.md).
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 15
+    MemorySize: 256
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      # No CorsConfiguration here on purpose -- app/main.py's own
+      # CORSMiddleware already locks CORS to one exact origin with
+      # credentials; layering API Gateway's own CORS handling on top risks
+      # duplicate/conflicting Access-Control-* headers.
+
+  BranchDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub tngb-branch-data-api-${Stage}
+      CodeUri: .
+      Handler: lambda_handler.handler
+      Environment:
+        Variables:
+          DATA_SOURCE: dynamodb
+          ENVIRONMENT: production
+          DYNAMODB_TABLE_NAME: !Ref DynamoDbTableName
+          CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+          COGNITO_APP_CLIENT_ID: !Ref CognitoAppClientId
+          COGNITO_APP_CLIENT_SECRET: !Ref CognitoAppClientSecret
+          SESSION_SECRET_KEY: !Ref SessionSecretKey
+          # AWS_REGION / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are
+          # deliberately absent: AWS_REGION is a Lambda-reserved env var
+          # name (CloudFormation rejects a stack that tries to set it) and
+          # is auto-populated at runtime anyway; leaving the credential
+          # vars blank is exactly what makes DynamoDBDataSource and
+          # CognitoClient (see app/data/__init__.py, app/auth/cognito.py)
+          # fall back to boto3's default credential chain, which resolves
+          # to this function's own execution role below -- zero code
+          # changes needed to go from static dev keys to a real IAM role.
+          #
+          # TRUST_PROXY_HEADERS intentionally left at its default (false):
+          # Mangum already maps API Gateway's requestContext.http.sourceIp
+          # into the ASGI scope's client address, so get_client_ip() already
+          # sees the real caller IP -- there's no proxy hop here to trust.
+      Policies:
+        - Statement:
+            - Sid: DynamoDbReadOnly
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchGetItem
+                - dynamodb:DescribeTable
+              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDbTableName}
+            - Sid: CognitoAdminActions
+              Effect: Allow
+              Action:
+                - cognito-idp:AdminInitiateAuth
+                - cognito-idp:AdminRespondToAuthChallenge
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminAddUserToGroup
+                - cognito-idp:AdminListGroupsForUser
+                - cognito-idp:AdminDisableUser
+                - cognito-idp:AdminEnableUser
+                - cognito-idp:ListUsers
+                - cognito-idp:ListUsersInGroup
+                - cognito-idp:DescribeUserPool
+                - cognito-idp:DescribeUserPoolClient
+              Resource: !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}
+              # ForgotPassword/ConfirmForgotPassword deliberately NOT listed
+              # here -- Cognito evaluates no IAM policy for those two client-
+              # level actions at all (verified against AWS's own docs).
+              # Adding them would be a harmless no-op at best.
+      Events:
+        ProxyAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: Base URL for tngb-dashboard/src/data/liveSource.js's apiBaseUrl in this environment.
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  FunctionArn:
+    Value: !GetAtt BranchDataFunction.Arn

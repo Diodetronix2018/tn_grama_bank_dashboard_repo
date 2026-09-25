@@ -13,10 +13,8 @@
   var FILTERS = {
     acNormal: { title: "AC Power Normal", side: "ac", match: function (x) { return x.power.acStatus === "Normal"; } },
     acFail: { title: "AC Fail", side: "ac", match: function (x) { return x.power.acStatus === "Fail"; } },
-    acRestored: { title: "AC Restored Today", side: "ac", restored: true, match: function (x) { return x.power.acRestoredToday; } },
     batteryNormal: { title: "Battery Normal", side: "battery", match: function (x) { return x.power.batteryStatus === "Normal"; } },
     batteryFail: { title: "Battery Fail", side: "battery", match: function (x) { return x.power.batteryStatus === "Fail"; } },
-    batteryRestored: { title: "Battery Restored Today", side: "battery", restored: true, match: function (x) { return x.power.batteryRestoredToday; } },
   };
 
   function panel(ctx) {
@@ -39,25 +37,6 @@
       columns.push({
         label: "Battery",
         render: function (r) { return badge(r.power.batteryStatus, r.power.batteryColor); },
-      });
-      columns.push({
-        label: "Voltage",
-        align: "right",
-        render: function (r) { return r.power.voltage.toFixed(1) + "V"; },
-      });
-      columns.push({
-        label: "Charging",
-        render: function (r) { return badge(r.power.chargingStatus, r.power.chargingColor); },
-      });
-    }
-
-    if (meta.restored) {
-      columns.push({
-        label: "Restored At",
-        render: function (r) {
-          var at = r.power.acRestoredAt || r.power.batteryRestoredAt || "--";
-          return h("span.mono", { style: "color:" + COLORS.green + ";" }, at);
-        },
       });
     }
 
@@ -105,14 +84,6 @@
             { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
             { label: "AC Status", render: function (r) { return badge(r.power.acStatus, r.power.acColor); } },
             { label: "Battery", render: function (r) { return badge(r.power.batteryStatus, r.power.batteryColor); } },
-            {
-              label: "Voltage", align: "right",
-              render: function (r) { return r.power.voltage.toFixed(1) + "V"; },
-            },
-            {
-              label: "Charging",
-              render: function (r) { return badge(r.power.chargingStatus, r.power.chargingColor); },
-            },
           ], matches.slice(0, ROW_LIMIT), {
             onRowClick: function (r) {
               ctx.setState({ selectedRegion: r.branch.district, selectedBranchId: r.branch.id });
@@ -137,10 +108,8 @@
     var cardDefs = [
       { key: "acNormal", label: "AC Power Normal", value: count(function (x) { return x.power.acStatus === "Normal"; }), color: COLORS.green, iconHtml: App.ICONS.power },
       { key: "acFail", label: "AC Fail", value: count(function (x) { return x.power.acStatus === "Fail"; }), color: COLORS.red, iconHtml: App.ICONS.power },
-      { key: "acRestored", label: "AC Restored", value: count(function (x) { return x.power.acRestoredToday; }), color: COLORS.green, iconHtml: App.ICONS.power },
       { key: "batteryNormal", label: "Battery Normal", value: count(function (x) { return x.power.batteryStatus === "Normal"; }), color: COLORS.green, iconHtml: App.ICONS.battery },
       { key: "batteryFail", label: "Battery Fail", value: count(function (x) { return x.power.batteryStatus === "Fail"; }), color: COLORS.red, iconHtml: App.ICONS.battery },
-      { key: "batteryRestored", label: "Battery Restored", value: count(function (x) { return x.power.batteryRestoredToday; }), color: COLORS.green, iconHtml: App.ICONS.battery },
     ];
 
     var cards = cardDefs.map(function (d) {
@@ -160,7 +129,7 @@
 
     return h(
       "div",
-      h("div.mb-lg", W.kpiRow(cards, 3)),
+      h("div.mb-lg", W.kpiRow(cards, 4)),
       panel(ctx) || overviewTable(ctx, rows)
     );
   }

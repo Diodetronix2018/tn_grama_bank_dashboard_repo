@@ -152,7 +152,7 @@ setTimeout(function () {
     // --- power --------------------------------------------------------------
     navBtn("Power Status").click();
     var pcards = content().querySelectorAll(".kpi");
-    ok("power has 6 cards", pcards.length === 6, pcards.length + "");
+    ok("power has 4 cards", pcards.length === 4, pcards.length + "");
     ok("power lands on a populated table",
       content().querySelectorAll("table.data tbody tr").length > 0 &&
       text().indexOf("Power Health by Branch") !== -1);
@@ -161,8 +161,8 @@ setTimeout(function () {
     var ph = findByText(".card-title", "AC Fail");
     ok("AC Fail panel count matches card", ph && ph.textContent.indexOf("(" + acFail + ")") !== -1,
       "card=" + acFail + " header=" + (ph ? ph.textContent.trim() : "?"));
-    pcards[4].click(); // Battery Fail -> battery columns
-    ok("battery panel shows voltage column", text().indexOf("Voltage") !== -1);
+    pcards[3].click(); // Battery Fail -> battery columns
+    ok("battery panel opens", !!findByText(".card-title", "Battery Fail"));
 
     // --- zones --------------------------------------------------------------
     navBtn("Zone Status").click();

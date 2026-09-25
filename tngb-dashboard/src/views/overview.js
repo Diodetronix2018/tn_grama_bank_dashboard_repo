@@ -24,30 +24,78 @@
     var total = a.count + b.count || 1;
     var aDash = (a.count / total) * 100;
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "88");
-    svg.setAttribute("height", "88");
+    svg.setAttribute("width", "112");
+    svg.setAttribute("height", "112");
     svg.setAttribute("viewBox", "0 0 42 42");
     svg.innerHTML =
-      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#e6e9ef" stroke-width="6"></circle>' +
-      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="' + a.color +
-        '" stroke-width="6" stroke-dasharray="' + aDash + ' 100" stroke-dashoffset="0"></circle>' +
       '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="' + b.color +
-        '" stroke-width="6" stroke-dasharray="' + (100 - aDash) + ' 100" stroke-dashoffset="' + -aDash + '"></circle>';
-    return { node: svg, pct: Math.round((a.count / total) * 100) };
+        '" stroke-width="5" stroke-dasharray="' + (100 - aDash) + ' 100" stroke-dashoffset="' + -aDash + '"></circle>' +
+      '<circle cx="21" cy="21" r="15.9" fill="transparent" stroke="' + a.color +
+        '" stroke-width="5" stroke-dasharray="' + aDash + ' 100" stroke-dashoffset="0"></circle>';
+    return { node: svg, pct: Math.round((a.count / total) * 100), total: total };
   }
 
-  function pie(title, a, b) {
+  function pct(count, total) {
+    return Math.round((count / (total || 1)) * 100) + "%";
+  }
+
+  /* One tile: heading, donut with the lead share in its centre, then a row
+     per segment with its count and share. */
+  function pie(title, iconHtml, a, b) {
     var d = donut(a, b);
+    function row(seg) {
+      return h(
+        "div.pie-row",
+        h("span.pie-swatch", { style: "background:" + seg.color + ";" }),
+        h("span.pie-row-label", seg.label),
+        h("span.pie-row-count", val(seg.count)),
+        h("span.pie-row-pct", pct(seg.count, d.total))
+      );
+    }
     return h(
       "div.pie",
-      d.node,
-      h("div.pie-pct", d.pct + "%"),
-      h("div.pie-title", title),
+      h("div.pie-head",
+        h("span.pie-icon", { style: "color:" + a.color + ";background:" + a.color + "14;", html: iconHtml }),
+        h("div.pie-title", title)),
       h(
-        "div.pie-legend",
-        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " ", val(a.count)),
-        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " ", val(b.count))
-      )
+        "div.pie-chart",
+        d.node,
+        h("div.pie-center",
+          h("div.pie-pct", { style: "color:" + a.color + ";" }, d.pct + "%"),
+          h("div.pie-center-label", a.label))
+      ),
+      h("div.pie-rows", row(a), row(b)),
+      h("div.pie-foot", "of ", val(d.total), " panels")
+    );
+  }
+
+  /* Every branch by panel state in one bar, so alarm and fault panels that
+     the armed / disarmed donut leaves out are still accounted for. */
+  function stateBar(stats) {
+    var segs = [
+      { label: "Armed", count: stats.armed, color: COLORS.navy },
+      { label: "Disarmed", count: stats.disarmed, color: COLORS.grey },
+      { label: "Alarm Active", count: stats.alarm, color: COLORS.red },
+      { label: "Fault", count: stats.fault, color: COLORS.amber },
+    ];
+    var total = stats.totalBranches || 1;
+    return h(
+      "div.state-mix",
+      h("div.flex-between",
+        h("div.state-mix-title", "Panel State Mix"),
+        h("div.state-mix-total", val(stats.totalBranches), " branches")),
+      h("div.state-bar", segs.map(function (sg) {
+        return h("span", {
+          style: "flex:" + sg.count + " 0 0;background:" + sg.color + ";",
+          title: sg.label + ": " + sg.count,
+        });
+      })),
+      h("div.state-legend", segs.map(function (sg) {
+        return h("span.state-legend-item",
+          h("span.pie-swatch", { style: "background:" + sg.color + ";" }),
+          sg.label + " ", val(sg.count),
+          h("span.pie-row-pct", pct(sg.count, total)));
+      }))
     );
   }
 
@@ -57,24 +105,25 @@
       "div.card.card-pad",
       h(
         "div.flex-between",
-        { style: "margin-bottom:6px;" },
+        { style: "margin-bottom:4px;" },
         h("div.card-title", "Overall System Status"),
         badge(normalPct + "% Normal", normalPct >= 90 ? COLORS.green : COLORS.amber)
       ),
-      h("div", { style: "font-size:11.5px;color:var(--ink-soft);margin-bottom:18px;" },
+      h("div.card-sub", { style: "margin-bottom:16px;" },
         "Live split of branch panels network-wide"),
       h(
         "div.pies",
-        pie("Normal / Abnormal",
+        pie("System Health", App.ICONS.shield,
           { label: "Normal", count: stats.normal, color: COLORS.green },
           { label: "Abnormal", count: stats.abnormal, color: COLORS.red }),
-        pie("Online / Offline",
+        pie("Connectivity", App.ICONS.online,
           { label: "Online", count: stats.online, color: COLORS.green },
           { label: "Offline", count: stats.offline, color: COLORS.red }),
-        pie("Armed / Disarmed",
+        pie("Arming", App.ICONS.arm,
           { label: "Armed", count: stats.armed, color: COLORS.navy },
           { label: "Disarmed", count: stats.disarmed, color: COLORS.grey })
-      )
+      ),
+      stateBar(stats)
     );
   }
 
@@ -102,7 +151,7 @@
       })),
       h(
         "div.list-scroll",
-        { style: "max-height:250px;" },
+        { style: "flex:1 1 0;min-height:250px;" },
         regions.length ? regions.map(function (r) {
           var s = App.data.districtStats(r.name);
           var status = App.data.districtStatus(s);
@@ -269,7 +318,8 @@
       "div",
       W.kpiRow(kpis, 4),
       panel ? h("div.mt-md", panel) : null,
-      h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
+      /* Not align-start: the region list stretches to the status card's height. */
+      h("div.grid.split.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
         statusCard(stats), regionCard(ctx)),
       branchArea
     );

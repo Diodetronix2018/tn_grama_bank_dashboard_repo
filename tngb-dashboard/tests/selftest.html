@@ -173,12 +173,18 @@ setTimeout(function () {
     // --- zones --------------------------------------------------------------
     navBtn("Zone Status").click();
     ok("zone showcase is default", !!content().querySelector(".showcase"));
-    ok("zone shows 8 zone cards", content().querySelectorAll(".zone-card").length === 8,
+    ok("showcase shows 8 zone cards + tamper", content().querySelectorAll(".zone-card").length === 9,
       content().querySelectorAll(".zone-card").length + "");
+    ok("showcase ninth card is Tamper",
+      /^Tamper/.test(content().querySelectorAll(".zone-card-name")[8].textContent.trim()));
     findByText(".segmented button", "Grand View").click();
     ok("grand view renders", !!content().querySelector(".zone-hero"));
+    ok("grand view shows 8 zone cards + tamper", content().querySelectorAll(".zone-card").length === 9,
+      content().querySelectorAll(".zone-card").length + "");
     findByText(".segmented button", "Table View").click();
-    ok("table view renders 8 rows", content().querySelectorAll("table.data tbody tr").length === 8);
+    var zrows = content().querySelectorAll("table.data tbody tr");
+    ok("table view lists 8 zones + tamper", zrows.length === 9 &&
+      /^Tamper/.test(zrows[8].textContent.trim()), zrows.length + "");
     findByText(".segmented button", "All (Grid)").click();
     ok("grid picker renders", content().querySelectorAll(".picker-chip").length > 100,
       content().querySelectorAll(".picker-chip").length + "");

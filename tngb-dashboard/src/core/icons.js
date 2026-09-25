@@ -16,6 +16,17 @@
     '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/>' +
     '<path d="M12 3v18M3 12h18M4.2 7.5h15.6M4.2 16.5h15.6"/>';
 
+  var TAMPER =
+    '<circle cx="12" cy="12" r="10.5"/>' +
+    '<path fill="currentColor" stroke="none" d="M7.85 19.19L19.8 9.16A8.3 8.3 0 0 1 7.85 19.19z"/>' +
+    '<g fill="currentColor" stroke="none" transform="translate(10 10.3) rotate(45) scale(.9) translate(-12 -12)">' +
+    '<rect x="11.2" y="5" width="1.6" height="7"/>' +
+    '<rect x="12" y="3.4" width="4" height="3" rx=".5"/>' +
+    '<path d="M12.4 3.4H10Q7.6 3.6 6.8 6.2Q8.6 5 12.4 6.4z"/>' +
+    '<rect x="8.9" y="10.6" width="6.4" height="5" rx="1.7"/>' +
+    '<rect x="9.6" y="16.4" width="5" height="3" rx=".4"/>' +
+    "</g>";
+
   var ICONS = {
     overview: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>'),
     branches: svg('<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>'),
@@ -51,17 +62,9 @@
     ),
     /* Tamper: a fist swinging a hammer at a surface, inside a ring. The hand
        and hammer are drawn upright, then turned 45° to strike down-right. */
-    tamper: svg(
-      '<circle cx="12" cy="12" r="10.5"/>' +
-      '<path fill="currentColor" stroke="none" d="M7.85 19.19L19.8 9.16A8.3 8.3 0 0 1 7.85 19.19z"/>' +
-      '<g fill="currentColor" stroke="none" transform="translate(10 10.3) rotate(45) scale(.9) translate(-12 -12)">' +
-      '<rect x="11.2" y="5" width="1.6" height="7"/>' +
-      '<rect x="12" y="3.4" width="4" height="3" rx=".5"/>' +
-      '<path d="M12.4 3.4H10Q7.6 3.6 6.8 6.2Q8.6 5 12.4 6.4z"/>' +
-      '<rect x="8.9" y="10.6" width="6.4" height="5" rx="1.7"/>' +
-      '<rect x="9.6" y="16.4" width="5" height="3" rx=".4"/>' +
-      "</g>"
-    ),
+    tamper: svg(TAMPER),
+    /* 20px copy for the Tamper card beside the 8 zone cards. */
+    tamperLg: svg(TAMPER, 20),
     /* Open door on a threshold; every zone card in the Zone Status showcase. */
     zoneDoor: svg(
       '<path d="M3.5 19.5h17"/><path d="M8 19.5V5.5A1.5 1.5 0 019.5 4h3.7"/>' +

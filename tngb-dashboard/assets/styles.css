@@ -921,6 +921,8 @@ table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
   color: rgba(255, 255, 255, .055);
   line-height: 1;
 }
+/* A word ("TAMPER") in place of a zone number, sized down to fit the card. */
+.zone-watermark.word { font-size: 34px; top: 10px; letter-spacing: .02em; }
 
 .district-rail { border-right: 1px solid var(--line-soft); padding: 10px; max-height: 440px; overflow-y: auto; }
 

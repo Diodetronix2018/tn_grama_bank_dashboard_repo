@@ -1,5 +1,6 @@
-/* Zone Status: pick a branch, then read its 8-zone panel in one of three
-   presentations - grand cards, a dark showcase, or a dense table. */
+/* Zone Status: pick a branch, then read its 8-zone panel (plus the panel
+   tamper circuit) in one of three presentations - grand cards, a dark
+   showcase, or a dense table. */
 (function (App) {
   "use strict";
 
@@ -26,6 +27,20 @@
   function defaultBranch() {
     var all = App.data.allBranches();
     return all.find(function (b) { return b.panelStatus === "Alarm Active"; }) || all[0];
+  }
+
+  /* The ninth card beside the 8 zones: the panel's tamper circuit. It trips
+     when any zone reports an open tamper switch, the same rule that feeds
+     Tamper Active on Intrusion Status, so the two always agree. */
+  function panelTamper(zones) {
+    var tripped = zones.find(function (z) { return z.tamper === "Tamper"; });
+    return {
+      name: "Tamper",
+      label: tripped ? "Tamper" : "Normal",
+      color: tripped ? COLORS.orange : COLORS.green,
+      detail: tripped ? tripped.name : "All 8 zones secure",
+      lastTrigger: tripped ? tripped.lastTrigger : "--",
+    };
   }
 
   function heroStats(zones) {
@@ -146,7 +161,7 @@
           h(
             "div",
             h("div.zone-hero-name", branch.name),
-            h("div.zone-hero-sub", branch.district + " · 8-zone burglar alarm panel"),
+            h("div.zone-hero-sub", branch.district + " · 8-zone + tamper burglar alarm panel"),
             h("div.flex.gap-8", { style: "margin-top:12px;" },
               lightBadge(branch.panelStatus), lightBadge(branch.connectivity))
           )
@@ -157,12 +172,12 @@
           stat("Fault", hero.fault, "#fcd34d"),
           stat("Tamper", hero.tamper, "#fdba74"))
       ),
-      h("div.grid.grid-4", zones.map(function (z) {
+      h("div.grid.grid-3", zones.map(function (z) {
         return h(
           "div.zone-card",
           h("span.zone-card-bar", { style: "background:" + z.dominant + ";" }),
           h("div.flex-between",
-            iconChip(z.iconHtml, z.dominant, { class: "lg" }),
+            iconChip(App.ICONS.zoneDoor, z.dominant, { class: "lg" }),
             h("span.zone-num", "ZONE " + z.num)),
           h("div.zone-card-name", z.name),
           h("div", { style: "margin-top:10px;" },
@@ -174,7 +189,22 @@
             badge(z.tamper, z.tamperColor, "sm")),
           h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
-      }))
+      }).concat(grandTamperCard(panelTamper(zones))))
+    );
+  }
+
+  function grandTamperCard(t) {
+    return h(
+      "div.zone-card",
+      h("span.zone-card-bar", { style: "background:" + t.color + ";" }),
+      h("div.flex-between",
+        iconChip(App.ICONS.tamperLg, t.color, { class: "lg" }),
+        h("span.zone-num", "TAMPER")),
+      h("div.zone-card-name", t.name),
+      h("div", { style: "margin-top:10px;" },
+        h("span.badge", { style: u.badgeStyle(t.color) + "font-size:12px;padding:4px 12px;" }, t.label)),
+      h("div.flex.gap-6.flex-wrap", { style: "margin-top:10px;" }, badge(t.detail, t.color, "sm")),
+      h("div.zone-card-foot", "Last trigger: ", App.dom.val(t.lastTrigger))
     );
   }
 
@@ -205,7 +235,7 @@
           h(
             "div",
             h("div.showcase-name", branch.name),
-            h("div.showcase-sub", branch.district + " · 8-zone burglar alarm panel"),
+            h("div.showcase-sub", branch.district + " · 8-zone + tamper burglar alarm panel"),
             h("div.flex.gap-8", { style: "margin-top:14px;" },
               darkBadge(branch.panelStatus), darkBadge(branch.connectivity))
           )
@@ -225,7 +255,7 @@
             legend("#fb923c", hero.tamper, "Tamper"))
         )
       ),
-      h("div.grid.grid-4", { style: "gap:18px;" }, zones.map(function (z) {
+      h("div.grid.grid-3", { style: "gap:18px;" }, zones.map(function (z) {
         var glow = z.dominantLabel === "Normal"
           ? "border-color:" + z.dominant + "22;"
           : "border-color:" + z.dominant + "66;box-shadow:0 0 0 1px " + z.dominant +
@@ -245,7 +275,28 @@
               z.dominantLabel)),
           h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
-      }))
+      }).concat(showcaseTamperCard(panelTamper(zones))))
+    );
+  }
+
+  function showcaseTamperCard(t) {
+    var glow = t.label === "Normal"
+      ? "border-color:" + t.color + "22;"
+      : "border-color:" + t.color + "66;box-shadow:0 0 0 1px " + t.color +
+        "40, 0 0 30px " + t.color + "40, 0 4px 16px rgba(0,0,0,.4);";
+    return h(
+      "div.zone-card.dark",
+      { style: glow },
+      h("div.zone-watermark.word", "TAMPER"),
+      h("span.icon-chip", {
+        style: "width:44px;height:44px;flex:0 0 44px;border-radius:12px;position:relative;z-index:1;" +
+          "background:" + t.color + "22;color:" + t.color + ";border-color:" + t.color + "55;",
+        html: App.ICONS.tamperLg,
+      }),
+      h("div.zone-card-name", t.name),
+      h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
+        h("span.badge", { style: u.badgeStyle(t.color) + "font-size:12px;padding:4px 12px;" }, t.label)),
+      h("div.zone-card-foot", t.detail, " · ", App.dom.val(t.lastTrigger))
     );
   }
 
@@ -256,7 +307,7 @@
       W.listHeader({
         iconHtml: App.ICONS.branches,
         title: branch.name,
-        subtitle: branch.district + " · 8-zone panel detail",
+        subtitle: branch.district + " · 8-zone + tamper panel detail",
         controls: h("div.flex.gap-8",
           W.panelBadge(branch.panelStatus), W.connBadge(branch.connectivity)),
       }),
@@ -267,8 +318,29 @@
         { label: "Fault", render: function (z) { return badge(z.fault, z.faultColor); } },
         { label: "Tamper", render: function (z) { return badge(z.tamper, z.tamperColor); } },
         { label: "Last Trigger Time", key: "lastTrigger", className: "mono" },
-      ], zones))
+      ], zones.concat(tamperRow(zones))))
     );
+  }
+
+  /* The tamper circuit as a ninth table row, shaped like a zone row. It is
+     supervised around the clock, so it stays Active when the panel is
+     disarmed and only goes Unknown when the panel is offline. */
+  function tamperRow(zones) {
+    var t = panelTamper(zones);
+    var tripped = t.label === "Tamper";
+    var offline = zones.length && zones[0].status === "Unknown";
+    return {
+      name: tripped ? "Tamper (" + t.detail + ")" : "Tamper",
+      status: offline ? "Unknown" : "Active",
+      statusColor: offline ? COLORS.slate : COLORS.green,
+      condition: t.label,
+      conditionColor: t.color,
+      fault: "--",
+      faultColor: COLORS.grey,
+      tamper: tripped ? "Tamper" : "OK",
+      tamperColor: t.color,
+      lastTrigger: t.lastTrigger,
+    };
   }
 
   function render(ctx) {
@@ -289,7 +361,7 @@
     label: "Zone Status",
     icon: "zones",
     title: "Zone Status",
-    subtitle: "8-zone panel detail per branch",
+    subtitle: "8-zone + tamper panel detail per branch",
     render: render,
   };
 })(window.App = window.App || {});

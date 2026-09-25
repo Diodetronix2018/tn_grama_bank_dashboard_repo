@@ -16,7 +16,8 @@
 
     var matches = App.data.allBranches().filter(function (b) {
       if (!search) return true;
-      return u.includesCI(b.name, search) ||
+      return u.includesCI(b.branchIdCode, search) ||
+        u.includesCI(b.name, search) ||
         u.includesCI(b.district, search) ||
         u.includesCI(b.manager.name, search);
     });
@@ -43,15 +44,16 @@
         controls: W.searchInput({
           id: "mgr-search",
           value: ctx.state.mgrSearch,
-          placeholder: "Search branch, district or manager…",
+          placeholder: "Search code, branch, district or manager…",
           width: "300px",
           onInput: function (v) { ctx.setState({ mgrSearch: v }); },
         }),
       }),
       matches.length
         ? h("div.table-scroll", { style: "max-height:600px;" }, W.dataTable([
-            { label: "Branch", key: "name", className: "name" },
+            { label: "Branch Code", key: "branchIdCode", className: "mono" },
             { label: "District", key: "district", className: "sub" },
+            { label: "Branch Name", key: "name", className: "name" },
             {
               label: "Manager Name",
               className: "sub",
@@ -59,9 +61,8 @@
                 return h("span", { style: "color:var(--ink-body);font-weight:600;" }, b.manager.name);
               },
             },
-            { label: "Manager ID", className: "mono", render: function (b) { return b.manager.id; } },
-            { label: "Contact", className: "mono", render: function (b) { return b.manager.contact; } },
-            { label: "Email", className: "sub", render: function (b) { return b.manager.email; } },
+            { label: "Phone Number", className: "mono", render: function (b) { return b.manager.contact; } },
+            { label: "Email ID", className: "sub", render: function (b) { return b.manager.email; } },
             {
               label: "Branch Status",
               render: function (b) {

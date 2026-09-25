@@ -2,7 +2,7 @@
 
 Mail systems routinely block .js attachments, even inside a .zip, so the
 easiest way to send someone a working copy of the dashboard is one .html file
-they can double-click. This inlines the stylesheet and every script in the
+they can double-click. This inlines the stylesheet, the logo and every script in the
 order index.html loads them.
 
     python build/bundle.py
@@ -10,6 +10,7 @@ order index.html loads them.
 Writes dist/tngb-dashboard-standalone.html. Run it from the project root.
 """
 
+import base64
 import pathlib
 import re
 import sys
@@ -20,6 +21,9 @@ OUT = ROOT / "dist" / "tngb-dashboard-standalone.html"
 # A literal </script> inside inlined code would end the tag early. None of the
 # sources contain one today; fail loudly rather than emit a broken file.
 CLOSING_TAG = re.compile(r"</\s*script", re.IGNORECASE)
+
+# Images the page references by path; each becomes an inline data: URI.
+IMAGES = ["assets/logo.png"]
 
 
 def read(relative):
@@ -53,6 +57,14 @@ def main():
 
     # Drop the external stylesheet link; its contents go inline instead.
     head = re.sub(r'\n?<link rel="stylesheet" href="assets/styles\.css">', "", head)
+
+    for relative in IMAGES:
+        path = ROOT / relative
+        if not path.exists():
+            sys.exit("missing image: %s" % relative)
+        uri = "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+        head = head.replace(relative, uri)
+        parts = [p.replace(relative, uri) for p in parts]
 
     html = "".join([
         head,

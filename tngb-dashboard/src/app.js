@@ -107,10 +107,11 @@
     var nav = h("nav.sidebar",
       h(
         "div.brand",
-        h("span.brand-mark", { html: App.ICONS.shield }),
+        h("span.brand-mark", h("img", { src: "assets/logo.png", alt: "TN Grama Bank logo" })),
         h("div", { style: "min-width:0;" },
           h("div.brand-name", "TN GRAMA BANK"),
-          h("div.brand-sub", "HEAD OFFICE, SALEM · SECURITY OPS"))
+          h("div.brand-sub", "HEAD OFFICE, SALEM"),
+          h("div.brand-sub.brand-sub-accent", "SECURITY OPS"))
       ),
       h("div.nav-heading", "DASHBOARD")
     );

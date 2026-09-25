@@ -5,8 +5,8 @@
 <!-- Loads the real dashboard, drives it through every view and interaction,
      and prints a pass/fail report below. Open this file in a browser, or run
      it headless - see README. -->
+<pre id="report" style="background:#111;color:#0f0;padding:12px;margin:0;font-size:13px;">Running…</pre>
 <div id="app"></div>
-<pre id="report" style="background:#111;color:#0f0;padding:12px;font-size:13px;"></pre>
 
 <script src="../src/core/utils.js"></script>
 <script src="../src/core/icons.js"></script>
@@ -51,6 +51,28 @@ function findByText(sel, needle) {
     return n.textContent.indexOf(needle) !== -1;
   });
 }
+/* Text nodes, form controls and input placeholders under #app that aren't
+   Arial Regular: Arial first, weight 400, not italic. */
+function nonArialText() {
+  var problem = function (el, pseudo) {
+    var s = getComputedStyle(el, pseudo);
+    var family = s.fontFamily.split(",")[0].trim().replace(/["']/g, "");
+    if (family === "Arial" && s.fontWeight === "400" && s.fontStyle === "normal") return null;
+    return family + " " + s.fontWeight + " " + s.fontStyle;
+  };
+  var bad = [];
+  Array.prototype.forEach.call(document.querySelectorAll("#app *"), function (el) {
+    var control = /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName);
+    var ownText = Array.prototype.some.call(el.childNodes, function (n) {
+      return n.nodeType === 3 && n.textContent.trim();
+    });
+    var p = (control || ownText) && problem(el);
+    if (p) bad.push(el.tagName.toLowerCase() + " -> " + p);
+    p = el.placeholder && problem(el, "::placeholder");
+    if (p) bad.push(el.tagName.toLowerCase() + "::placeholder -> " + p);
+  });
+  return bad;
+}
 
 setTimeout(function () {
   try {
@@ -64,6 +86,9 @@ setTimeout(function () {
         b.click();
         ok("nav renders: " + l, text().length > 500, text().length + " chars");
         ok("nav marks active: " + l, b.classList.contains("is-active"));
+        var badFont = nonArialText();
+        ok("all text is Arial Regular: " + l, badFont.length === 0,
+          badFont.length ? badFont.length + " elements, e.g. " + badFont.slice(0, 3).join(" | ") : "");
       }
     });
 

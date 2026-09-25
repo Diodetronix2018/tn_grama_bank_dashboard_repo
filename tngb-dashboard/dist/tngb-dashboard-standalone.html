@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TN Grama Bank · Security Operations Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================================
    TN Grama Bank - Security Operations Dashboard
@@ -47,9 +44,9 @@
   --shadow-lift: 0 8px 20px rgba(15, 23, 42, .10);
   --shadow-deep: 0 20px 50px rgba(0, 0, 0, .35);
 
-  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+  --font-display: Arial, Helvetica, sans-serif;
+  --font-body: Arial, Helvetica, sans-serif;
+  --font-mono: Arial, Helvetica, sans-serif;
 
   --sidebar-w: 264px;
 }
@@ -65,6 +62,15 @@ body {
   font-family: var(--font-body);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
+}
+
+/* House font is Arial Regular on every screen (sign-in, dashboard, error
+   states) -- no bold or italic. !important so form controls, placeholders,
+   SVG labels, <b>/<th> defaults and inline styles can't override it. */
+*, *::before, *::after, ::placeholder {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
 }
 
 a { color: var(--navy); }
@@ -236,6 +242,23 @@ a:hover { color: #00154f; }
   border: 1px solid #e2e6ec;
   border-radius: 20px;
   padding: 6px 14px;
+}
+
+.freshness {
+  font-size: 12px;
+  color: var(--ink-muted);
+  background: var(--surface-muted);
+  border: 1px solid #e2e6ec;
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+
+.freshness:empty { display: none; }
+
+.freshness.is-stale {
+  color: var(--amber);
+  border-color: #f0dcb3;
+  background: #fdf3e4;
 }
 
 .clock-dot {
@@ -1187,6 +1210,131 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ---- Boot states: shown while liveSource.js is fetching branch data ---- */
+.boot-state {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.boot-card {
+  max-width: 380px;
+  text-align: center;
+  padding: 32px;
+}
+
+.boot-spinner {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--navy);
+  animation: boot-spin 0.8s linear infinite;
+}
+
+@keyframes boot-spin {
+  to { transform: rotate(360deg); }
+}
+
+.boot-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.boot-detail {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.boot-card .boot-title.is-error { color: var(--red); }
+
+.boot-retry {
+  margin-top: 16px;
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.boot-retry:hover { background: var(--navy-deep); }
+
+/* ---- Login / new-password screens (reuse .boot-card/.boot-state above) ---- */
+.login-card { max-width: 320px; }
+
+.login-field {
+  text-align: left;
+  margin-top: 14px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+
+.login-error {
+  min-height: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--red);
+}
+
+.login-card .boot-retry { width: 100%; }
+
+.forgot-password-link {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  border: none;
+  background: none;
+  color: var(--navy);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.forgot-password-link:hover { text-decoration: underline; }
+
+/* ---- Topbar sign-out chip ---- */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.sign-out-btn {
+  border: 1px solid #e2e6ec;
+  background: var(--surface-muted);
+  color: var(--ink-body);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.sign-out-btn:hover { border-color: var(--navy); color: var(--navy); }
+
 </style>
 </head>
 <body>
@@ -1850,8 +1998,21 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   };
 
   var _cache = null;
+  var _externalCache = null;
+
+  /* Called by src/data/liveSource.js once the backend responds. Every other
+     function in this module and in src/data/derived.js reads branches
+     through allBranches(), so pointing that one function at fetched data is
+     enough to make the whole dashboard live -- nothing else changes. */
+  function setBranches(list) {
+    _externalCache = list;
+    _cache = null;
+    _stats = null;
+    if (App.data.invalidateDerived) App.data.invalidateDerived();
+  }
 
   function allBranches() {
+    if (_externalCache) return _externalCache;
     if (_cache) return _cache;
 
     var list = [];
@@ -1971,6 +2132,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     todayStamp: todayStamp,
     dayStamp: dayStamp,
     allBranches: allBranches,
+    setBranches: setBranches,
     branchById: branchById,
     branchesIn: branchesIn,
     districtStats: districtStats,
@@ -2272,6 +2434,20 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "zones" },
   ];
 
+  /* Every cache above is keyed off the branch roster at the time it was first
+     read. Called whenever that roster is replaced (see master.js's
+     setBranches) so zone/power/event views recompute against the new data
+     instead of silently keeping figures derived from the old one. */
+  function invalidateDerived() {
+    _zoneCache = {};
+    _powerCache = {};
+    _powerRows = null;
+    _allEvents = null;
+    _eventCounts = null;
+    _tamperBranches = null;
+    _restored = null;
+  }
+
   Object.assign(App.data, {
     EVENT_TYPES: EVENT_TYPES,
     EVENT_COLORS: EVENT_COLORS,
@@ -2284,7 +2460,218 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     eventCounts: eventCounts,
     tamperBranches: tamperBranches,
     restoredEvents: restoredEvents,
+    invalidateDerived: invalidateDerived,
   });
+})(window.App = window.App || {});
+
+/* ==== src/data/liveSource.js ==== */
+/* Fetches branch records from the backend API instead of generating sample
+   data. Loading this file is what switches the dashboard from "local demo"
+   to "backend-fed" -- leave it out of the page and everything behaves
+   exactly as it did before (src/data/master.js generates its own sample
+   set, same as tests/selftest.html still does).
+
+   apiBaseUrl below is a local-development convenience, not how a real
+   deployment should hold it -- see backend/.env.example and
+   IMPLEMENTATION.md for the production note on this.
+
+   Auth is now a signed session cookie (see src/data/authSource.js), not an
+   API key -- every fetch here sends credentials:"include" so the browser
+   attaches it. apiBaseUrl is deliberately "localhost", not "127.0.0.1":
+   the session cookie is Secure+SameSite=Strict, and browsers treat
+   localhost/127.0.0.1 as different *sites* even though they're the same
+   machine -- SameSite=Strict would silently withhold the cookie across
+   that mismatch. Serve this dashboard via `python -m http.server 8000`
+   (http://localhost:8000), not as a file:// page, for the same reason. */
+(function (App) {
+  "use strict";
+
+  /* Port 8000 is this repo's documented local-dev static-file-server port
+     (see README): frontend and backend run as two separate processes there,
+     so the API needs an absolute URL. Anywhere else (a single combined
+     deployment serving both from one origin -- see backend/app/main.py's
+     serve_dashboard_static), a relative path targets whatever origin this
+     page was actually loaded from. */
+  var CONFIG = {
+    apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
+  };
+
+  /* The upstream telemetry table gets a new record roughly every 5 minutes;
+     poll on the same cadence so the dashboard picks it up without a reload. */
+  var POLL_INTERVAL_MS = 5 * 60 * 1000;
+  var pollTimer = null;
+  var inFlight = false;
+
+  function applyRegionCounts(branches) {
+    var counts = {};
+    branches.forEach(function (b) {
+      counts[b.district] = (counts[b.district] || 0) + 1;
+    });
+    (App.data.REGIONS || []).forEach(function (r) {
+      r.branchCount = counts[r.name] || 0;
+    });
+  }
+
+  function load() {
+    return fetch(CONFIG.apiBaseUrl + "/api/branches", {
+      credentials: "include",
+    })
+      .then(function (res) {
+        if (res.status === 401) {
+          var authErr = new Error("Session expired");
+          authErr.isAuthError = true;
+          throw authErr;
+        }
+        if (!res.ok) {
+          throw new Error("Branch data service returned HTTP " + res.status);
+        }
+        return res.json();
+      })
+      .then(function (payload) {
+        var branches = payload.branches || [];
+        if (!branches.length) {
+          throw new Error("Branch data service returned zero branches");
+        }
+        App.data.setBranches(branches);
+        applyRegionCounts(branches);
+        return branches;
+      });
+  }
+
+  /* One tick of the background refresh. Skips this tick rather than queuing
+     if the previous fetch hasn't settled yet -- avoids overlapping requests
+     if the backend is briefly slow. A failed poll rejects inside load()
+     before setBranches() runs, so it never disturbs the data already on
+     screen. A session-expiry failure is reported distinctly (via
+     App.onSessionExpired) from any other failure (App.reportRefresh's
+     low-key "feed delayed" indicator) -- a timed-out session needs the
+     operator to sign in again, not just a retry. */
+  function poll() {
+    if (inFlight) return;
+    inFlight = true;
+    load().then(
+      function () {
+        inFlight = false;
+        if (App.reportRefresh) App.reportRefresh(true);
+      },
+      function (err) {
+        inFlight = false;
+        if (err && err.isAuthError && App.onSessionExpired) {
+          App.onSessionExpired();
+          return;
+        }
+        if (App.reportRefresh) App.reportRefresh(false, err && err.message);
+      }
+    );
+  }
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (!pollTimer) return;
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  App.data.apiBaseUrl = CONFIG.apiBaseUrl;
+  App.data.load = load;
+  App.data.startPolling = startPolling;
+  App.data.stopPolling = stopPolling;
+})(window.App = window.App || {});
+
+/* ==== src/data/authSource.js ==== */
+/* Talks to the backend's /api/auth/* endpoints. Kept separate from
+   liveSource.js the same way master.js/derived.js/liveSource.js are each
+   scoped to one concern. Every call sends credentials:"include" so the
+   browser attaches/receives the session cookie. */
+(function (App) {
+  "use strict";
+
+  function apiBaseUrl() {
+    // Not "||" -- App.data.apiBaseUrl is deliberately "" for a same-origin
+    // deployment (see liveSource.js), and "" is falsy in JS, so "||" would
+    // silently fall back to the hardcoded localhost URL below even when
+    // same-origin is exactly what's wanted.
+    var base = App.data && App.data.apiBaseUrl;
+    return base !== undefined && base !== null ? base : "http://localhost:8787";
+  }
+
+  function postJson(path, body) {
+    return fetch(apiBaseUrl() + path, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var err = new Error((data && data.detail) || "Request failed");
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function login(username, password) {
+    return postJson("/api/auth/login", { username: username, password: password });
+  }
+
+  function completeNewPassword(username, newPassword, cognitoSession) {
+    return postJson("/api/auth/complete-new-password", {
+      username: username,
+      new_password: newPassword,
+      session: cognitoSession,
+    });
+  }
+
+  function completeMfa(username, mfaType, code, cognitoSession) {
+    return postJson("/api/auth/complete-mfa", {
+      username: username,
+      mfa_type: mfaType,
+      code: code,
+      session: cognitoSession,
+    });
+  }
+
+  function forgotPassword(username) {
+    return postJson("/api/auth/forgot-password", { username: username });
+  }
+
+  function confirmForgotPassword(username, confirmationCode, newPassword) {
+    return postJson("/api/auth/confirm-forgot-password", {
+      username: username,
+      confirmation_code: confirmationCode,
+      new_password: newPassword,
+    });
+  }
+
+  function logout() {
+    return postJson("/api/auth/logout", {});
+  }
+
+  function me() {
+    return fetch(apiBaseUrl() + "/api/auth/me", { credentials: "include" }).then(function (res) {
+      if (!res.ok) {
+        throw new Error("Not authenticated");
+      }
+      return res.json();
+    });
+  }
+
+  App.auth = {
+    login: login,
+    completeNewPassword: completeNewPassword,
+    completeMfa: completeMfa,
+    forgotPassword: forgotPassword,
+    confirmForgotPassword: confirmForgotPassword,
+    logout: logout,
+    me: me,
+  };
 })(window.App = window.App || {});
 
 /* ==== src/views/overview.js ==== */
@@ -4426,6 +4813,9 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   var state = {
     active: "overview",
     now: new Date(),
+    lastUpdated: null,
+    refreshError: null,
+    userEmail: null,
 
     /* Overview */
     regionSearch: "",
@@ -4478,6 +4868,19 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
   function setState(patch) {
     Object.assign(state, patch);
+    render();
+  }
+
+  /* Called by src/data/liveSource.js after every background poll -- success
+     bumps the freshness timestamp and clears any earlier error; failure
+     leaves the last-good data on screen and just flags it as delayed. */
+  function reportRefresh(ok, message) {
+    if (ok) {
+      state.lastUpdated = new Date();
+      state.refreshError = null;
+    } else {
+      state.refreshError = message || "Background refresh failed";
+    }
     render();
   }
 
@@ -4548,13 +4951,23 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     refs.subtitle = h("div.topbar-sub");
     refs.clock = h("span", u.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
+    refs.freshness = h("span.freshness");
+    refs.userChip = h("span", state.userEmail || "");
+
+    var signOut = h(
+      "div.user-chip",
+      refs.userChip,
+      h("button.sign-out-btn", { type: "button", onclick: signOut }, "Sign out")
+    );
 
     return h(
       "header.topbar",
       h("div", refs.title, refs.subtitle),
       h("div.topbar-right",
+        refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
-        refs.pill)
+        refs.pill,
+        signOut)
     );
   }
 
@@ -4596,6 +5009,15 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
       "background:" + pill.bg + ";color:" + pill.color + ";border-color:" + pill.border + ";"
     );
 
+    refs.freshness.classList.toggle("is-stale", !!state.refreshError);
+    refs.freshness.textContent = !state.lastUpdated
+      ? ""
+      : state.refreshError
+      ? "Live feed delayed — showing data from " + u.fmtClock(state.lastUpdated)
+      : "Updated " + u.fmtClock(state.lastUpdated);
+
+    if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
+
     Object.keys(refs.navButtons).forEach(function (key) {
       var isActive = key === state.active;
       refs.navButtons[key].classList.toggle("is-active", isActive);
@@ -4609,8 +5031,11 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
   /* ---- Boot ------------------------------------------------------------ */
 
-  function start() {
+  var chromeInitialized = false;
+
+  function boot() {
     var root = document.getElementById("app");
+    App.dom.clear(root);
     refs.content = h("main.content");
 
     var main = h("div.main", buildTopbar(), refs.content);
@@ -4619,25 +5044,362 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     var hash = window.location.hash.slice(1);
     if (App.views[hash]) state.active = hash;
 
-    window.addEventListener("hashchange", function () {
-      var key = window.location.hash.slice(1);
-      if (App.views[key] && key !== state.active) {
-        state.active = key;
-        render();
-      }
-    });
+    /* One-time setup only -- boot() can now run more than once per page
+       load (e.g. after a session expires and the operator signs back in),
+       and re-registering these each time would stack up duplicate timers
+       and listeners. */
+    if (!chromeInitialized) {
+      chromeInitialized = true;
 
-    /* The header clock is the only thing that ticks; repainting the whole
-       content region every second would fight with scrolling and typing. */
-    setInterval(function () {
-      state.now = new Date();
-      refs.clock.textContent = u.fmtClock(state.now);
-    }, 1000);
+      window.addEventListener("hashchange", function () {
+        var key = window.location.hash.slice(1);
+        if (App.views[key] && key !== state.active) {
+          state.active = key;
+          render();
+        }
+      });
+
+      /* The header clock is the only thing that ticks; repainting the whole
+         content region every second would fight with scrolling and typing. */
+      setInterval(function () {
+        state.now = new Date();
+        refs.clock.textContent = u.fmtClock(state.now);
+      }, 1000);
+    }
 
     render();
+
+    /* No-op wherever src/data/liveSource.js isn't loaded (e.g. selftest.html,
+       which deliberately runs on generated sample data only). */
+    if (App.data.startPolling) App.data.startPolling();
+  }
+
+  function renderBootState(title, detail, isError, onRetry) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+    var card = h(
+      "div.boot-card",
+      isError ? null : h("div.boot-spinner"),
+      h("div.boot-title" + (isError ? ".is-error" : ""), title),
+      h("div.boot-detail", detail)
+    );
+    if (isError) {
+      card.appendChild(
+        h("button.boot-retry", { type: "button", onclick: onRetry }, "Retry")
+      );
+    }
+    root.appendChild(h("div.boot-state", card));
+  }
+
+  /* Fetches branch data and boots the dashboard shell, or shows a blocking
+     retry screen on failure -- shared by the initial page load and by a
+     fresh login after a session expired. A 401 mid-fetch (session expired
+     between checking /me and this actually running) falls back to the
+     login screen rather than the generic retry screen. */
+  function loadThenBoot() {
+    renderBootState(
+      "Loading branch data",
+      "Fetching the live feed from the branch data service…",
+      false
+    );
+
+    App.data.load().then(function () {
+      state.lastUpdated = new Date();
+      boot();
+    }, function (err) {
+      if (err && err.isAuthError) {
+        renderLoginScreen("Your session expired — sign in again.");
+        return;
+      }
+      renderBootState(
+        "Could not reach the branch data service",
+        (err && err.message ? err.message : "Request failed") +
+          ". Confirm the backend is running (see backend/README.md), then retry.",
+        true,
+        loadThenBoot
+      );
+    });
+  }
+
+  /* ---- Auth ------------------------------------------------------------- */
+
+  function renderLoginScreen(message) {
+    if (App.data.stopPolling) App.data.stopPolling();
+
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var usernameInput = h("input.text-input", {
+      type: "text", id: "login-username", placeholder: "Email", autocomplete: "username",
+    });
+    var passwordInput = h("input.text-input", {
+      type: "password", id: "login-password", placeholder: "Password", autocomplete: "current-password",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var username = usernameInput.value.trim();
+      var password = passwordInput.value;
+      if (!username || !password) {
+        errorBox.textContent = "Enter your email and password.";
+        return;
+      }
+      errorBox.textContent = "Signing in…";
+      App.auth.login(username, password).then(function (res) {
+        if (res.status === "new_password_required") {
+          renderNewPasswordScreen(username, res.session);
+          return;
+        }
+        if (res.status === "mfa_required") {
+          renderMfaScreen(username, res.mfa_type, res.session);
+          return;
+        }
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderLoginScreen((err && err.message) || "Sign-in failed.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    usernameInput.onkeydown = onEnter;
+    passwordInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "TN Grama Bank — Sign in"),
+      h("div.login-field", h("label", { for: "login-username" }, "Email"), usernameInput),
+      h("div.login-field", h("label", { for: "login-password" }, "Password"), passwordInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Sign in"),
+      h("button.forgot-password-link", { type: "button", onclick: function () { renderForgotPasswordScreen(); } }, "Forgot password?")
+    );
+    root.appendChild(h("div.boot-state", card));
+    usernameInput.focus();
+  }
+
+  /* Admin-created accounts get a temporary password and must set a real one
+     on first login -- Cognito's NEW_PASSWORD_REQUIRED challenge, surfaced by
+     /api/auth/login as {status:"new_password_required", session}. */
+  function renderNewPasswordScreen(username, cognitoSession, message) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var newPasswordInput = h("input.text-input", {
+      type: "password", id: "new-password", placeholder: "New password", autocomplete: "new-password",
+    });
+    var confirmInput = h("input.text-input", {
+      type: "password", id: "confirm-password", placeholder: "Confirm new password", autocomplete: "new-password",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var newPassword = newPasswordInput.value;
+      if (!newPassword || newPassword !== confirmInput.value) {
+        errorBox.textContent = "Passwords must match and cannot be empty.";
+        return;
+      }
+      errorBox.textContent = "Setting your password…";
+      App.auth.completeNewPassword(username, newPassword, cognitoSession).then(function (res) {
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderNewPasswordScreen(username, cognitoSession, (err && err.message) || "Could not set your password.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    newPasswordInput.onkeydown = onEnter;
+    confirmInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Set a new password"),
+      h("div.boot-detail", "First sign-in for " + username + " — choose a password only you know."),
+      h("div.login-field", h("label", { for: "new-password" }, "New password"), newPasswordInput),
+      h("div.login-field", h("label", { for: "confirm-password" }, "Confirm new password"), confirmInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Set password and sign in")
+    );
+    root.appendChild(h("div.boot-state", card));
+    newPasswordInput.focus();
+  }
+
+  /* Cognito's SMS_MFA / SOFTWARE_TOKEN_MFA challenge -- only appears for
+     accounts that have MFA enrolled (the pool is MfaConfiguration=OPTIONAL,
+     not required), so a non-MFA account's login is completely unaffected. */
+  function renderMfaScreen(username, mfaType, cognitoSession, message) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var codeInput = h("input.text-input", {
+      type: "text", id: "mfa-code", placeholder: "6-digit code", autocomplete: "one-time-code",
+    });
+    var errorBox = h("div.login-error", message || "");
+
+    function submit() {
+      var code = codeInput.value.trim();
+      if (!code) {
+        errorBox.textContent = "Enter the code from your authenticator.";
+        return;
+      }
+      errorBox.textContent = "Verifying…";
+      App.auth.completeMfa(username, mfaType, code, cognitoSession).then(function (res) {
+        state.userEmail = res.email;
+        loadThenBoot();
+      }, function (err) {
+        renderMfaScreen(username, mfaType, cognitoSession, (err && err.message) || "Invalid code.");
+      });
+    }
+
+    codeInput.onkeydown = function (e) { if (e.key === "Enter") submit(); };
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Verification code"),
+      h("div.boot-detail", "Enter the verification code for " + username + "."),
+      h("div.login-field", h("label", { for: "mfa-code" }, "Code"), codeInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Verify")
+    );
+    root.appendChild(h("div.boot-state", card));
+    codeInput.focus();
+  }
+
+  /* Cognito's self-service reset: step 1 (this screen) emails a code and
+     always shows the same message whether or not the account exists (the
+     backend guarantees that -- this screen never learns which). Step 2 is
+     renderResetPasswordScreen. */
+  function renderForgotPasswordScreen() {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var usernameInput = h("input.text-input", {
+      type: "text", id: "forgot-username", placeholder: "Email", autocomplete: "username",
+    });
+    var errorBox = h("div.login-error", "");
+
+    function submit() {
+      var username = usernameInput.value.trim();
+      if (!username) {
+        errorBox.textContent = "Enter your email.";
+        return;
+      }
+      errorBox.textContent = "Sending…";
+      var fallbackDetail = "If that account exists, a reset code has been sent to its email.";
+      App.auth.forgotPassword(username).then(function (res) {
+        renderResetPasswordScreen(username, res.detail || fallbackDetail);
+      }, function () {
+        renderResetPasswordScreen(username, fallbackDetail);
+      });
+    }
+
+    usernameInput.onkeydown = function (e) { if (e.key === "Enter") submit(); };
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Reset your password"),
+      h("div.login-field", h("label", { for: "forgot-username" }, "Email"), usernameInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Send reset code"),
+      h("button.forgot-password-link", { type: "button", onclick: function () { renderLoginScreen(); } }, "Back to sign in")
+    );
+    root.appendChild(h("div.boot-state", card));
+    usernameInput.focus();
+  }
+
+  function renderResetPasswordScreen(username, detail, error) {
+    var root = document.getElementById("app");
+    App.dom.clear(root);
+
+    var codeInput = h("input.text-input", {
+      type: "text", id: "reset-code", placeholder: "Reset code", autocomplete: "one-time-code",
+    });
+    var newPasswordInput = h("input.text-input", {
+      type: "password", id: "reset-new-password", placeholder: "New password", autocomplete: "new-password",
+    });
+    var confirmInput = h("input.text-input", {
+      type: "password", id: "reset-confirm-password", placeholder: "Confirm new password", autocomplete: "new-password",
+    });
+    var errorBox = h("div.login-error", error || "");
+
+    function submit() {
+      var code = codeInput.value.trim();
+      var newPassword = newPasswordInput.value;
+      if (!code || !newPassword || newPassword !== confirmInput.value) {
+        errorBox.textContent = "Enter the code and matching new passwords.";
+        return;
+      }
+      errorBox.textContent = "Resetting…";
+      App.auth.confirmForgotPassword(username, code, newPassword).then(function () {
+        renderLoginScreen("Password reset — sign in with your new password.");
+      }, function (err) {
+        renderResetPasswordScreen(username, detail, (err && err.message) || "Could not reset your password.");
+      });
+    }
+
+    var onEnter = function (e) { if (e.key === "Enter") submit(); };
+    codeInput.onkeydown = onEnter;
+    newPasswordInput.onkeydown = onEnter;
+    confirmInput.onkeydown = onEnter;
+
+    var card = h(
+      "div.boot-card.login-card",
+      h("div.boot-title", "Enter reset code"),
+      h("div.boot-detail", detail || ""),
+      h("div.login-field", h("label", { for: "reset-code" }, "Reset code"), codeInput),
+      h("div.login-field", h("label", { for: "reset-new-password" }, "New password"), newPasswordInput),
+      h("div.login-field", h("label", { for: "reset-confirm-password" }, "Confirm new password"), confirmInput),
+      errorBox,
+      h("button.boot-retry", { type: "button", onclick: submit }, "Reset password")
+    );
+    root.appendChild(h("div.boot-state", card));
+    codeInput.focus();
+  }
+
+  function signOut() {
+    App.auth.logout().then(afterSignOut, afterSignOut);
+  }
+
+  function afterSignOut() {
+    state.userEmail = null;
+    state.lastUpdated = null;
+    state.refreshError = null;
+    renderLoginScreen();
+  }
+
+  /* Called by src/data/liveSource.js when a background poll gets a 401 --
+     the session timed out mid-use. Distinct from a network hiccup
+     (reportRefresh's low-key "feed delayed" indicator): this needs the
+     operator to sign in again, not just a retry. */
+  function onSessionExpired() {
+    state.userEmail = null;
+    renderLoginScreen("Your session expired — sign in again.");
+  }
+
+  /* If src/data/liveSource.js is loaded (see index.html), a session check
+     runs before anything renders: a valid session loads branch data and
+     boots straight in (silent resume); no session shows the login screen.
+     Without liveSource.js/authSource.js (as in tests/selftest.html) the
+     dashboard boots straight into the generated sample data, exactly as
+     before -- unauthenticated dashboard views are never part of that path. */
+  function start() {
+    if (!App.data.load || !App.auth) {
+      boot();
+      return;
+    }
+
+    App.auth.me().then(function (res) {
+      state.userEmail = res.email;
+      loadThenBoot();
+    }, function () {
+      renderLoginScreen();
+    });
   }
 
   App.start = start;
+  App.reportRefresh = reportRefresh;
+  App.onSessionExpired = onSessionExpired;
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);
   } else {

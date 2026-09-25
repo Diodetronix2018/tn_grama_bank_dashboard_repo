@@ -74,7 +74,7 @@
           })
         : h("div.row-item-sub", "No branch in this district matches that search."));
 
-      body = h("div.grid", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
+      body = h("div.grid.split", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
     } else {
       var all = App.data.allBranches().filter(function (b) {
         return !search || u.includesCI(b.name, search) || u.includesCI(b.district, search);
@@ -237,7 +237,7 @@
           h("span.icon-chip", {
             style: "width:44px;height:44px;flex:0 0 44px;border-radius:12px;position:relative;z-index:1;" +
               "background:" + z.dominant + "22;color:" + z.dominant + ";border-color:" + z.dominant + "55;",
-            html: z.iconHtml,
+            html: App.ICONS.zoneDoor,
           }),
           h("div.zone-card-name", z.name),
           h("div", { style: "margin-top:8px;position:relative;z-index:1;" },

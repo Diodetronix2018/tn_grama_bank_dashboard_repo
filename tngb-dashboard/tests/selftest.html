@@ -54,7 +54,7 @@ function findByText(sel, needle) {
 }
 /* Important values and numbers are Arial Bold; everything else is Arial
    Regular. Keep in sync with the bold rule in assets/styles.css. */
-var VALUE_SELECTOR = ".val, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num, " +
+var VALUE_SELECTOR = ".val, .kpi-label, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num, " +
   ".muted-count, .chip-count, .rail-count, .map-count, .map-tooltip b, " +
   ".badge, .overall-pill, .time-pill, .clock-time, .mono, " +
   ".event-line-time, .feed-time-dark, table.data tbody td.num, " +
@@ -150,16 +150,9 @@ setTimeout(function () {
     // --- intrusion ----------------------------------------------------------
     navBtn("Intrusion Status").click();
     var icards = content().querySelectorAll(".kpi");
-    ok("intrusion has 8 cards", icards.length === 8, icards.length + "");
-    var restoredValue = icards[3].querySelector(".kpi-value").textContent;
-    icards[3].click(); // Alarm Restored
-    var rrows = content().querySelectorAll("table.data tbody tr").length;
-    var alarmRestoredHeader = findByText(".card-title", "Alarm Restored");
-    ok("alarm restored panel opens", !!alarmRestoredHeader);
-    ok("restored count matches its list", alarmRestoredHeader &&
-      alarmRestoredHeader.textContent.indexOf("(" + restoredValue + ")") !== -1,
-      "card=" + restoredValue + " header=" + (alarmRestoredHeader ? alarmRestoredHeader.textContent.trim() : "?"));
-    icards[6].click(); // Tamper Active
+    ok("intrusion has 5 cards", icards.length === 5, icards.length + "");
+    ok("no restored cards", text().indexOf("Restored") === -1);
+    icards[4].click(); // Tamper Active
     ok("tamper active lists branches", !!findByText(".card-title", "Tamper Active Branches"));
 
     // --- power --------------------------------------------------------------
@@ -227,14 +220,17 @@ setTimeout(function () {
     navBtn("Reports").click();
     var items = content().querySelectorAll(".report-item");
     ok("10 report definitions", items.length === 10, items.length + "");
+    // Checked per report, right after it renders: reading text() once after
+    // the loop would judge every report by the last one's page.
     var counts = [];
+    var renderedOk = true;
     items.forEach(function (it) {
       it.click();
-      counts.push(content().querySelectorAll("table.data tbody tr").length);
+      var c = content().querySelectorAll("table.data tbody tr").length;
+      counts.push(c);
+      if (!(c > 0 || text().indexOf("No records") !== -1)) renderedOk = false;
     });
-    ok("every report renders rows or an empty note",
-      counts.every(function (c, i) { return c > 0 || text().indexOf("No records") !== -1; }),
-      counts.join(","));
+    ok("every report renders rows or an empty note", renderedOk, counts.join(","));
     findByText(".report-item", "Branch-wise").click();
     ok("branch-wise report has tamper column", text().indexOf("Tamper") !== -1);
 

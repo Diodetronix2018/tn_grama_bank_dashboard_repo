@@ -1,5 +1,5 @@
-/* Intrusion Status: current arm/alarm/fault/tamper state, plus incidents
-   that already cleared earlier today. Every counter opens the list behind it. */
+/* Intrusion Status: current arm/alarm/fault/tamper state. Every counter
+   opens the list behind it. */
 (function (App) {
   "use strict";
 
@@ -12,7 +12,7 @@
     armed: { title: "Armed Branches", match: function (b) { return b.panelStatus === "Armed"; } },
     disarmed: { title: "Disarmed Branches", match: function (b) { return b.panelStatus === "Disarmed"; } },
     alarm: { title: "Alarm Active Branches", match: function (b) { return b.panelStatus === "Alarm Active"; } },
-    fault: { title: "Fault Branches", match: function (b) { return b.panelStatus === "Fault"; } },
+    fault: { title: "Fault Active Branches", match: function (b) { return b.panelStatus === "Fault"; } },
   };
 
   function openBranch(ctx, branch) {
@@ -61,33 +61,6 @@
     });
   }
 
-  function restoredPanel(ctx) {
-    var key = ctx.state.restoreFilter;
-    if (!key) return null;
-    var titles = { alarm: "Alarm Restored", fault: "Fault Restored", tamper: "Tamper Restored" };
-    var rows = App.data.restoredEvents()[key];
-
-    return W.filterPanel({
-      title: titles[key],
-      count: rows.length,
-      subtitle: "Earlier-today incidents that have already cleared · click a row to open that branch",
-      rows: rows,
-      columns: [
-        { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
-        { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
-        { label: "Zone", className: "sub", render: function (r) { return r.zone; } },
-        {
-          label: "Restored At",
-          render: function (r) {
-            return h("span.mono", { style: "color:" + COLORS.green + ";" }, r.time);
-          },
-        },
-      ],
-      onRowClick: function (r) { openBranch(ctx, r.branch); },
-      onClose: function () { ctx.setState({ restoreFilter: null }); },
-    });
-  }
-
   /* Branches whose panel is currently in a condition an operator must act on. */
   function openIncidents() {
     var rows = App.data.allBranches()
@@ -117,30 +90,23 @@
       });
     });
 
-    return rows.sort(function (a, b) { return a.since < b.since ? 1 : -1; });
+    return rows.sort(function (a, b) { return a.since < b.since ? 1 : a.since > b.since ? -1 : 0; });
   }
 
   function render(ctx) {
     var stats = App.data.networkStats();
-    var restored = App.data.restoredEvents();
     var tamperActive = App.data.tamperBranches().length;
 
     var cardDefs = [
-      { key: "armed", kind: "live", label: "Armed", value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
-      { key: "disarmed", kind: "live", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
-      { key: "alarm", kind: "live", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.alerts },
-      { key: "alarm", kind: "restored", label: "Alarm Restored", value: restored.alarm.length, color: COLORS.green, iconHtml: App.ICONS.alerts },
-      { key: "fault", kind: "live", label: "Fault", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
-      { key: "fault", kind: "restored", label: "Fault Restored", value: restored.fault.length, color: COLORS.green, iconHtml: App.ICONS.fault },
-      { key: "tamper", kind: "live", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.zones },
-      { key: "tamper", kind: "restored", label: "Tamper Restored", value: restored.tamper.length, color: COLORS.green, iconHtml: App.ICONS.zones },
+      { key: "armed", label: "Armed", value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.arm },
+      { key: "disarmed", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
+      { key: "alarm", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
+      { key: "fault", label: "Fault Active", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
+      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.tamper },
     ];
 
     var cards = cardDefs.map(function (d) {
-      var isRestored = d.kind === "restored";
-      var selected = isRestored
-        ? ctx.state.restoreFilter === d.key
-        : ctx.state.liveStatusFilter === d.key;
+      var selected = ctx.state.liveStatusFilter === d.key;
       return {
         compact: true,
         label: d.label,
@@ -150,17 +116,7 @@
         iconHtml: d.iconHtml,
         selected: selected,
         onClick: function () {
-          if (isRestored) {
-            ctx.setState({
-              restoreFilter: selected ? null : d.key,
-              liveStatusFilter: null,
-            });
-          } else {
-            ctx.setState({
-              liveStatusFilter: selected ? null : d.key,
-              restoreFilter: null,
-            });
-          }
+          ctx.setState({ liveStatusFilter: selected ? null : d.key });
         },
       };
     });
@@ -169,9 +125,8 @@
 
     return h(
       "div",
-      h("div.mb-lg", W.kpiRow(cards, 4)),
+      h("div.mb-lg", W.kpiRow(cards, 5)),
       livePanel(ctx),
-      restoredPanel(ctx),
       h(
         "div.card",
         { style: "overflow:hidden;" },

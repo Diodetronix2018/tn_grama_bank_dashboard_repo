@@ -70,7 +70,7 @@
           { label: "Abnormal", count: stats.abnormal, color: COLORS.red }),
         pie("Online / Offline",
           { label: "Online", count: stats.online, color: COLORS.green },
-          { label: "Offline", count: stats.offline, color: COLORS.slate }),
+          { label: "Offline", count: stats.offline, color: COLORS.red }),
         pie("Armed / Disarmed",
           { label: "Armed", count: stats.armed, color: COLORS.navy },
           { label: "Disarmed", count: stats.disarmed, color: COLORS.grey })
@@ -207,9 +207,9 @@
       { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
       { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.navy, iconHtml: App.ICONS.map, go: "locationMaps" },
       { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
-      { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.slate, iconHtml: App.ICONS.offline },
-      { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
-      { key: "disarmed", label: "Disarmed Panels", value: stats.disarmed, hint: "Click to view list", color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
+      { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.offline },
+      { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.arm },
+      { key: "disarmed", label: "Disarmed Panels", value: stats.disarmed, hint: "Click to view list", color: COLORS.grey, iconHtml: App.ICONS.disarm },
       { key: "alarm", label: "Alarm Panels", value: stats.alarm, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.bell },
       { key: "fault", label: "Fault Panels", value: stats.fault, hint: "Click to view list", color: COLORS.amber, iconHtml: App.ICONS.fault },
     ];
@@ -253,18 +253,25 @@
     var selectedId = ctx.state.selectedBranchId &&
       branches.some(function (b) { return b.id === ctx.state.selectedBranchId; })
         ? ctx.state.selectedBranchId
-        : branches[0].id;
+        : branches.length ? branches[0].id : null;
     var selected = branches.find(function (b) { return b.id === selectedId; });
+
+    /* A district the live feed returned no branches for is still listed and
+       clickable, so it needs an empty state rather than a spotlight. */
+    var branchArea = branches.length
+      ? h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
+          branchListCard(ctx, branches, selectedId),
+          spotlightCard(selected))
+      : h("div.card.mt-lg", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+          "No branches reported in " + ctx.state.selectedRegion + " yet.");
 
     return h(
       "div",
       W.kpiRow(kpis, 4),
       panel ? h("div.mt-md", panel) : null,
-      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
+      h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
         statusCard(stats), regionCard(ctx)),
-      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
-        branchListCard(ctx, branches, selectedId),
-        spotlightCard(selected))
+      branchArea
     );
   }
 

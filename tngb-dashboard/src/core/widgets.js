@@ -18,9 +18,9 @@
       "button." + classes.join("."),
       { type: "button", onclick: opts.onClick || null, disabled: !opts.onClick },
       h("span.kpi-rail", { style: "background:" + opts.color + ";" }),
-      iconChip(opts.iconHtml, opts.color, { solid: true, class: opts.compact ? "sm" : "" }),
+      iconChip(opts.iconHtml, opts.color, { class: opts.compact ? "sm" : "" }),
       h("div.kpi-label", opts.label),
-      h("div.kpi-value" + (opts.compact ? ".sm" : ""), String(opts.value)),
+      h("div.kpi-value" + (opts.compact ? ".sm" : ""), { style: "color:" + opts.color + ";" }, String(opts.value)),
       opts.hint ? h("div.kpi-hint", opts.hint) : null
     );
   }
@@ -91,14 +91,22 @@
         "div.table-scroll",
         { style: "max-height:" + (opts.maxHeight || 380) + "px;" },
         dataTable(opts.columns, opts.rows, { onRowClick: opts.onRowClick })
-      )
+      ),
+      opts.rows.length < opts.count ? truncationNote(opts.rows.length, opts.count, "rows") : null
     );
+  }
+
+  /* Footer for a list cut short for speed, so its header count still adds up. */
+  function truncationNote(shown, total, noun) {
+    return h("div", {
+      style: "padding:12px 22px;border-top:1px solid var(--line-faint);font-size:12px;color:var(--ink-soft);",
+    }, "Showing the first ", App.dom.val(shown), " of ", App.dom.val(total), " " + noun + ".");
   }
 
   /* A filter chip row driven by a counts map. */
   function chipRow(opts) {
     var chips = opts.types.map(function (t) {
-      var color = opts.colors[t];
+      var color = opts.dark ? u.onDark(opts.colors[t]) : opts.colors[t];
       var isActive = opts.active === t;
       var style = opts.dark
         ? "background:" + (isActive ? color + "2a" : "rgba(255,255,255,.06)") +
@@ -161,15 +169,30 @@
     }));
   }
 
-  /* Small summary tiles used at the top of secondary views. */
+  /* Small summary tiles used at the top of secondary views. A tile that
+     pairs two counts ("Online / Offline") passes `pair`: one {value, color,
+     iconHtml} per side, so each number sits under its own coloured icon. */
   function summaryCards(cards, columns) {
     return h("div.grid.gap-sm.grid-" + (columns || 3) + ".mb-lg", cards.map(function (c) {
+      var icons, value;
+      if (c.pair) {
+        icons = h("div.flex.gap-6", c.pair.map(function (p) {
+          return iconChip(p.iconHtml, p.color, { class: "sm" });
+        }));
+        value = h("div.kpi-value.sm",
+          h("span.val", { style: "color:" + c.pair[0].color + ";" }, String(c.pair[0].value)),
+          h("span.kpi-sep", " / "),
+          h("span.val", { style: "color:" + c.pair[1].color + ";" }, String(c.pair[1].value)));
+      } else {
+        icons = c.iconHtml ? iconChip(c.iconHtml, c.color, { class: "sm" }) : null;
+        value = h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value));
+      }
       return h(
         "div.kpi.compact",
         h("span.kpi-rail", { style: "background:" + c.color + ";" }),
-        c.iconHtml ? iconChip(c.iconHtml, c.color, { solid: true, class: "sm" }) : null,
+        icons,
         h("div.kpi-label", c.label),
-        h("div.kpi-value.sm", String(c.value))
+        value
       );
     }));
   }
@@ -189,6 +212,7 @@
     searchInput: searchInput,
     dataTable: dataTable,
     filterPanel: filterPanel,
+    truncationNote: truncationNote,
     chipRow: chipRow,
     listHeader: listHeader,
     segmented: segmented,

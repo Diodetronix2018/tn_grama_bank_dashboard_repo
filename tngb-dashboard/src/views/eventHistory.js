@@ -34,7 +34,7 @@
         color: COLORS.navy,
         iconHtml: App.ICONS.activities,
       },
-      { label: "Most Frequent Event", value: busiest, color: COLORS.amber, iconHtml: App.ICONS.alerts },
+      { label: "Most Frequent Event", value: busiest, color: App.data.EVENT_COLORS[busiest], iconHtml: App.EVENT_ICONS[busiest] },
     ], 3);
 
     var chips = W.chipRow({

@@ -20,9 +20,11 @@
     }, events.length ? events[0].time.slice(0, 10) : App.data.TODAY);
   }
 
+  /* Calendar arithmetic in UTC: a local-midnight Date read back through
+     toISOString() lands on the previous day east of Greenwich (e.g. IST). */
   function shiftDays(dateStr, delta) {
-    var d = new Date(dateStr + "T00:00:00");
-    d.setDate(d.getDate() + delta);
+    var d = new Date(dateStr + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + delta);
     return d.toISOString().slice(0, 10);
   }
 
@@ -64,9 +66,12 @@
     }).sort(function (a, b) { return b.total - a.total; });
   }
 
+  /* Text starting with = + - @ (or a tab/CR) would run as a formula when
+     the CSV is opened in Excel, so it is prefixed with ' to stay plain text. */
   function csvCell(value) {
     var s = value === null || value === undefined ? "" : String(value);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
   function downloadCsv(filename, header, rows) {
@@ -82,7 +87,8 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Revoking in the same tick can cancel the download in some browsers.
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
   function render(ctx) {
@@ -172,15 +178,15 @@
           { label: "Total Events", key: "total", align: "right", className: "name" },
           {
             label: "Alarm", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.red + ";" }, String(r.alarm)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.red + ";" }, String(r.alarm)); },
           },
           {
             label: "Fault", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.amber + ";" }, String(r.fault)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.amber + ";" }, String(r.fault)); },
           },
           {
             label: "Tamper", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
           },
           {
             label: "Status",
@@ -207,7 +213,7 @@
         return h("div.kpi.compact",
           h("span.kpi-rail", { style: "background:" + c.color + ";" }),
           h("div.kpi-label", { style: "margin-top:0;" }, c.label),
-          h("div.kpi-value.sm", String(c.value)));
+          h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value)));
       })),
       h(
         "div.card",
@@ -229,7 +235,7 @@
       )
     );
 
-    return h("div.grid", { style: "grid-template-columns:250px minmax(0,1fr);" }, rail, body);
+    return h("div.grid.split", { style: "grid-template-columns:250px minmax(0,1fr);" }, rail, body);
   }
 
   App.views = App.views || {};

@@ -18,8 +18,8 @@
   ];
 
   var EVENT_COLORS = {
-    Arm: COLORS.green,
-    Disarm: COLORS.slate,
+    Arm: COLORS.navy,
+    Disarm: COLORS.grey,
     Alarm: COLORS.red,
     Fault: COLORS.amber,
     "AC Fail": COLORS.red,
@@ -28,7 +28,7 @@
     "Battery Restore": COLORS.green,
     "Tamper Activate": COLORS.orange,
     "Tamper Restore": COLORS.green,
-    "Communication Lost": COLORS.slate,
+    "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
   };
 
@@ -184,10 +184,22 @@
       out.push({ type: "Battery Restore", time: power.batteryRestoredAt });
     }
 
+    /* A zone still in tamper logs only its activation (tamperBranches lists
+       it as open). Restores come from earlier incidents on zones that have
+       since cleared, so the log never shows an open tamper as restored. */
     zonesFor(branch).forEach(function (z) {
-      if (z.tamper !== "Tamper") return;
-      out.push({ type: "Tamper Activate", time: z.lastTrigger, zone: z.name });
-      if (cr() < 0.5) out.push({ type: "Tamper Restore", time: z.lastTrigger, zone: z.name });
+      if (z.tamper === "Tamper") {
+        out.push({ type: "Tamper Activate", time: z.lastTrigger, zone: z.name });
+      } else if (cr() < 0.004) {
+        var day = 1 + Math.floor(cr() * 7);
+        var hour = 9 + Math.floor(cr() * 8);
+        var stamp = function (minute) {
+          return data.MONTH + u.pad2(day) + " " + u.pad2(hour) + ":" + u.pad2(minute);
+        };
+        var tripped = Math.floor(cr() * 30);
+        out.push({ type: "Tamper Activate", time: stamp(tripped), zone: z.name });
+        out.push({ type: "Tamper Restore", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
+      }
     });
 
     return out;
@@ -247,33 +259,6 @@
     return _tamperBranches;
   }
 
-  /* --- Cleared-earlier-today incidents ----------------------------------- */
-
-  var _restored = null;
-
-  /* Incidents that fired earlier today and have since cleared. Each one keeps
-     its branch, zone and clear time, so "Alarm Restored: 34" opens a table of
-     34 real records. */
-  function restoredEvents() {
-    if (_restored) return _restored;
-    _restored = { alarm: [], fault: [], tamper: [] };
-    data.allBranches().forEach(function (b) {
-      var rr = u.seededRnd(b.id + "-restored");
-      var add = function (bucket, chance, hourBase) {
-        if (rr() >= chance) return;
-        _restored[bucket].push({
-          branch: b,
-          zone: u.pick(rr, data.SAMPLE_ZONES),
-          time: data.todayStamp(rr, hourBase, 3),
-        });
-      };
-      add("alarm", 0.05, 6);
-      add("fault", 0.06, 7);
-      add("tamper", 0.015, 5);
-    });
-    return _restored;
-  }
-
   /* --- Report definitions ------------------------------------------------ */
 
   var REPORT_DEFS = [
@@ -281,12 +266,12 @@
     { key: "weekly", label: "Weekly Report", desc: "All events over the last 7 days", scope: "events", range: "week", color: COLORS.navy, icon: "history" },
     { key: "monthly", label: "Monthly Report", desc: "All events this month", scope: "events", range: "month", color: COLORS.navy, icon: "history" },
     { key: "branchwise", label: "Branch-wise Report", desc: "Per-branch panel and event summary", scope: "branchwise", color: COLORS.navy, icon: "branches" },
-    { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "alerts" },
+    { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "bell" },
     { key: "fault", label: "Fault Report", desc: "Fault conditions network-wide", scope: "events", types: ["Fault"], color: COLORS.amber, icon: "fault" },
-    { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.green, icon: "intrusion" },
+    { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
     { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and restores", scope: "events", types: ["AC Fail", "AC Restore"], color: COLORS.red, icon: "power" },
     { key: "battery", label: "Battery Report", desc: "Battery failures and restores", scope: "events", types: ["Battery Fail", "Battery Restore"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "zones" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first
@@ -300,7 +285,6 @@
     _allEvents = null;
     _eventCounts = null;
     _tamperBranches = null;
-    _restored = null;
   }
 
   Object.assign(App.data, {
@@ -314,7 +298,6 @@
     allEvents: allEvents,
     eventCounts: eventCounts,
     tamperBranches: tamperBranches,
-    restoredEvents: restoredEvents,
     invalidateDerived: invalidateDerived,
   });
 })(window.App = window.App || {});

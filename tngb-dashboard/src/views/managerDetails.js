@@ -22,7 +22,8 @@
         u.includesCI(b.manager.name, search);
     });
 
-    var attention = matches.filter(function (b) { return b.status === "Attention"; }).length;
+    // Network-wide, like the two cards beside it, not just the search results.
+    var attention = App.data.allBranches().filter(function (b) { return b.status === "Attention"; }).length;
 
     var summary = W.summaryCards([
       { label: "Total Managers", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.managers },

@@ -35,7 +35,6 @@
 
     /* Intrusion */
     liveStatusFilter: null,
-    restoreFilter: null,
 
     /* Zones */
     zoneSearch: "",
@@ -631,7 +630,9 @@
      dashboard boots straight into the generated sample data, exactly as
      before -- unauthenticated dashboard views are never part of that path. */
   function start() {
-    if (!App.data.load || !App.auth) {
+    /* Opened straight from disk (index.html or the emailed standalone build)
+       there is no API to sign in against, so run on the bundled sample data. */
+    if (!App.data.load || !App.auth || window.location.protocol === "file:") {
       boot();
       return;
     }

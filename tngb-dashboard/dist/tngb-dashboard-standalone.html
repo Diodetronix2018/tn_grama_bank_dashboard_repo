@@ -75,9 +75,10 @@ body {
 
 /* The one exception: important values and numbers are Arial Bold on every
    screen -- KPI figures, percentages, counts, status badges, codes, phone
-   numbers, times, key/value readouts, and .val (App.dom.val) for a number
-   inside running text. Keep in sync with VALUE_SELECTOR in tests/selftest.html. */
-.val, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num,
+   numbers, times, key/value readouts, KPI card labels, and .val (App.dom.val)
+   for a number inside running text. Keep in sync with VALUE_SELECTOR in
+   tests/selftest.html. */
+.val, .kpi-label, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num,
 .muted-count, .chip-count, .rail-count, .map-count, .map-tooltip b,
 .badge, .overall-pill, .time-pill, .clock-time, .mono,
 .event-line-time, .feed-time-dark, table.data tbody td.num,
@@ -373,6 +374,7 @@ a:hover { color: #00154f; }
 
 .icon-chip.sm { width: 32px; height: 32px; flex-basis: 32px; border-radius: 9px; }
 .icon-chip.lg { width: 40px; height: 40px; flex-basis: 40px; border-radius: 11px; }
+.kpi-sep { color: var(--ink-soft); }
 
 .text-input {
   width: 100%;
@@ -448,6 +450,7 @@ a:hover { color: #00154f; }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .gap-sm { gap: 14px; }
 .mb-lg { margin-bottom: 18px; }
 .mt-lg { margin-top: 18px; }
@@ -463,6 +466,8 @@ a:hover { color: #00154f; }
   box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
+  text-align: left;
+  width: 100%;
   transition: transform .15s ease, box-shadow .15s ease;
 }
 
@@ -470,11 +475,13 @@ a:hover { color: #00154f; }
 .kpi.is-clickable:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .kpi.is-selected { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy), var(--shadow-lift); }
 
-.kpi-rail { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.kpi-rail { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+/* KPI icons sit on a soft tint of the card colour, with no outline. */
+.kpi .icon-chip { border-color: transparent !important; }
 
 .kpi-label {
-  font-size: 10.5px;
-  color: var(--ink-soft);
+  font-size: 11.5px;
+  color: var(--ink-body);
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -781,7 +788,7 @@ table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
 
 .feed-time-dark {
   font-size: 11px;
-  color: rgba(255, 255, 255, .4);
+  color: rgba(255, 255, 255, .65);
   font-family: var(--font-mono);
   flex: 0 0 auto;
   width: 92px;
@@ -1438,6 +1445,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 @media (max-width: 1180px) {
   .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .spotlight-grid { grid-template-columns: 1fr; }
   .spotlight-left { border-right: 0; border-bottom: 1px solid var(--line-soft); }
 }
@@ -1445,8 +1453,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .content { padding: 20px 16px 48px; }
-  .topbar { padding: 16px; }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
+  .topbar { padding: 16px; flex-wrap: wrap; }
+  .topbar-right { flex-wrap: wrap; gap: 10px; }
+  .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: minmax(0, 1fr); }
+  /* Two-pane layouts set their columns inline; stack them on phones. */
+  .grid.split { grid-template-columns: minmax(0, 1fr) !important; }
+  .map-wrap { height: 70vh; }
 }
 
 /* ---- Boot states: shown while liveSource.js is fetching branch data ---- */
@@ -1632,22 +1644,45 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   }
 
   function panelStatusColor(status) {
-    if (status === "Armed") return COLORS.green;
+    if (status === "Armed") return COLORS.navy;
     if (status === "Disarmed") return COLORS.grey;
     if (status === "Alarm Active") return COLORS.red;
     if (status === "Fault") return COLORS.amber;
     if (status === "Tamper Active") return COLORS.orange;
+    if (status === "Offline") return COLORS.red;
     return COLORS.slate;
   }
 
+  /* The palette is tuned for white cards; on the dark command-centre
+     surfaces each colour swaps for a lighter tone of the same hue so text
+     and icons stay readable (the Zone Status hero uses the same tones). */
+  var ON_DARK = {};
+  ON_DARK[COLORS.navy] = "#7b9bff";
+  ON_DARK[COLORS.green] = "#4ade80";
+  ON_DARK[COLORS.red] = "#f87171";
+  ON_DARK[COLORS.amber] = "#fbbf24";
+  ON_DARK[COLORS.orange] = "#fb923c";
+  ON_DARK[COLORS.grey] = "#94a3b8";
+  ON_DARK[COLORS.slate] = "#94a3b8";
+
+  function onDark(color) {
+    return ON_DARK[color] || color;
+  }
+
   function connectivityColor(conn) {
-    return conn === "Online" ? COLORS.green : COLORS.slate;
+    return conn === "Online" ? COLORS.green : COLORS.red;
   }
 
   function fmtClock(d) {
     return (
       pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds())
     );
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
   }
 
   function includesCI(haystack, needle) {
@@ -1663,6 +1698,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     badgeStyle: badgeStyle,
     panelStatusColor: panelStatusColor,
     connectivityColor: connectivityColor,
+    onDark: onDark,
+    escapeHtml: escapeHtml,
     fmtClock: fmtClock,
     includesCI: includesCI,
   };
@@ -1783,11 +1820,17 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     );
   }
 
+  /* Wireframe globe shared by the online and offline (slashed) glyphs. */
+  var GLOBE =
+    '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/>' +
+    '<path d="M12 3v18M3 12h18M4.2 7.5h15.6M4.2 16.5h15.6"/>';
+
   var ICONS = {
     overview: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>'),
     branches: svg('<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>'),
     intrusion: svg('<path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z"/>'),
-    zones: svg('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'),
+    /* Floor plan split into rooms, with a sensor broadcasting in one zone. */
+    zones: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v4M9 10.5V21M9 14.5h4M16.5 14.5H21"/><circle cx="15" cy="8.3" r="1.2" fill="currentColor" stroke="none"/><path d="M12.7 6a3.2 3.2 0 000 4.6M17.3 6a3.2 3.2 0 010 4.6"/>'),
     power: svg('<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>'),
     activities: svg('<path d="M3 12h4l2 8 4-16 2 8h6"/>'),
     history: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>'),
@@ -1796,12 +1839,45 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     managers: svg('<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/>'),
     reports: svg('<path d="M6 2h9l4 4v16H6z"/><path d="M9 12h6M9 16h6M9 8h3"/>'),
     settings: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'),
-    online: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none"/>'),
-    offline: svg('<circle cx="12" cy="12" r="9" opacity=".45"/><circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none" opacity=".45"/>'),
+    online: svg(GLOBE),
+    offline: svg(GLOBE + '<path d="M21.5 2.5L2.5 21.5"/>'),
     fault: svg('<path d="M12 3.5L22 20H2z"/><path d="M12 9.5v5M12 17.5h.01"/>'),
-    battery: svg('<rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4"/><path d="M6 12h3l1.5-2 2 4L14 12h3"/>'),
+    /* Car-style battery: two terminals, lid, body and an outlined bolt. */
+    battery: svg('<path d="M5.5 6V4h3v2M15.5 6V4h3v2"/><rect x="2" y="6" width="20" height="2.8" rx=".4"/><path d="M3.3 8.8V20.5h17.4V8.8"/><path d="M10.8 10.6h2.8l-1.2 3.6h3l-4.2 5.4.9-3.8H9.2z"/>'),
     wifi: svg('<path d="M2 8.5a16 16 0 0120 0"/><path d="M5 12.5a11 11 0 0114 0"/><path d="M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>'),
     bell: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 3a1.3 1.3 0 011.3 1.3v.6c2.6.7 4.5 3.1 4.5 6v3.2c0 .6.2 1.2.6 1.7l.7.9c.5.6.1 1.5-.7 1.5H5.6c-.8 0-1.2-.9-.7-1.5l.7-.9c.4-.5.6-1.1.6-1.7V10.9c0-2.9 1.9-5.3 4.5-6v-.6A1.3 1.3 0 0112 3z"/><path d="M9.5 20a2.5 2.5 0 005 0z"/></svg>',
+    /* Away-arm: solid house with a door cut-out and a figure walking off. */
+    arm: svg(
+      '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M9 3.5l8.5 8h-2V21h-13v-9.5h-2L9 3.5zM7 13.5v6h4v-6H7z"/>' +
+      '<rect x="3.3" y="4.5" width="2.2" height="5" fill="currentColor" stroke="none"/>' +
+      '<circle cx="20.6" cy="13.6" r="1.25" fill="currentColor" stroke="none"/>' +
+      '<path stroke-width="1.6" d="M20.2 15.9l-.8 3.3-1.6 2.6M19.4 19.2l1.8 1 .3 1.8M18.2 17.6l2-1.7 1.7 1.6"/>'
+    ),
+    /* Disarm: solid house with a person cut out, i.e. someone is home. */
+    disarm: svg(
+      '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2.5l9.5 9h-2.3V21H4.8v-9.5H2.5L12 2.5zM13.6 10.6a1.6 1.6 0 1 1-3.2 0a1.6 1.6 0 1 1 3.2 0zM10.4 13.2h3.2a.8.8 0 01.8.8v3.6h-1.2V20h-2.4v-2.4H9.6V14a.8.8 0 01.8-.8z"/>' +
+      '<rect x="5.8" y="4" width="2.2" height="5" fill="currentColor" stroke="none"/>'
+    ),
+    /* Tamper: a fist swinging a hammer at a surface, inside a ring. The hand
+       and hammer are drawn upright, then turned 45° to strike down-right. */
+    tamper: svg(
+      '<circle cx="12" cy="12" r="10.5"/>' +
+      '<path fill="currentColor" stroke="none" d="M7.85 19.19L19.8 9.16A8.3 8.3 0 0 1 7.85 19.19z"/>' +
+      '<g fill="currentColor" stroke="none" transform="translate(10 10.3) rotate(45) scale(.9) translate(-12 -12)">' +
+      '<rect x="11.2" y="5" width="1.6" height="7"/>' +
+      '<rect x="12" y="3.4" width="4" height="3" rx=".5"/>' +
+      '<path d="M12.4 3.4H10Q7.6 3.6 6.8 6.2Q8.6 5 12.4 6.4z"/>' +
+      '<rect x="8.9" y="10.6" width="6.4" height="5" rx="1.7"/>' +
+      '<rect x="9.6" y="16.4" width="5" height="3" rx=".4"/>' +
+      "</g>"
+    ),
+    /* Open door on a threshold; every zone card in the Zone Status showcase. */
+    zoneDoor: svg(
+      '<path d="M3.5 19.5h17"/><path d="M8 19.5V5.5A1.5 1.5 0 019.5 4h3.7"/>' +
+      '<path d="M13.2 4.2l4.5.9c.8.2 1.3.8 1.3 1.6v11.8c0 .6-.3 1-.9 1.2l-3.5 1.2c-.8.3-1.4-.2-1.4-1V4.2z"/>' +
+      '<circle cx="15.4" cy="12" r=".9" fill="currentColor" stroke="none"/>',
+      20
+    ),
     lockClosed: svg('<path d="M8 10V7a4 4 0 018 0v3"/><rect x="5" y="10" width="14" height="10" rx="2.5"/><circle cx="12" cy="14.3" r="1.3" fill="currentColor" stroke="none"/><path d="M12 15.6v1.8"/>'),
     lockOpen: svg('<path d="M17 10V7a4 4 0 00-7.6-1.8M14.5 8.3L17 5.8"/><rect x="5" y="10" width="14" height="10" rx="2.5"/><circle cx="12" cy="14.3" r="1.3" fill="currentColor" stroke="none"/><path d="M12 15.6v1.8"/>'),
     download: svg('<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>'),
@@ -1824,18 +1900,18 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   /* Which glyph represents each event type in feeds and logs. */
   var EVENT_ICONS = {
-    Arm: ICONS.lockClosed,
-    Disarm: ICONS.lockOpen,
+    Arm: ICONS.arm,
+    Disarm: ICONS.disarm,
     Alarm: ICONS.bell,
     Fault: ICONS.fault,
     "AC Fail": ICONS.power,
     "AC Restore": ICONS.power,
     "Battery Fail": ICONS.battery,
     "Battery Restore": ICONS.battery,
-    "Tamper Activate": ICONS.zones,
-    "Tamper Restore": ICONS.zones,
-    "Communication Lost": ICONS.wifi,
-    "Communication Restored": ICONS.wifi,
+    "Tamper Activate": ICONS.tamper,
+    "Tamper Restore": ICONS.tamper,
+    "Communication Lost": ICONS.offline,
+    "Communication Restored": ICONS.online,
   };
 
   App.ICONS = ICONS;
@@ -1960,9 +2036,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       "button." + classes.join("."),
       { type: "button", onclick: opts.onClick || null, disabled: !opts.onClick },
       h("span.kpi-rail", { style: "background:" + opts.color + ";" }),
-      iconChip(opts.iconHtml, opts.color, { solid: true, class: opts.compact ? "sm" : "" }),
+      iconChip(opts.iconHtml, opts.color, { class: opts.compact ? "sm" : "" }),
       h("div.kpi-label", opts.label),
-      h("div.kpi-value" + (opts.compact ? ".sm" : ""), String(opts.value)),
+      h("div.kpi-value" + (opts.compact ? ".sm" : ""), { style: "color:" + opts.color + ";" }, String(opts.value)),
       opts.hint ? h("div.kpi-hint", opts.hint) : null
     );
   }
@@ -2033,14 +2109,22 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         "div.table-scroll",
         { style: "max-height:" + (opts.maxHeight || 380) + "px;" },
         dataTable(opts.columns, opts.rows, { onRowClick: opts.onRowClick })
-      )
+      ),
+      opts.rows.length < opts.count ? truncationNote(opts.rows.length, opts.count, "rows") : null
     );
+  }
+
+  /* Footer for a list cut short for speed, so its header count still adds up. */
+  function truncationNote(shown, total, noun) {
+    return h("div", {
+      style: "padding:12px 22px;border-top:1px solid var(--line-faint);font-size:12px;color:var(--ink-soft);",
+    }, "Showing the first ", App.dom.val(shown), " of ", App.dom.val(total), " " + noun + ".");
   }
 
   /* A filter chip row driven by a counts map. */
   function chipRow(opts) {
     var chips = opts.types.map(function (t) {
-      var color = opts.colors[t];
+      var color = opts.dark ? u.onDark(opts.colors[t]) : opts.colors[t];
       var isActive = opts.active === t;
       var style = opts.dark
         ? "background:" + (isActive ? color + "2a" : "rgba(255,255,255,.06)") +
@@ -2103,15 +2187,30 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     }));
   }
 
-  /* Small summary tiles used at the top of secondary views. */
+  /* Small summary tiles used at the top of secondary views. A tile that
+     pairs two counts ("Online / Offline") passes `pair`: one {value, color,
+     iconHtml} per side, so each number sits under its own coloured icon. */
   function summaryCards(cards, columns) {
     return h("div.grid.gap-sm.grid-" + (columns || 3) + ".mb-lg", cards.map(function (c) {
+      var icons, value;
+      if (c.pair) {
+        icons = h("div.flex.gap-6", c.pair.map(function (p) {
+          return iconChip(p.iconHtml, p.color, { class: "sm" });
+        }));
+        value = h("div.kpi-value.sm",
+          h("span.val", { style: "color:" + c.pair[0].color + ";" }, String(c.pair[0].value)),
+          h("span.kpi-sep", " / "),
+          h("span.val", { style: "color:" + c.pair[1].color + ";" }, String(c.pair[1].value)));
+      } else {
+        icons = c.iconHtml ? iconChip(c.iconHtml, c.color, { class: "sm" }) : null;
+        value = h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value));
+      }
       return h(
         "div.kpi.compact",
         h("span.kpi-rail", { style: "background:" + c.color + ";" }),
-        c.iconHtml ? iconChip(c.iconHtml, c.color, { solid: true, class: "sm" }) : null,
+        icons,
         h("div.kpi-label", c.label),
-        h("div.kpi-value.sm", String(c.value))
+        value
       );
     }));
   }
@@ -2131,6 +2230,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     searchInput: searchInput,
     dataTable: dataTable,
     filterPanel: filterPanel,
+    truncationNote: truncationNote,
     chipRow: chipRow,
     listHeader: listHeader,
     segmented: segmented,
@@ -2447,7 +2547,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   function networkStats() {
     if (_stats) return _stats;
-    var s = { online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0 };
+    var s = { online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0, abnormal: 0 };
     var all = allBranches();
     all.forEach(function (b) {
       if (b.connectivity === "Online") s.online++; else s.offline++;
@@ -2455,10 +2555,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       else if (b.panelStatus === "Disarmed") s.disarmed++;
       else if (b.panelStatus === "Alarm Active") s.alarm++;
       else if (b.panelStatus === "Fault") s.fault++;
+      /* One count per branch: an alarm or fault panel is usually offline
+         too, so summing offline + alarm + fault would count it twice. */
+      if (b.connectivity === "Offline" || b.panelStatus === "Alarm Active" ||
+          b.panelStatus === "Fault") s.abnormal++;
     });
     s.totalBranches = all.length;
     s.totalDistricts = REGIONS.length;
-    s.abnormal = s.offline + s.alarm + s.fault;
     s.normal = s.totalBranches - s.abnormal;
     _stats = s;
     return s;
@@ -2509,8 +2612,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   ];
 
   var EVENT_COLORS = {
-    Arm: COLORS.green,
-    Disarm: COLORS.slate,
+    Arm: COLORS.navy,
+    Disarm: COLORS.grey,
     Alarm: COLORS.red,
     Fault: COLORS.amber,
     "AC Fail": COLORS.red,
@@ -2519,7 +2622,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     "Battery Restore": COLORS.green,
     "Tamper Activate": COLORS.orange,
     "Tamper Restore": COLORS.green,
-    "Communication Lost": COLORS.slate,
+    "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
   };
 
@@ -2675,10 +2778,22 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       out.push({ type: "Battery Restore", time: power.batteryRestoredAt });
     }
 
+    /* A zone still in tamper logs only its activation (tamperBranches lists
+       it as open). Restores come from earlier incidents on zones that have
+       since cleared, so the log never shows an open tamper as restored. */
     zonesFor(branch).forEach(function (z) {
-      if (z.tamper !== "Tamper") return;
-      out.push({ type: "Tamper Activate", time: z.lastTrigger, zone: z.name });
-      if (cr() < 0.5) out.push({ type: "Tamper Restore", time: z.lastTrigger, zone: z.name });
+      if (z.tamper === "Tamper") {
+        out.push({ type: "Tamper Activate", time: z.lastTrigger, zone: z.name });
+      } else if (cr() < 0.004) {
+        var day = 1 + Math.floor(cr() * 7);
+        var hour = 9 + Math.floor(cr() * 8);
+        var stamp = function (minute) {
+          return data.MONTH + u.pad2(day) + " " + u.pad2(hour) + ":" + u.pad2(minute);
+        };
+        var tripped = Math.floor(cr() * 30);
+        out.push({ type: "Tamper Activate", time: stamp(tripped), zone: z.name });
+        out.push({ type: "Tamper Restore", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
+      }
     });
 
     return out;
@@ -2738,33 +2853,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     return _tamperBranches;
   }
 
-  /* --- Cleared-earlier-today incidents ----------------------------------- */
-
-  var _restored = null;
-
-  /* Incidents that fired earlier today and have since cleared. Each one keeps
-     its branch, zone and clear time, so "Alarm Restored: 34" opens a table of
-     34 real records. */
-  function restoredEvents() {
-    if (_restored) return _restored;
-    _restored = { alarm: [], fault: [], tamper: [] };
-    data.allBranches().forEach(function (b) {
-      var rr = u.seededRnd(b.id + "-restored");
-      var add = function (bucket, chance, hourBase) {
-        if (rr() >= chance) return;
-        _restored[bucket].push({
-          branch: b,
-          zone: u.pick(rr, data.SAMPLE_ZONES),
-          time: data.todayStamp(rr, hourBase, 3),
-        });
-      };
-      add("alarm", 0.05, 6);
-      add("fault", 0.06, 7);
-      add("tamper", 0.015, 5);
-    });
-    return _restored;
-  }
-
   /* --- Report definitions ------------------------------------------------ */
 
   var REPORT_DEFS = [
@@ -2772,12 +2860,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     { key: "weekly", label: "Weekly Report", desc: "All events over the last 7 days", scope: "events", range: "week", color: COLORS.navy, icon: "history" },
     { key: "monthly", label: "Monthly Report", desc: "All events this month", scope: "events", range: "month", color: COLORS.navy, icon: "history" },
     { key: "branchwise", label: "Branch-wise Report", desc: "Per-branch panel and event summary", scope: "branchwise", color: COLORS.navy, icon: "branches" },
-    { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "alerts" },
+    { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "bell" },
     { key: "fault", label: "Fault Report", desc: "Fault conditions network-wide", scope: "events", types: ["Fault"], color: COLORS.amber, icon: "fault" },
-    { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.green, icon: "intrusion" },
+    { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
     { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and restores", scope: "events", types: ["AC Fail", "AC Restore"], color: COLORS.red, icon: "power" },
     { key: "battery", label: "Battery Report", desc: "Battery failures and restores", scope: "events", types: ["Battery Fail", "Battery Restore"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "zones" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first
@@ -2791,7 +2879,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     _allEvents = null;
     _eventCounts = null;
     _tamperBranches = null;
-    _restored = null;
   }
 
   Object.assign(App.data, {
@@ -2805,7 +2892,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     allEvents: allEvents,
     eventCounts: eventCounts,
     tamperBranches: tamperBranches,
-    restoredEvents: restoredEvents,
     invalidateDerived: invalidateDerived,
   });
 })(window.App = window.App || {});
@@ -2967,9 +3053,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body || {}),
     }).then(function (res) {
-      return res.json().then(function (data) {
+      // A proxy error page or an empty 204 isn't JSON; keep the HTTP status
+      // instead of surfacing "Unexpected token '<'" in the login box.
+      return res.text().then(function (body) {
+        var data = null;
+        try { data = body ? JSON.parse(body) : null; } catch (e) { data = null; }
         if (!res.ok) {
-          var err = new Error((data && data.detail) || "Request failed");
+          var err = new Error((data && data.detail) || "Request failed (HTTP " + res.status + ")");
           err.status = res.status;
           throw err;
         }
@@ -3108,7 +3198,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           { label: "Abnormal", count: stats.abnormal, color: COLORS.red }),
         pie("Online / Offline",
           { label: "Online", count: stats.online, color: COLORS.green },
-          { label: "Offline", count: stats.offline, color: COLORS.slate }),
+          { label: "Offline", count: stats.offline, color: COLORS.red }),
         pie("Armed / Disarmed",
           { label: "Armed", count: stats.armed, color: COLORS.navy },
           { label: "Disarmed", count: stats.disarmed, color: COLORS.grey })
@@ -3245,9 +3335,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
       { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.navy, iconHtml: App.ICONS.map, go: "locationMaps" },
       { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
-      { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.slate, iconHtml: App.ICONS.offline },
-      { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
-      { key: "disarmed", label: "Disarmed Panels", value: stats.disarmed, hint: "Click to view list", color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
+      { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.offline },
+      { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.arm },
+      { key: "disarmed", label: "Disarmed Panels", value: stats.disarmed, hint: "Click to view list", color: COLORS.grey, iconHtml: App.ICONS.disarm },
       { key: "alarm", label: "Alarm Panels", value: stats.alarm, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.bell },
       { key: "fault", label: "Fault Panels", value: stats.fault, hint: "Click to view list", color: COLORS.amber, iconHtml: App.ICONS.fault },
     ];
@@ -3291,18 +3381,25 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var selectedId = ctx.state.selectedBranchId &&
       branches.some(function (b) { return b.id === ctx.state.selectedBranchId; })
         ? ctx.state.selectedBranchId
-        : branches[0].id;
+        : branches.length ? branches[0].id : null;
     var selected = branches.find(function (b) { return b.id === selectedId; });
+
+    /* A district the live feed returned no branches for is still listed and
+       clickable, so it needs an empty state rather than a spotlight. */
+    var branchArea = branches.length
+      ? h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
+          branchListCard(ctx, branches, selectedId),
+          spotlightCard(selected))
+      : h("div.card.mt-lg", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
+          "No branches reported in " + ctx.state.selectedRegion + " yet.");
 
     return h(
       "div",
       W.kpiRow(kpis, 4),
       panel ? h("div.mt-md", panel) : null,
-      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
+      h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
         statusCard(stats), regionCard(ctx)),
-      h("div.grid.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
-        branchListCard(ctx, branches, selectedId),
-        spotlightCard(selected))
+      branchArea
     );
   }
 
@@ -3325,6 +3422,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   var W = App.widgets;
   var u = App.utils;
   var COLORS = u.COLORS;
+
+  var GRID_LIMIT = 400;
 
   /* District rows carry their own manager contact, drawn from a stable seed
      so the same district always shows the same regional contact. */
@@ -3353,8 +3452,20 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var summary = W.summaryCards([
       { label: "Total Branches", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.branches },
       { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
-      { label: "Online / Offline", value: stats.online + " / " + stats.offline, color: COLORS.green, iconHtml: App.ICONS.activities },
-      { label: "Armed / Disarmed", value: stats.armed + " / " + stats.disarmed, color: COLORS.navy, iconHtml: App.ICONS.overview },
+      {
+        label: "Online / Offline", color: COLORS.green,
+        pair: [
+          { value: stats.online, color: COLORS.green, iconHtml: App.ICONS.online },
+          { value: stats.offline, color: COLORS.red, iconHtml: App.ICONS.offline },
+        ],
+      },
+      {
+        label: "Armed / Disarmed", color: COLORS.navy,
+        pair: [
+          { value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.arm },
+          { value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
+        ],
+      },
     ], 4);
 
     var rows = districtRows();
@@ -3363,7 +3474,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         label: key.charAt(0).toUpperCase() + key.slice(1),
         align: "right",
         render: function (r) {
-          return h("span", { style: color ? "color:" + color + ";font-weight:600;" : "" }, String(r[key]));
+          return h("span.val", { style: color ? "color:" + color + ";" : "" }, String(r[key]));
         },
       };
     };
@@ -3379,10 +3490,10 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         { label: "District", key: "name", className: "name" },
         { label: "Code", key: "code", className: "mono" },
         { label: "Total", key: "total", align: "right", className: "name" },
-        numCol("armed", COLORS.green),
+        numCol("armed", COLORS.navy),
         numCol("disarmed", COLORS.grey),
         numCol("online", COLORS.green),
-        numCol("offline", COLORS.slate),
+        numCol("offline", COLORS.red),
         numCol("alarm", COLORS.red),
         numCol("fault", COLORS.amber),
         { label: "Status", render: function (r) { return App.dom.badge(r.status, App.data.STATUS_COLORS[r.status]); } },
@@ -3418,7 +3529,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         }),
       }),
       matches.length
-        ? h("div.branch-grid", { style: "max-height:560px;" }, matches.slice(0, 400).map(function (b) {
+        ? h("div.branch-grid", { style: "max-height:560px;" }, matches.slice(0, GRID_LIMIT).map(function (b) {
             return h(
               "button.branch-card",
               {
@@ -3444,7 +3555,10 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             );
           }))
         : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No branch matches that search.")
+            "No branch matches that search."),
+      matches.length > GRID_LIMIT
+        ? W.truncationNote(GRID_LIMIT, matches.length, "branches · search to narrow the list")
+        : null
     );
 
     return h("div", summary, districtTable, grid);
@@ -3461,8 +3575,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 })(window.App = window.App || {});
 
 /* ==== src/views/intrusionStatus.js ==== */
-/* Intrusion Status: current arm/alarm/fault/tamper state, plus incidents
-   that already cleared earlier today. Every counter opens the list behind it. */
+/* Intrusion Status: current arm/alarm/fault/tamper state. Every counter
+   opens the list behind it. */
 (function (App) {
   "use strict";
 
@@ -3475,7 +3589,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     armed: { title: "Armed Branches", match: function (b) { return b.panelStatus === "Armed"; } },
     disarmed: { title: "Disarmed Branches", match: function (b) { return b.panelStatus === "Disarmed"; } },
     alarm: { title: "Alarm Active Branches", match: function (b) { return b.panelStatus === "Alarm Active"; } },
-    fault: { title: "Fault Branches", match: function (b) { return b.panelStatus === "Fault"; } },
+    fault: { title: "Fault Active Branches", match: function (b) { return b.panelStatus === "Fault"; } },
   };
 
   function openBranch(ctx, branch) {
@@ -3524,33 +3638,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     });
   }
 
-  function restoredPanel(ctx) {
-    var key = ctx.state.restoreFilter;
-    if (!key) return null;
-    var titles = { alarm: "Alarm Restored", fault: "Fault Restored", tamper: "Tamper Restored" };
-    var rows = App.data.restoredEvents()[key];
-
-    return W.filterPanel({
-      title: titles[key],
-      count: rows.length,
-      subtitle: "Earlier-today incidents that have already cleared · click a row to open that branch",
-      rows: rows,
-      columns: [
-        { label: "Branch", className: "name", render: function (r) { return r.branch.name; } },
-        { label: "District", className: "sub", render: function (r) { return r.branch.district; } },
-        { label: "Zone", className: "sub", render: function (r) { return r.zone; } },
-        {
-          label: "Restored At",
-          render: function (r) {
-            return h("span.mono", { style: "color:" + COLORS.green + ";" }, r.time);
-          },
-        },
-      ],
-      onRowClick: function (r) { openBranch(ctx, r.branch); },
-      onClose: function () { ctx.setState({ restoreFilter: null }); },
-    });
-  }
-
   /* Branches whose panel is currently in a condition an operator must act on. */
   function openIncidents() {
     var rows = App.data.allBranches()
@@ -3580,30 +3667,23 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       });
     });
 
-    return rows.sort(function (a, b) { return a.since < b.since ? 1 : -1; });
+    return rows.sort(function (a, b) { return a.since < b.since ? 1 : a.since > b.since ? -1 : 0; });
   }
 
   function render(ctx) {
     var stats = App.data.networkStats();
-    var restored = App.data.restoredEvents();
     var tamperActive = App.data.tamperBranches().length;
 
     var cardDefs = [
-      { key: "armed", kind: "live", label: "Armed", value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.lockClosed },
-      { key: "disarmed", kind: "live", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.lockOpen },
-      { key: "alarm", kind: "live", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.alerts },
-      { key: "alarm", kind: "restored", label: "Alarm Restored", value: restored.alarm.length, color: COLORS.green, iconHtml: App.ICONS.alerts },
-      { key: "fault", kind: "live", label: "Fault", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
-      { key: "fault", kind: "restored", label: "Fault Restored", value: restored.fault.length, color: COLORS.green, iconHtml: App.ICONS.fault },
-      { key: "tamper", kind: "live", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.zones },
-      { key: "tamper", kind: "restored", label: "Tamper Restored", value: restored.tamper.length, color: COLORS.green, iconHtml: App.ICONS.zones },
+      { key: "armed", label: "Armed", value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.arm },
+      { key: "disarmed", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
+      { key: "alarm", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
+      { key: "fault", label: "Fault Active", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
+      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.tamper },
     ];
 
     var cards = cardDefs.map(function (d) {
-      var isRestored = d.kind === "restored";
-      var selected = isRestored
-        ? ctx.state.restoreFilter === d.key
-        : ctx.state.liveStatusFilter === d.key;
+      var selected = ctx.state.liveStatusFilter === d.key;
       return {
         compact: true,
         label: d.label,
@@ -3613,17 +3693,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         iconHtml: d.iconHtml,
         selected: selected,
         onClick: function () {
-          if (isRestored) {
-            ctx.setState({
-              restoreFilter: selected ? null : d.key,
-              liveStatusFilter: null,
-            });
-          } else {
-            ctx.setState({
-              liveStatusFilter: selected ? null : d.key,
-              restoreFilter: null,
-            });
-          }
+          ctx.setState({ liveStatusFilter: selected ? null : d.key });
         },
       };
     });
@@ -3632,9 +3702,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     return h(
       "div",
-      h("div.mb-lg", W.kpiRow(cards, 4)),
+      h("div.mb-lg", W.kpiRow(cards, 5)),
       livePanel(ctx),
-      restoredPanel(ctx),
       h(
         "div.card",
         { style: "overflow:hidden;" },
@@ -3743,7 +3812,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           })
         : h("div.row-item-sub", "No branch in this district matches that search."));
 
-      body = h("div.grid", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
+      body = h("div.grid.split", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
     } else {
       var all = App.data.allBranches().filter(function (b) {
         return !search || u.includesCI(b.name, search) || u.includesCI(b.district, search);
@@ -3906,7 +3975,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           h("span.icon-chip", {
             style: "width:44px;height:44px;flex:0 0 44px;border-radius:12px;position:relative;z-index:1;" +
               "background:" + z.dominant + "22;color:" + z.dominant + ";border-color:" + z.dominant + "55;",
-            html: z.iconHtml,
+            html: App.ICONS.zoneDoor,
           }),
           h("div.zone-card-name", z.name),
           h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
@@ -4120,6 +4189,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   var badge = App.dom.badge;
   var iconChip = App.dom.iconChip;
   var W = App.widgets;
+  var u = App.utils;
 
   var FEED_LIMIT = 200;
 
@@ -4159,6 +4229,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   function feedRow(event, dark) {
     var color = App.data.EVENT_COLORS[event.type];
+    if (dark) color = u.onDark(color);
     return h(
       "div.feed-row" + (dark ? ".dark" : ""),
       { style: dark ? "border-color:" + color + "30;" : "border-left:3px solid " + color + ";" },
@@ -4222,8 +4293,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             "div",
             h("div.command-title", "Live Activity Feed"),
             h("div.command-sub", filter
-              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total today"]
-              : [App.dom.val(all.length), " events across the network today"])
+              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total"]
+              : [App.dom.val(all.length), " events across the network"])
           ),
           W.chipRow(Object.assign({}, chipOpts, { dark: true }))
         ),
@@ -4300,7 +4371,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         color: COLORS.navy,
         iconHtml: App.ICONS.activities,
       },
-      { label: "Most Frequent Event", value: busiest, color: COLORS.amber, iconHtml: App.ICONS.alerts },
+      { label: "Most Frequent Event", value: busiest, color: App.data.EVENT_COLORS[busiest], iconHtml: App.EVENT_ICONS[busiest] },
     ], 3);
 
     var chips = W.chipRow({
@@ -4529,7 +4600,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       group.addEventListener("mousemove", function (e) {
         var rect = wrap.getBoundingClientRect();
         tooltip.innerHTML =
-          "<b>" + p.name + "</b><br>" +
+          "<b>" + u.escapeHtml(p.name) + "</b><br>" +
           "<b>" + p.stats.total + "</b> branches · <b>" + p.stats.online + "</b> online<br>" +
           "<b>" + p.stats.offline + "</b> offline · <b>" + p.stats.alarm + "</b> alarm · <b>" +
           p.stats.fault + "</b> fault";
@@ -4615,7 +4686,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     /* The map column is capped near the projection's own aspect ratio, so the
        drawing fills its card instead of floating in white space. */
     return h(
-      "div.grid",
+      "div.grid.split",
       { style: "grid-template-columns:minmax(0,760px) minmax(280px,1fr);align-items:start;" },
       buildMap(ctx, points),
       h("div.flex-col", { style: "gap:12px;" }, legend, headline, watchlist)
@@ -4657,7 +4728,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         u.includesCI(b.manager.name, search);
     });
 
-    var attention = matches.filter(function (b) { return b.status === "Attention"; }).length;
+    // Network-wide, like the two cards beside it, not just the search results.
+    var attention = App.data.allBranches().filter(function (b) { return b.status === "Attention"; }).length;
 
     var summary = W.summaryCards([
       { label: "Total Managers", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.managers },
@@ -4750,9 +4822,11 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     }, events.length ? events[0].time.slice(0, 10) : App.data.TODAY);
   }
 
+  /* Calendar arithmetic in UTC: a local-midnight Date read back through
+     toISOString() lands on the previous day east of Greenwich (e.g. IST). */
   function shiftDays(dateStr, delta) {
-    var d = new Date(dateStr + "T00:00:00");
-    d.setDate(d.getDate() + delta);
+    var d = new Date(dateStr + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + delta);
     return d.toISOString().slice(0, 10);
   }
 
@@ -4794,9 +4868,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     }).sort(function (a, b) { return b.total - a.total; });
   }
 
+  /* Text starting with = + - @ (or a tab/CR) would run as a formula when
+     the CSV is opened in Excel, so it is prefixed with ' to stay plain text. */
   function csvCell(value) {
     var s = value === null || value === undefined ? "" : String(value);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
   function downloadCsv(filename, header, rows) {
@@ -4812,7 +4889,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Revoking in the same tick can cancel the download in some browsers.
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
   function render(ctx) {
@@ -4902,15 +4980,15 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           { label: "Total Events", key: "total", align: "right", className: "name" },
           {
             label: "Alarm", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.red + ";" }, String(r.alarm)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.red + ";" }, String(r.alarm)); },
           },
           {
             label: "Fault", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.amber + ";" }, String(r.fault)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.amber + ";" }, String(r.fault)); },
           },
           {
             label: "Tamper", align: "right",
-            render: function (r) { return h("span", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
           },
           {
             label: "Status",
@@ -4937,7 +5015,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         return h("div.kpi.compact",
           h("span.kpi-rail", { style: "background:" + c.color + ";" }),
           h("div.kpi-label", { style: "margin-top:0;" }, c.label),
-          h("div.kpi-value.sm", String(c.value)));
+          h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value)));
       })),
       h(
         "div.card",
@@ -4959,7 +5037,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       )
     );
 
-    return h("div.grid", { style: "grid-template-columns:250px minmax(0,1fr);" }, rail, body);
+    return h("div.grid.split", { style: "grid-template-columns:250px minmax(0,1fr);" }, rail, body);
   }
 
   App.views = App.views || {};
@@ -5503,7 +5581,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     /* Intrusion */
     liveStatusFilter: null,
-    restoreFilter: null,
 
     /* Zones */
     zoneSearch: "",
@@ -6099,7 +6176,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
      dashboard boots straight into the generated sample data, exactly as
      before -- unauthenticated dashboard views are never part of that path. */
   function start() {
-    if (!App.data.load || !App.auth) {
+    /* Opened straight from disk (index.html or the emailed standalone build)
+       there is no API to sign in against, so run on the bundled sample data. */
+    if (!App.data.load || !App.auth || window.location.protocol === "file:") {
       boot();
       return;
     }

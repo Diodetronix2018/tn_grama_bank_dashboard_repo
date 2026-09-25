@@ -46,22 +46,45 @@
   }
 
   function panelStatusColor(status) {
-    if (status === "Armed") return COLORS.green;
+    if (status === "Armed") return COLORS.navy;
     if (status === "Disarmed") return COLORS.grey;
     if (status === "Alarm Active") return COLORS.red;
     if (status === "Fault") return COLORS.amber;
     if (status === "Tamper Active") return COLORS.orange;
+    if (status === "Offline") return COLORS.red;
     return COLORS.slate;
   }
 
+  /* The palette is tuned for white cards; on the dark command-centre
+     surfaces each colour swaps for a lighter tone of the same hue so text
+     and icons stay readable (the Zone Status hero uses the same tones). */
+  var ON_DARK = {};
+  ON_DARK[COLORS.navy] = "#7b9bff";
+  ON_DARK[COLORS.green] = "#4ade80";
+  ON_DARK[COLORS.red] = "#f87171";
+  ON_DARK[COLORS.amber] = "#fbbf24";
+  ON_DARK[COLORS.orange] = "#fb923c";
+  ON_DARK[COLORS.grey] = "#94a3b8";
+  ON_DARK[COLORS.slate] = "#94a3b8";
+
+  function onDark(color) {
+    return ON_DARK[color] || color;
+  }
+
   function connectivityColor(conn) {
-    return conn === "Online" ? COLORS.green : COLORS.slate;
+    return conn === "Online" ? COLORS.green : COLORS.red;
   }
 
   function fmtClock(d) {
     return (
       pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds())
     );
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
   }
 
   function includesCI(haystack, needle) {
@@ -77,6 +100,8 @@
     badgeStyle: badgeStyle,
     panelStatusColor: panelStatusColor,
     connectivityColor: connectivityColor,
+    onDark: onDark,
+    escapeHtml: escapeHtml,
     fmtClock: fmtClock,
     includesCI: includesCI,
   };

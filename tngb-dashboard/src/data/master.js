@@ -304,7 +304,7 @@
 
   function networkStats() {
     if (_stats) return _stats;
-    var s = { online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0 };
+    var s = { online: 0, offline: 0, armed: 0, disarmed: 0, alarm: 0, fault: 0, abnormal: 0 };
     var all = allBranches();
     all.forEach(function (b) {
       if (b.connectivity === "Online") s.online++; else s.offline++;
@@ -312,10 +312,13 @@
       else if (b.panelStatus === "Disarmed") s.disarmed++;
       else if (b.panelStatus === "Alarm Active") s.alarm++;
       else if (b.panelStatus === "Fault") s.fault++;
+      /* One count per branch: an alarm or fault panel is usually offline
+         too, so summing offline + alarm + fault would count it twice. */
+      if (b.connectivity === "Offline" || b.panelStatus === "Alarm Active" ||
+          b.panelStatus === "Fault") s.abnormal++;
     });
     s.totalBranches = all.length;
     s.totalDistricts = REGIONS.length;
-    s.abnormal = s.offline + s.alarm + s.fault;
     s.normal = s.totalBranches - s.abnormal;
     _stats = s;
     return s;

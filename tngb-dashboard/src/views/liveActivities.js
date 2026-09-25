@@ -7,6 +7,7 @@
   var badge = App.dom.badge;
   var iconChip = App.dom.iconChip;
   var W = App.widgets;
+  var u = App.utils;
 
   var FEED_LIMIT = 200;
 
@@ -46,6 +47,7 @@
 
   function feedRow(event, dark) {
     var color = App.data.EVENT_COLORS[event.type];
+    if (dark) color = u.onDark(color);
     return h(
       "div.feed-row" + (dark ? ".dark" : ""),
       { style: dark ? "border-color:" + color + "30;" : "border-left:3px solid " + color + ";" },
@@ -109,8 +111,8 @@
             "div",
             h("div.command-title", "Live Activity Feed"),
             h("div.command-sub", filter
-              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total today"]
-              : [App.dom.val(all.length), " events across the network today"])
+              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total"]
+              : [App.dom.val(all.length), " events across the network"])
           ),
           W.chipRow(Object.assign({}, chipOpts, { dark: true }))
         ),

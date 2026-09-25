@@ -157,7 +157,7 @@
       group.addEventListener("mousemove", function (e) {
         var rect = wrap.getBoundingClientRect();
         tooltip.innerHTML =
-          "<b>" + p.name + "</b><br>" +
+          "<b>" + u.escapeHtml(p.name) + "</b><br>" +
           "<b>" + p.stats.total + "</b> branches · <b>" + p.stats.online + "</b> online<br>" +
           "<b>" + p.stats.offline + "</b> offline · <b>" + p.stats.alarm + "</b> alarm · <b>" +
           p.stats.fault + "</b> fault";
@@ -243,7 +243,7 @@
     /* The map column is capped near the projection's own aspect ratio, so the
        drawing fills its card instead of floating in white space. */
     return h(
-      "div.grid",
+      "div.grid.split",
       { style: "grid-template-columns:minmax(0,760px) minmax(280px,1fr);align-items:start;" },
       buildMap(ctx, points),
       h("div.flex-col", { style: "gap:12px;" }, legend, headline, watchlist)

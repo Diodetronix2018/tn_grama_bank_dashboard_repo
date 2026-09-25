@@ -7,6 +7,8 @@
   var u = App.utils;
   var COLORS = u.COLORS;
 
+  var GRID_LIMIT = 400;
+
   /* District rows carry their own manager contact, drawn from a stable seed
      so the same district always shows the same regional contact. */
   function districtRows() {
@@ -34,8 +36,20 @@
     var summary = W.summaryCards([
       { label: "Total Branches", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.branches },
       { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
-      { label: "Online / Offline", value: stats.online + " / " + stats.offline, color: COLORS.green, iconHtml: App.ICONS.activities },
-      { label: "Armed / Disarmed", value: stats.armed + " / " + stats.disarmed, color: COLORS.navy, iconHtml: App.ICONS.overview },
+      {
+        label: "Online / Offline", color: COLORS.green,
+        pair: [
+          { value: stats.online, color: COLORS.green, iconHtml: App.ICONS.online },
+          { value: stats.offline, color: COLORS.red, iconHtml: App.ICONS.offline },
+        ],
+      },
+      {
+        label: "Armed / Disarmed", color: COLORS.navy,
+        pair: [
+          { value: stats.armed, color: COLORS.navy, iconHtml: App.ICONS.arm },
+          { value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
+        ],
+      },
     ], 4);
 
     var rows = districtRows();
@@ -44,7 +58,7 @@
         label: key.charAt(0).toUpperCase() + key.slice(1),
         align: "right",
         render: function (r) {
-          return h("span", { style: color ? "color:" + color + ";font-weight:600;" : "" }, String(r[key]));
+          return h("span.val", { style: color ? "color:" + color + ";" : "" }, String(r[key]));
         },
       };
     };
@@ -60,10 +74,10 @@
         { label: "District", key: "name", className: "name" },
         { label: "Code", key: "code", className: "mono" },
         { label: "Total", key: "total", align: "right", className: "name" },
-        numCol("armed", COLORS.green),
+        numCol("armed", COLORS.navy),
         numCol("disarmed", COLORS.grey),
         numCol("online", COLORS.green),
-        numCol("offline", COLORS.slate),
+        numCol("offline", COLORS.red),
         numCol("alarm", COLORS.red),
         numCol("fault", COLORS.amber),
         { label: "Status", render: function (r) { return App.dom.badge(r.status, App.data.STATUS_COLORS[r.status]); } },
@@ -99,7 +113,7 @@
         }),
       }),
       matches.length
-        ? h("div.branch-grid", { style: "max-height:560px;" }, matches.slice(0, 400).map(function (b) {
+        ? h("div.branch-grid", { style: "max-height:560px;" }, matches.slice(0, GRID_LIMIT).map(function (b) {
             return h(
               "button.branch-card",
               {
@@ -125,7 +139,10 @@
             );
           }))
         : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No branch matches that search.")
+            "No branch matches that search."),
+      matches.length > GRID_LIMIT
+        ? W.truncationNote(GRID_LIMIT, matches.length, "branches · search to narrow the list")
+        : null
     );
 
     return h("div", summary, districtTable, grid);

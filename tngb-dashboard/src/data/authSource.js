@@ -21,9 +21,13 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body || {}),
     }).then(function (res) {
-      return res.json().then(function (data) {
+      // A proxy error page or an empty 204 isn't JSON; keep the HTTP status
+      // instead of surfacing "Unexpected token '<'" in the login box.
+      return res.text().then(function (body) {
+        var data = null;
+        try { data = body ? JSON.parse(body) : null; } catch (e) { data = null; }
         if (!res.ok) {
-          var err = new Error((data && data.detail) || "Request failed");
+          var err = new Error((data && data.detail) || "Request failed (HTTP " + res.status + ")");
           err.status = res.status;
           throw err;
         }

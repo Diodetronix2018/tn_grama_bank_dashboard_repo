@@ -45,8 +45,8 @@ values and numbers in bold, everything else regular.
 python build/bundle.py
 ```
 
-writes `dist/tngb-dashboard-standalone.html`, a single 160 KB file with the
-stylesheet and all eighteen scripts inlined. The recipient double-clicks it and
+writes `dist/tngb-dashboard-standalone.html`, a single ~210 KB file with the
+stylesheet and all twenty-one scripts inlined. The recipient double-clicks it and
 the whole dashboard runs. Send that when you just need someone to see the thing
 working.
 
@@ -86,7 +86,7 @@ on `App.views`, adding its key to `NAV_ORDER` in `src/app.js`, and adding its
 
 **Every number is drillable.** No counter on any page is a hard-coded figure —
 each one is computed from the branch roster and opens the list it came from.
-"Alarm Restored: 39" opens 39 real branch-and-time records.
+"Tamper Active: 32" opens 32 real branch, zone and time records.
 
 **One rule per fact.** District status comes from `App.data.districtStatus`, so
 the region list, the district table and the map can never disagree. Panel and

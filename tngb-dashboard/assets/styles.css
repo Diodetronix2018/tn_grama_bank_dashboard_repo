@@ -1273,8 +1273,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   font-size: 12px;
   line-height: 1.45;
 }
-.ss-callout-icon { display: flex; flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; }
-.ss-callout-icon svg { width: 16px; height: 16px; }
+.ss-callout-icon { display: flex; flex: 0 0 19px; width: 19px; height: 19px; margin-top: 1px; }
+.ss-callout-icon svg { width: 19px; height: 19px; }
 
 .ss-actions { display: flex; justify-content: flex-end; }
 

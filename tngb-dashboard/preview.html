@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TN Grama Bank · Security Operations Dashboard</title>
+<title>TN Grama Bank — Preview (sample data)</title>
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-
+<!-- Local preview: the real dashboard on built-in sample data, with no
+     backend and no sign-in (liveSource.js/authSource.js are left out, the
+     same way tests/selftest.html does it). Use index.html for the live app.
+     Open a screen directly with its fragment, e.g. preview.html#systemSetting -->
 <div id="app"></div>
 
-<!-- Plain scripts in dependency order, so the page runs from the file system
-     with no build step and no module/CORS restrictions. -->
 <script src="src/core/utils.js"></script>
 <script src="src/core/prefs.js"></script>
 <script src="src/core/icons.js"></script>
@@ -20,8 +21,6 @@
 
 <script src="src/data/master.js"></script>
 <script src="src/data/derived.js"></script>
-<script src="src/data/liveSource.js"></script>
-<script src="src/data/authSource.js"></script>
 
 <script src="src/views/overview.js"></script>
 <script src="src/views/branchMonitoring.js"></script>

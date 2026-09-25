@@ -255,6 +255,17 @@ a:hover { color: #00154f; }
 
 .freshness:empty { display: none; }
 
+.idle-note {
+  font-size: 12px;
+  color: var(--amber);
+  background: #fdf3e4;
+  border: 1px solid #f0dcb3;
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+
+.idle-note:empty { display: none; }
+
 .freshness.is-stale {
   color: var(--amber);
   border-color: #f0dcb3;
@@ -1016,49 +1027,95 @@ table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
 .map-tooltip b { font-size: 12.5px; }
 
 /* ---------- Settings ---------------------------------------------------- */
+/* Built from the shared primitives (.card, .card-head, .segmented,
+   .text-input, .report-rail); only what they don't cover lives here. */
 
-.setting-row {
+.ss-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ss-rail { position: sticky; top: 16px; }
+
+.ss-panel, .ss-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.ss-header {
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 14px;
-  background: var(--surface-sunken);
-  border-radius: var(--radius-md);
+  flex-wrap: wrap;
 }
 
-.setting-name { font-size: 12.5px; font-weight: 700; color: var(--ink-body); }
-.setting-desc { font-size: 11px; color: var(--ink-soft); margin-top: 1px; }
+.ss-save-note { font-size: 11.5px; color: var(--ink-faint); }
+.ss-save-note.is-ok { color: var(--green); }
+.ss-save-note.is-warn { color: var(--amber); }
 
-.toggle-group { display: flex; gap: 16px; }
+.ss-body { padding: 4px 22px 8px; }
 
-.toggle-cell {
-  display: flex;
-  flex-direction: column;
+/* Label column + control column, so a control sits next to what it
+   describes instead of across a 1000px-wide card. */
+.ss-row {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  background: none;
-  border: 0;
-  font-family: inherit;
+  gap: 8px 24px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line-faint);
 }
 
-.toggle-cap { font-size: 9.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .03em; }
+.ss-body > .ss-row:first-child,
+.ss-body > .ss-list-row:first-child { border-top: 0; }
 
-.toggle-track {
+.ss-rl { font-size: 12.5px; color: var(--ink-body); }
+.ss-rd { font-size: 11px; color: var(--ink-soft); margin-top: 3px; line-height: 1.45; }
+.ss-row-control { min-width: 0; display: flex; align-items: center; }
+
+.ss-value { font-size: 12.5px; color: var(--ink-body); }
+.ss-value.is-ok, .ss-value.is-warn, .ss-value.is-muted { display: inline-flex; align-items: center; gap: 7px; }
+.ss-value.is-ok::before, .ss-value.is-warn::before, .ss-value.is-muted::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ss-value.is-ok { color: var(--green); }
+.ss-value.is-warn { color: var(--amber); }
+.ss-value.is-muted { color: var(--ink-soft); }
+
+.ss-tag {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--ink-soft);
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.ss-segmented { display: inline-flex; }
+.ss-select.text-input { width: auto; min-width: 220px; padding: 8px 12px; cursor: pointer; }
+.segmented button:disabled { cursor: not-allowed; color: var(--ink-faint); opacity: .7; }
+
+.ss-toggle {
   display: inline-flex;
   align-items: center;
   width: 34px;
   height: 19px;
   border-radius: 10px;
   padding: 2px;
+  border: 0;
+  cursor: pointer;
   background: #d8dde5;
   transition: background .15s ease;
 }
-
-.toggle-track.is-on { background: var(--navy); }
-
-.toggle-knob {
+.ss-toggle i {
   width: 15px;
   height: 15px;
   border-radius: 50%;
@@ -1066,46 +1123,215 @@ table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
   box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
   transition: transform .15s ease;
 }
+.ss-toggle.on { background: var(--navy); }
+.ss-toggle.on i { transform: translateX(15px); }
 
-.toggle-track.is-on .toggle-knob { transform: translateX(15px); }
+.ss-range { display: flex; align-items: center; gap: 12px; }
+.ss-range input[type="range"] { width: 160px; accent-color: var(--navy); }
+.ss-scale-label { font-size: 12px; color: var(--navy); min-width: 38px; }
 
-.threshold-head { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 8px; }
-.threshold-head span:first-child { font-weight: 700; color: var(--ink-body); }
-.threshold-value { font-family: var(--font-mono); color: var(--navy); font-weight: 700; }
+button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="range"]:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
 
-input[type="range"] { width: 100%; accent-color: var(--navy); }
+/* Theme cards */
+.ss-themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 12px 0 10px; }
+.ss-theme {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  font-family: inherit;
+  color: var(--ink-body);
+  text-align: left;
+  cursor: default;
+}
+.ss-theme.on { border-color: var(--navy); }
+.ss-theme:disabled { cursor: not-allowed; }
+.ss-theme:disabled .ss-preview { opacity: .55; }
+.ss-preview { height: 78px; border-radius: var(--radius-sm); overflow: hidden; display: flex; border: 1px solid var(--line); }
+.ss-preview-side { width: 26%; }
+.ss-preview-main { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.ss-preview-bar { height: 8px; width: 60%; border-radius: 4px; }
+.ss-preview-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; flex: 1; }
+.ss-preview-cards div { border-radius: 5px; }
+.ss-theme-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 12.5px; }
+.ss-dot { width: 14px; height: 14px; border-radius: 50%; border: 4px solid var(--navy); }
 
-.zone-label-cell {
+.ss-accents { display: flex; gap: 14px; flex-wrap: wrap; padding: 12px 0 10px; }
+.ss-accent {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
+  gap: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  padding: 4px;
+}
+.ss-accent b { display: block; width: 38px; height: 38px; border-radius: var(--radius-md); }
+.ss-accent.on { color: var(--ink-body); }
+.ss-accent.on b { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px currentColor; }
+
+.ss-btn-quiet {
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.ss-btn-quiet:hover:not(:disabled) { color: var(--navy); border-color: var(--navy); }
+.ss-btn-quiet:disabled { cursor: default; color: var(--ink-faint); }
+
+/* Roles table */
+.ss-yes { color: var(--green); }
+.ss-no { color: var(--ink-faint); }
+
+/* Support */
+.ss-auto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.ss-support-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+
+.ss-contact { padding: 18px 22px; }
+.ss-contact-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.ss-contact .card-sub { margin-bottom: 10px; }
+
+.ss-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--surface-sunken);
   border-radius: 10px;
+  font-size: 12px;
+  margin-top: 8px;
+  text-decoration: none;
+  color: var(--ink-body);
 }
+.ss-kv:hover { background: var(--surface-muted); }
+.ss-kv span:first-child { color: var(--ink-soft); }
+.ss-kv span:last-child { color: var(--navy); text-align: right; overflow-wrap: anywhere; min-width: 0; }
 
-.zone-label-num {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-  border-radius: 6px;
-  background: #00217214;
-  color: var(--navy);
+.ss-list-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-faint);
+  font-size: 12px;
+  color: var(--ink-body);
+  text-decoration: none;
+}
+.ss-list-row.is-link:hover span:first-child { color: var(--navy); text-decoration: underline; }
+.ss-list-row > span:first-child { flex: 0 0 auto; }
+.ss-list-row .ss-value { font-size: 12px; text-align: right; }
+.ss-strong { color: var(--ink-body); text-align: right; }
+.ss-soft { color: var(--ink-soft); }
+.ss-faint { color: var(--ink-faint); }
+
+.ss-form { display: flex; flex-direction: column; gap: 14px; padding: 12px 0 14px; }
+.ss-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ss-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ss-field > span { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
+.ss-field .text-input { padding: 9px 12px; }
+.ss-field textarea.text-input { resize: vertical; min-height: 92px; }
+.text-input.is-invalid { border-color: var(--red); }
+.ss-error { font-size: 11px; color: var(--red); }
+.ss-hint { font-size: 11px; color: var(--green); }
+
+.ss-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdeeee;
+  border: 1px solid #f3c9c9;
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.ss-callout-icon { display: flex; flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; }
+.ss-callout-icon svg { width: 16px; height: 16px; }
+
+.ss-actions { display: flex; justify-content: flex-end; }
+
+.ss-btn {
+  background: var(--navy);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
 }
 
-.zone-label-text {
-  font-size: 11.5px;
-  color: var(--ink-body);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.ss-success {
+  margin: 12px 0 14px;
+  padding: 18px 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
+.ss-success-title { font-size: 13px; color: var(--green); }
+.ss-success p { margin: 0; font-size: 12px; color: #166534; line-height: 1.5; }
+
+.ss-link {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--navy);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  margin-top: 6px;
+  text-decoration: underline;
+}
+
+@media (max-width: 1180px) {
+  .ss-support-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .ss-layout { grid-template-columns: minmax(0, 1fr); }
+  .report-rail.ss-rail { position: static; flex-direction: row; overflow-x: auto; max-height: none; }
+  .ss-rail .report-item { width: auto; flex: 0 0 auto; }
+  .ss-rail .report-item-desc { display: none; }
+  .ss-row { grid-template-columns: minmax(0, 1fr); }
+  .ss-themes, .ss-grid2 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- Display preferences (src/core/prefs.js) --------------------- */
+
+.content { zoom: var(--ui-scale, 1); }
+
+.pref-compact table.data tbody td { padding-top: 6px; padding-bottom: 6px; }
+
+.pref-reduce-motion *, .pref-reduce-motion *::before, .pref-reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.pref-sidebar-collapsed { --sidebar-w: 76px; }
+.pref-sidebar-collapsed .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+.pref-sidebar-collapsed .brand > div,
+.pref-sidebar-collapsed .nav-heading,
+.pref-sidebar-collapsed .nav-label,
+.pref-sidebar-collapsed .nav-dot,
+.pref-sidebar-collapsed .sidebar-note { display: none; }
+.pref-sidebar-collapsed .nav-item { justify-content: center; }
 
 /* ---------- Reports ----------------------------------------------------- */
 
@@ -1426,6 +1652,107 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     connectivityColor: connectivityColor,
     fmtClock: fmtClock,
     includesCI: includesCI,
+  };
+})(window.App = window.App || {});
+
+/* ==== src/core/prefs.js ==== */
+/* Display preferences chosen on the System Setting screen. They live in this
+   browser's localStorage (per operator, per machine) and are applied to the
+   page here, so every screen picks them up -- not just System Setting. */
+(function (App) {
+  "use strict";
+
+  var STORAGE_KEY = "tngb.prefs";
+
+  var DEFAULTS = {
+    accent: "#002172",
+    density: "comfortable",
+    fontScale: 100,
+    liveView: "command",
+    sidebarCollapsed: false,
+    reduceMotion: false,
+    clock: "24h",
+    refreshMs: 5 * 60 * 1000,
+    idleTimeoutMin: 30,
+  };
+
+  /* Keys limited to a fixed set of values; anything else found in storage
+     (hand-edited, or left by an older build) falls back to the default. */
+  var CHOICES = {
+    refreshMs: [30 * 1000, 60 * 1000, 2 * 60 * 1000, 5 * 60 * 1000, 10 * 60 * 1000, 15 * 60 * 1000],
+    idleTimeoutMin: [5, 10, 15, 30],
+  };
+
+  var values = load();
+
+  function load() {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {}; } catch (e) { /* storage blocked */ }
+    var out = {};
+    Object.keys(DEFAULTS).forEach(function (k) {
+      var ok = typeof saved[k] === typeof DEFAULTS[k] &&
+        (!CHOICES[k] || CHOICES[k].indexOf(saved[k]) !== -1);
+      out[k] = ok ? saved[k] : DEFAULTS[k];
+    });
+    return out;
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /* Returns false when the browser refused to store it (private window,
+     blocked site data) -- the change still applies for this visit. */
+  function set(key, value) {
+    values[key] = value;
+    apply();
+    return persist();
+  }
+
+  /* Resets the given keys, or everything when called with none. */
+  function reset(keys) {
+    (keys || Object.keys(DEFAULTS)).forEach(function (k) { values[k] = DEFAULTS[k]; });
+    apply();
+    persist();
+  }
+
+  function apply() {
+    var root = document.documentElement;
+    root.style.setProperty("--navy", values.accent);
+    root.style.setProperty("--ui-scale", String(values.fontScale / 100));
+    root.classList.toggle("pref-compact", values.density === "compact");
+    root.classList.toggle("pref-reduce-motion", values.reduceMotion);
+    root.classList.toggle("pref-sidebar-collapsed", values.sidebarCollapsed);
+  }
+
+  function isDefault(keys) {
+    return (keys || Object.keys(DEFAULTS)).every(function (k) { return values[k] === DEFAULTS[k]; });
+  }
+
+  /* Header clock in the operator's chosen style. Data timestamps stay 24-hour
+     so exported reports sort and compare consistently. */
+  function fmtClock(d) {
+    if (values.clock !== "12h") return App.utils.fmtClock(d);
+    var hours = d.getHours() % 12 || 12;
+    return hours + ":" + App.utils.pad2(d.getMinutes()) + ":" + App.utils.pad2(d.getSeconds()) +
+      (d.getHours() < 12 ? " AM" : " PM");
+  }
+
+  apply();
+
+  App.prefs = {
+    DEFAULTS: DEFAULTS,
+    CHOICES: CHOICES,
+    get: function (key) { return values[key]; },
+    set: set,
+    reset: reset,
+    isDefault: isDefault,
+    fmtClock: fmtClock,
   };
 })(window.App = window.App || {});
 
@@ -2496,9 +2823,14 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
   };
 
-  /* The upstream telemetry table gets a new record roughly every 5 minutes;
-     poll on the same cadence so the dashboard picks it up without a reload. */
+  /* The upstream telemetry table gets a new record roughly every 5 minutes,
+     so that is the default cadence. Operators can change it under System
+     Setting > General (App.prefs "refreshMs"). */
   var POLL_INTERVAL_MS = 5 * 60 * 1000;
+
+  function pollInterval() {
+    return (App.prefs && App.prefs.get("refreshMs")) || POLL_INTERVAL_MS;
+  }
   var pollTimer = null;
   var inFlight = false;
 
@@ -2567,7 +2899,15 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
   function startPolling() {
     if (pollTimer) return;
-    pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+    pollTimer = setInterval(poll, pollInterval());
+  }
+
+  /* Picks up a changed refresh interval straight away; a no-op while
+     signed out, when there is no timer to restart. */
+  function restartPolling() {
+    if (!pollTimer) return;
+    stopPolling();
+    startPolling();
   }
 
   function stopPolling() {
@@ -2577,9 +2917,11 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   }
 
   App.data.apiBaseUrl = CONFIG.apiBaseUrl;
+  App.data.POLL_INTERVAL_MS = POLL_INTERVAL_MS;
   App.data.load = load;
   App.data.startPolling = startPolling;
   App.data.stopPolling = stopPolling;
+  App.data.restartPolling = restartPolling;
 })(window.App = window.App || {});
 
 /* ==== src/data/authSource.js ==== */
@@ -4607,25 +4949,32 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 })(window.App = window.App || {});
 
 /* ==== src/views/systemSetting.js ==== */
-/* System Setting: notification routing, escalation timers, the standard zone
-   layout, and the role matrix. All four panels write straight to app state. */
+/* System Setting: a section rail (same pattern as Reports) over setting
+   cards. Every control here either takes effect immediately (display
+   preferences, via App.prefs) or is shown read-only with where it is really
+   configured -- nothing on this screen pretends to change the server. */
 (function (App) {
   "use strict";
 
   var h = App.dom.h;
   var W = App.widgets;
 
-  var NOTIF_DEFS = [
-    { key: "critical", label: "Critical (Alarm / Tamper)", desc: "Intrusion and tamper events" },
-    { key: "warning", label: "Warning (Fault / Power)", desc: "AC fail, battery fail, panel fault" },
-    { key: "info", label: "Informational (Arm / Disarm)", desc: "Routine open/close activity" },
+  var SECTIONS = [
+    { key: "general", label: "General", desc: "Region, time and data feed", icon: "settings" },
+    { key: "appearance", label: "Appearance", desc: "Theme, accent and layout", icon: "overview" },
+    { key: "access", label: "Users & Access", desc: "Roles and sign-in security", icon: "lockClosed" },
+    { key: "support", label: "Support", desc: "Helpdesk, tickets and guides", icon: "bell" },
+    { key: "about", label: "About", desc: "System and deployment details", icon: "info" },
   ];
 
-  var THRESHOLD_DEFS = [
-    { key: "alarm", label: "Alarm Active" },
-    { key: "fault", label: "Fault Condition" },
-    { key: "offline", label: "Panel Offline" },
+  var THEMES = [
+    { key: "light", label: "Light", available: true, bg: "#f5f7fa", side: "#fff", bar: "var(--navy)", card: "#fff" },
+    { key: "dark", label: "Dark", available: false, bg: "#0b1220", side: "#111a2e", bar: "#6d8bff", card: "#1a2438" },
+    { key: "system", label: "Match system", available: false, bg: "linear-gradient(90deg,#f5f7fa 50%,#0b1220 50%)",
+      side: "#e6e9ef", bar: "var(--navy)", card: "rgba(255,255,255,.55)" },
   ];
+
+  var ACCENTS = [["#002172", "Navy"], ["#0f766e", "Teal"], ["#7c2d12", "Rust"], ["#334155", "Slate"]];
 
   var ROLES = [
     { role: "Head Office Admin", view: true, ack: true, configure: true, export: true },
@@ -4634,120 +4983,452 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     { role: "Viewer", view: true, ack: false, configure: false, export: false },
   ];
 
-  function toggle(isOn, onClick, caption) {
-    return h(
-      "button.toggle-cell",
-      { type: "button", onclick: onClick, "aria-pressed": String(isOn) },
-      h("span.toggle-cap", caption),
-      h("span.toggle-track" + (isOn ? ".is-on" : ""), h("span.toggle-knob"))
-    );
+  // Replace with the bank's real helpdesk details before go-live.
+  var CONTACTS = [
+    { title: "Security Operations Centre", hours: "24 × 7", desc: "Live alarms, false alarms and branch emergencies",
+      phone: "1800 000 0000", email: "soc@tngb.example" },
+    { title: "Panel Vendor / AMC", hours: "Mon–Sat, 9–18", desc: "Hardware faults, sensor replacement, site visits",
+      phone: "1800 000 0001", email: "amc@vendor.example" },
+  ];
+
+  // Set each url once the document is published; until then it shows as pending.
+  var DOCS = [
+    { title: "Operator user manual", kind: "PDF", url: "" },
+    { title: "Branch arming / disarming guide", kind: "PDF", url: "" },
+    { title: "Alarm response SOP", kind: "PDF", url: "" },
+    { title: "Frequently asked questions", kind: "Web", url: "" },
+  ];
+
+  var TICKET_CATEGORIES = ["Panel / Hardware", "False alarm", "Connectivity", "Dashboard access", "Other"];
+  var TICKET_PRIORITIES = ["Low", "Medium", "High"];
+
+  /* Screen-local UI state. Kept out of app state because nothing else reads
+     it, and out of storage because a half-written ticket shouldn't outlive
+     the visit. */
+  var ui = {
+    section: "general",
+    saved: null, // { ok: bool, at: Date } after the last preference change
+    ticket: freshTicket(),
+    ticketErrors: {},
+    ticketSent: null, // the mailto subject once the email app was opened
+  };
+
+  function freshTicket() {
+    return { category: TICKET_CATEGORIES[0], branch: "", priority: "Medium", desc: "" };
   }
 
-  function notificationsCard(ctx) {
-    var channels = ctx.state.notifChannels;
-    return h(
-      "div.card.card-pad",
-      { style: "padding:20px 22px;" },
-      h("div.card-title", { style: "margin-bottom:4px;" }, "Notification Channels"),
-      h("div.card-sub", { style: "margin-bottom:16px;" },
-        "Choose how each severity level reaches the ops team"),
-      h("div.flex-col", { style: "gap:10px;" }, NOTIF_DEFS.map(function (d) {
-        var row = channels[d.key];
-        var flip = function (field) {
-          return function () {
-            var next = Object.assign({}, channels);
-            next[d.key] = Object.assign({}, row);
-            next[d.key][field] = !row[field];
-            ctx.setState({ notifChannels: next });
-          };
-        };
-        return h(
-          "div.setting-row",
-          h("div",
-            h("div.setting-name", d.label),
-            h("div.setting-desc", d.desc)),
-          h("div.toggle-group",
-            toggle(row.email, flip("email"), "Email"),
-            toggle(row.sms, flip("sms"), "SMS"))
-        );
-      }))
-    );
+  /* ---- Building blocks -------------------------------------------------- */
+
+  function section(title, sub, body, opts) {
+    opts = opts || {};
+    return h("div.card" + (opts.className ? "." + opts.className : ""),
+      h("div.card-head",
+        h("div", h("div.card-title", title), sub ? h("div.card-sub", sub) : null),
+        opts.aside || null),
+      h("div" + (opts.flush ? "" : ".ss-body"), body));
   }
 
-  function thresholdsCard(ctx) {
-    var thresholds = ctx.state.escalationThresholds;
-    return h(
-      "div.card",
-      { style: "padding:20px 22px;" },
-      h("div.card-title", { style: "margin-bottom:4px;" }, "Alert Escalation Thresholds"),
-      h("div.card-sub", { style: "margin-bottom:16px;" },
-        "Minutes before an unresolved condition escalates to the regional office"),
-      h("div.flex-col", { style: "gap:16px;" }, THRESHOLD_DEFS.map(function (d) {
-        return h(
-          "div",
-          h("div.threshold-head",
-            h("span", d.label),
-            h("span.threshold-value", thresholds[d.key] + " min")),
-          h("input", {
-            type: "range", min: 1, max: 60, value: thresholds[d.key],
-            oninput: function (e) {
-              var next = Object.assign({}, thresholds);
-              next[d.key] = Number(e.target.value);
-              ctx.setState({ escalationThresholds: next });
-            },
-          })
-        );
-      }))
-    );
+  function row(label, desc, control) {
+    return h("div.ss-row",
+      h("div.ss-row-text", h("div.ss-rl", label), desc ? h("div.ss-rd", desc) : null),
+      h("div.ss-row-control", control));
   }
 
-  function zoneLabelsCard() {
-    var total = App.data.networkStats().totalBranches;
-    return h(
-      "div.card",
-      { style: "padding:20px 22px;" },
-      h("div.card-title", { style: "margin-bottom:4px;" }, "Zone Labels"),
-      h("div.card-sub", { style: "margin-bottom:16px;" },
-        "Standard 8-zone layout applied across all " + total + " branches"),
-      h("div.grid.grid-2", { style: "gap:8px;" }, App.data.ZONE_LABELS.map(function (label, i) {
-        return h("div.zone-label-cell",
-          h("span.zone-label-num", String(i + 1)),
-          h("span.zone-label-text", label));
-      }))
-    );
+  function value(text, tone) {
+    return h("span.ss-value" + (tone ? ".is-" + tone : ""), text);
   }
 
-  function rolesCard() {
+  function tag(text) {
+    return h("span.ss-tag", text);
+  }
+
+  /* The shared .segmented control, plus disabled options for things that
+     aren't built yet. */
+  function segmented(options, active, onPick) {
+    return h("div.segmented.ss-segmented", { role: "radiogroup" }, options.map(function (o) {
+      var on = o.key === active;
+      return h("button" + (on ? ".is-active" : ""), {
+        type: "button", role: "radio", "aria-checked": String(on),
+        disabled: o.disabled, title: o.disabled ? o.disabled : null,
+        onclick: function () { onPick(o.key); },
+      }, o.label);
+    }));
+  }
+
+  function toggle(on, label, onFlip) {
+    return h("button.ss-toggle" + (on ? ".on" : ""), {
+      type: "button", role: "switch", "aria-checked": String(on), "aria-label": label,
+      onclick: onFlip,
+    }, h("i"));
+  }
+
+  function setPref(ctx, key, val, patch) {
+    ui.saved = { ok: App.prefs.set(key, val), at: new Date() };
+    ctx.setState(patch || {});
+  }
+
+  function feedStatus(ctx) {
+    var s = ctx.state;
+    if (!App.data.load) return { text: "Sample data (offline copy)", tone: "muted" };
+    if (s.refreshError) return { text: "Delayed — last good data at " + App.prefs.fmtClock(s.lastUpdated), tone: "warn" };
+    if (s.lastUpdated) return { text: "Live — updated " + App.prefs.fmtClock(s.lastUpdated), tone: "ok" };
+    return { text: "Connecting…", tone: "muted" };
+  }
+
+  /* ---- General ---------------------------------------------------------- */
+
+  function durationLabel(ms) {
+    return ms < 60000 ? ms / 1000 + " seconds" : ms / 60000 + (ms === 60000 ? " minute" : " minutes");
+  }
+
+  /* A native select over one of App.prefs' fixed CHOICES lists. */
+  function prefSelect(ctx, key, label, fmt, onChanged) {
+    var current = App.prefs.get(key);
+    return h("select.text-input.ss-select", {
+      id: "ss-" + key, "aria-label": label,
+      onchange: function (e) {
+        var next = Number(e.target.value);
+        setPref(ctx, key, next);
+        if (onChanged) onChanged(next);
+      },
+    }, App.prefs.CHOICES[key].map(function (v) {
+      return h("option", { value: String(v), selected: v === current ? "selected" : null },
+        fmt(v) + (v === App.prefs.DEFAULTS[key] ? " (default)" : ""));
+    }));
+  }
+
+  function generalPanel(ctx) {
+    var live = !!App.data.load;
+    var signedIn = !!(App.auth && ctx.state.userEmail);
+    var feed = feedStatus(ctx);
+    return [
+      section("Regional", "Language and how times are shown", [
+        row("Language", "Interface language",
+          segmented([
+            { key: "en", label: "English" },
+            { key: "ta", label: "தமிழ்", disabled: "Tamil interface is not available yet" },
+          ], "en", function () {})),
+        row("Time zone", "Every branch timestamp is recorded in this zone",
+          value("India Standard Time (UTC+5:30)")),
+        row("Clock format", "Header clock and last-updated time; reports stay 24-hour",
+          segmented([{ key: "24h", label: "24-hour" }, { key: "12h", label: "12-hour" }],
+            App.prefs.get("clock"), function (k) { setPref(ctx, "clock", k); })),
+      ]),
+      section("Data & Session", "How often branch status updates, and when an idle session ends", [
+        row("Source", null,
+          value(live ? "Live branch data service" : "Built-in sample data")),
+        row("Auto-refresh interval",
+          "New sensor readings arrive about every 5 minutes." +
+            (live ? "" : " Takes effect when connected to the live feed."),
+          prefSelect(ctx, "refreshMs", "Auto-refresh interval", function (ms) { return "Every " + durationLabel(ms); },
+            function () { if (App.data.restartPolling) App.data.restartPolling(); })),
+        row("Feed status", null, value(feed.text, feed.tone)),
+        row("Session timeout",
+          "Signs out when idle, after a 1-minute warning. Sessions also end 30 minutes after sign-in." +
+            (signedIn ? "" : " Applies while signed in."),
+          prefSelect(ctx, "idleTimeoutMin", "Session timeout", function (m) { return m + " minutes idle"; })),
+      ]),
+    ];
+  }
+
+  /* ---- Appearance ------------------------------------------------------- */
+
+  /* What "Reset to defaults" on this tab covers -- not General's settings. */
+  var APPEARANCE_KEYS = ["accent", "density", "fontScale", "liveView", "sidebarCollapsed", "reduceMotion"];
+
+  function appearancePanel(ctx) {
+    var scale = App.prefs.get("fontScale");
+    var scaleLabel = h("span.ss-scale-label", scale + "%");
+    var accent = App.prefs.get("accent");
+
+    return [
+      section("Theme", "Colour scheme for the dashboard",
+        h("div.ss-themes", THEMES.map(function (t) {
+          var on = t.key === "light";
+          return h("button.ss-theme" + (on ? ".on" : ""), {
+            type: "button", disabled: !t.available, "aria-pressed": String(on),
+            title: t.available ? null : t.label + " theme is not available yet",
+          },
+          h("div.ss-preview", { style: "background:" + t.bg },
+            h("div.ss-preview-side", { style: "background:" + t.side }),
+            h("div.ss-preview-main",
+              h("div.ss-preview-bar", { style: "background:" + t.bar }),
+              h("div.ss-preview-cards",
+                h("div", { style: "background:" + t.card }),
+                h("div", { style: "background:" + t.card })))),
+          h("div.ss-theme-foot",
+            h("span", t.label),
+            t.available ? h("span.ss-dot") : tag("Coming soon")));
+        }))),
+
+      section("Accent colour", "Buttons, active items and highlights across every screen",
+        h("div.ss-accents", ACCENTS.map(function (a) {
+          var on = accent === a[0];
+          return h("button.ss-accent" + (on ? ".on" : ""), {
+            type: "button", "aria-pressed": String(on),
+            onclick: function () { setPref(ctx, "accent", a[0]); },
+          }, h("b", { style: "background:" + a[0] + ";color:" + a[0] + ";" }), a[1]);
+        }))),
+
+      section("Layout", "Applies on this computer only", [
+        row("Density", "Row height in tables",
+          segmented([{ key: "comfortable", label: "Comfortable" }, { key: "compact", label: "Compact" }],
+            App.prefs.get("density"), function (k) { setPref(ctx, "density", k); })),
+        row("Text size", "Scales the main content area",
+          h("div.ss-range",
+            h("input", {
+              type: "range", min: 90, max: 120, step: 5, value: scale, "aria-label": "Text size",
+              /* Live preview while dragging without replacing the slider
+                 under the pointer; the saved-state repaint waits for release. */
+              oninput: function (e) {
+                scaleLabel.textContent = e.target.value + "%";
+                document.documentElement.style.setProperty("--ui-scale", String(e.target.value / 100));
+              },
+              onchange: function (e) { setPref(ctx, "fontScale", Number(e.target.value)); },
+            }),
+            scaleLabel)),
+        row("Live Activities opens in", null,
+          segmented([{ key: "command", label: "Command Center" }, { key: "classic", label: "Classic View" }],
+            App.prefs.get("liveView"),
+            function (k) { setPref(ctx, "liveView", k, { liveViewMode: k }); })),
+        row("Collapse sidebar", "Icons only in the navigation rail",
+          toggle(App.prefs.get("sidebarCollapsed"), "Collapse sidebar",
+            function () { setPref(ctx, "sidebarCollapsed", !App.prefs.get("sidebarCollapsed")); })),
+        row("Reduce motion", "Stop pulsing status animations",
+          toggle(App.prefs.get("reduceMotion"), "Reduce motion",
+            function () { setPref(ctx, "reduceMotion", !App.prefs.get("reduceMotion")); })),
+      ], {
+        aside: h("button.ss-btn-quiet", {
+          type: "button", disabled: App.prefs.isDefault(APPEARANCE_KEYS),
+          onclick: function () {
+            App.prefs.reset(APPEARANCE_KEYS);
+            ui.saved = { ok: true, at: new Date() };
+            ctx.setState({ liveViewMode: App.prefs.get("liveView") });
+          },
+        }, "Reset to defaults"),
+      }),
+    ];
+  }
+
+  /* ---- Users & Access --------------------------------------------------- */
+
+  function accessPanel(ctx) {
     var tick = function (allowed) {
-      return h("span", {
-        style: "color:" + (allowed ? "var(--green)" : "var(--ink-faint)") + ";font-weight:700;",
-      }, allowed ? "✓" : "—");
+      return h("span", { class: allowed ? "ss-yes" : "ss-no", "aria-label": allowed ? "Allowed" : "Not allowed" },
+        allowed ? "✓" : "—");
     };
-    return h(
-      "div.card",
-      { style: "overflow:hidden;" },
-      h("div", { style: "padding:20px 22px 4px;" },
-        h("div.card-title", { style: "margin-bottom:4px;" }, "Access & Roles"),
-        h("div.card-sub", { style: "margin-bottom:12px;" }, "Who can see and act on what")),
-      W.dataTable([
-        { label: "Role", key: "role", className: "name" },
-        { label: "View", align: "center", render: function (r) { return tick(r.view); } },
-        { label: "Acknowledge", align: "center", render: function (r) { return tick(r.ack); } },
-        { label: "Configure", align: "center", render: function (r) { return tick(r.configure); } },
-        { label: "Export", align: "center", render: function (r) { return tick(r.export); } },
-      ], ROLES)
-    );
+    return [
+      section("Roles & Permissions", "Who can see and act on what",
+        W.dataTable([
+          { label: "Role", key: "role", className: "name" },
+          { label: "View", align: "center", render: function (r) { return tick(r.view); } },
+          { label: "Acknowledge", align: "center", render: function (r) { return tick(r.ack); } },
+          { label: "Configure", align: "center", render: function (r) { return tick(r.configure); } },
+          { label: "Export", align: "center", render: function (r) { return tick(r.export); } },
+        ], ROLES), { flush: true }),
+
+      section("Sign-in security", "Enforced by the identity service; changed by an administrator", [
+        row("Signed in as", null, value(ctx.state.userEmail || "Not signed in (offline copy)")),
+        row("Identity provider", null, value("AWS Cognito")),
+        row("Two-factor authentication", "Required at sign-in for accounts that have it enrolled",
+          value("Optional, per account")),
+        row("Session length", "You are asked to sign in again after this, even when active",
+          value("30 minutes (server default)")),
+        row("Inactivity sign-out", "Set under General",
+          value(App.prefs.get("idleTimeoutMin") + " minutes idle")),
+        row("Forgotten password", null, value("Self-service reset by email code")),
+      ], { aside: tag("Read only") }),
+    ];
+  }
+
+  /* ---- Support ---------------------------------------------------------- */
+
+  function contactCard(c) {
+    return h("div.card.ss-contact",
+      h("div.ss-contact-head",
+        h("div.card-title", c.title),
+        App.dom.badge(c.hours, App.utils.COLORS.green)),
+      h("div.card-sub", c.desc),
+      h("a.ss-kv", { href: "tel:" + c.phone.replace(/\s+/g, "") },
+        h("span", "Phone"), h("span", c.phone)),
+      h("a.ss-kv", { href: "mailto:" + c.email },
+        h("span", "Email"), h("span", c.email)));
+  }
+
+  function findBranch(code) {
+    code = code.trim().toUpperCase();
+    return App.data.allBranches().find(function (b) { return b.branchIdCode === code; }) || null;
+  }
+
+  function submitTicket(ctx) {
+    var t = ui.ticket;
+    var errors = {};
+    var branch = null;
+    if (t.branch.trim()) {
+      branch = findBranch(t.branch);
+      if (!branch) errors.branch = "No branch has the code " + t.branch.trim().toUpperCase();
+    }
+    if (t.desc.trim().length < 10) errors.desc = "Describe the issue in a sentence or two";
+    ui.ticketErrors = errors;
+    if (Object.keys(errors).length) { ctx.setState({}); return; }
+
+    var subject = "[" + t.priority + "] " + t.category +
+      (branch ? " — " + branch.branchIdCode + " " + branch.name : "");
+    var body = [
+      "Category: " + t.category,
+      "Priority: " + t.priority,
+      "Branch: " + (branch ? branch.branchIdCode + " — " + branch.name + ", " + branch.district : "Not branch-specific"),
+      "Raised by: " + (ctx.state.userEmail || "unknown"),
+      "",
+      t.desc.trim(),
+    ].join("\n");
+
+    // No ticketing API yet, so hand the ticket to the operator's email app.
+    h("a", {
+      href: "mailto:" + CONTACTS[0].email +
+        "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body),
+    }).click();
+    ui.ticketSent = subject;
+    ctx.setState({});
+  }
+
+  function ticketCard(ctx) {
+    var t = ui.ticket;
+    var err = ui.ticketErrors;
+
+    if (ui.ticketSent) {
+      return section("Raise a support ticket", "Sent by email to the Security Operations Centre",
+        h("div.ss-success",
+          h("div.ss-success-title", "Your email app should now be open"),
+          h("p", "Check the message and press Send to raise “" + ui.ticketSent + "”. " +
+            "If nothing opened, email " + CONTACTS[0].email + " directly."),
+          h("button.ss-link", {
+            type: "button",
+            onclick: function () {
+              ui.ticket = freshTicket(); ui.ticketErrors = {}; ui.ticketSent = null;
+              ctx.setState({});
+            },
+          }, "Raise another ticket")));
+    }
+
+    var branchMatch = t.branch.trim() && !err.branch ? findBranch(t.branch) : null;
+
+    return section("Raise a support ticket", "Opens a pre-filled email to the Security Operations Centre",
+      h("form.ss-form", {
+        novalidate: "novalidate",
+        onsubmit: function (e) { e.preventDefault(); submitTicket(ctx); },
+      },
+      h("div.ss-callout",
+        h("span.ss-callout-icon", { html: App.ICONS.alerts }),
+        h("span", "Active alarm or intruder? Call the SOC on " + CONTACTS[0].phone + " now — don't wait on a ticket.")),
+      h("div.ss-grid2",
+        h("label.ss-field", h("span", "Category"),
+          h("select.text-input", {
+            id: "ss-ticket-category",
+            onchange: function (e) { t.category = e.target.value; },
+          }, TICKET_CATEGORIES.map(function (c) {
+            return h("option", { selected: t.category === c ? "selected" : null }, c);
+          }))),
+        h("label.ss-field", h("span", "Branch code (optional)"),
+          h("input.text-input" + (err.branch ? ".is-invalid" : ""), {
+            type: "text", id: "ss-ticket-branch", value: t.branch, placeholder: "e.g. TNGB-2041",
+            "aria-invalid": err.branch ? "true" : null,
+            oninput: function (e) { t.branch = e.target.value; },
+          }),
+          err.branch ? h("small.ss-error", err.branch)
+            : branchMatch ? h("small.ss-hint", branchMatch.name + ", " + branchMatch.district) : null)),
+      h("div.ss-field", h("span", "Priority"),
+        h("div", segmented(TICKET_PRIORITIES.map(function (p) { return { key: p, label: p }; }), t.priority,
+          function (k) { t.priority = k; ctx.setState({}); }))),
+      h("label.ss-field", h("span", "Description"),
+        h("textarea.text-input" + (err.desc ? ".is-invalid" : ""), {
+          id: "ss-ticket-desc", rows: 4, value: t.desc, placeholder: "What happened, when, and what you have tried",
+          "aria-invalid": err.desc ? "true" : null,
+          oninput: function (e) { t.desc = e.target.value; },
+        }),
+        err.desc ? h("small.ss-error", err.desc) : null),
+      h("div.ss-actions", h("button.ss-btn", { type: "submit" }, "Open email to SOC"))));
+  }
+
+  function supportPanel(ctx) {
+    var feed = feedStatus(ctx);
+    var signIn = !App.auth ? { text: "Not used (offline copy)", tone: "muted" }
+      : ctx.state.userEmail ? { text: "Signed in", tone: "ok" } : { text: "Signed out", tone: "muted" };
+
+    return [
+      h("div.ss-auto-grid", CONTACTS.map(contactCard)),
+      h("div.ss-support-grid",
+        ticketCard(ctx),
+        h("div.ss-stack",
+          section("Service status", "Checked by this dashboard", [
+            h("div.ss-list-row", h("span", "Branch data feed"), value(feed.text, feed.tone)),
+            h("div.ss-list-row", h("span", "Sign-in service"), value(signIn.text, signIn.tone)),
+          ]),
+          section("Guides", "For operators and branch staff", DOCS.map(function (d) {
+            return d.url
+              ? h("a.ss-list-row.is-link", { href: d.url, target: "_blank", rel: "noopener" },
+                h("span", d.title), h("span.ss-faint", d.kind))
+              : h("div.ss-list-row", h("span.ss-faint", d.title), tag("Not published"));
+          })))),
+    ];
+  }
+
+  /* ---- About ------------------------------------------------------------ */
+
+  function aboutPanel() {
+    var stats = App.data.networkStats();
+    var rows = [
+      ["Application", "Intrusion Monitoring Dashboard"],
+      ["Organisation", "Tamil Nadu Grama Bank · Head Office, Salem"],
+      ["Branches monitored", stats.totalBranches + " across " + stats.totalDistricts + " districts"],
+      ["Panels online now", stats.online + " of " + stats.totalBranches],
+      ["Data source", App.data.load ? "Live branch data service" : "Built-in sample data"],
+    ];
+    return [
+      section("About this system", null, rows.map(function (r) {
+        return h("div.ss-list-row", h("span.ss-soft", r[0]), h("span.ss-strong", r[1]));
+      })),
+    ];
+  }
+
+  var PANELS = {
+    general: generalPanel,
+    appearance: appearancePanel,
+    access: accessPanel,
+    support: supportPanel,
+    about: aboutPanel,
+  };
+
+  /* ---- Screen ----------------------------------------------------------- */
+
+  function saveNote() {
+    if (!ui.saved) return h("span.ss-save-note", "Display preferences are saved in this browser");
+    if (!ui.saved.ok) return h("span.ss-save-note.is-warn", "Couldn't save — this change lasts until you close the tab");
+    return h("span.ss-save-note.is-ok", "Saved · " + App.prefs.fmtClock(ui.saved.at));
   }
 
   function render(ctx) {
-    return h(
-      "div.grid.grid-2",
-      { style: "align-items:start;" },
-      notificationsCard(ctx),
-      thresholdsCard(ctx),
-      zoneLabelsCard(),
-      rolesCard()
-    );
+    var current = SECTIONS.find(function (s) { return s.key === ui.section; }) || SECTIONS[0];
+    var accent = App.prefs.get("accent");
+
+    var rail = h("nav.report-rail.ss-rail", { "aria-label": "Setting sections" }, SECTIONS.map(function (s) {
+      var on = s.key === current.key;
+      return h("button.report-item" + (on ? ".is-active" : ""), {
+        type: "button", "aria-current": on ? "page" : null,
+        onclick: function () { ui.section = s.key; ctx.setState({}); },
+      },
+      App.dom.iconChip(App.ICONS[s.icon], accent, { class: "sm" }),
+      h("div", { style: "min-width:0;" },
+        h("div.report-item-label", s.label),
+        h("div.report-item-desc", s.desc)));
+    }));
+
+    var header = h("div.card.ss-header",
+      h("div", h("div.report-title", current.label), h("div.report-desc", current.desc)),
+      current.key === "appearance" || current.key === "general" ? saveNote() : null);
+
+    return h("div.ss-layout", rail,
+      h("div.ss-panel", header, PANELS[current.key](ctx)));
   }
 
   App.views = App.views || {};
@@ -4755,7 +5436,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     label: "System Setting",
     icon: "settings",
     title: "System Setting",
-    subtitle: "Branch, zone and alert configuration",
+    subtitle: "Display preferences, access and support",
     render: render,
   };
 })(window.App = window.App || {});
@@ -4813,7 +5494,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
     /* Live activities */
     liveActivityFilter: null,
-    liveViewMode: "command",
+    liveViewMode: App.prefs.get("liveView"),
 
     /* Event history */
     ehSearch: "",
@@ -4825,13 +5506,8 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     /* Reports */
     reportType: "daily",
 
-    /* Settings */
-    notifChannels: {
-      critical: { email: true, sms: true },
-      warning: { email: true, sms: false },
-      info: { email: false, sms: false },
-    },
-    escalationThresholds: { alarm: 5, fault: 30, offline: 15 },
+    /* System Setting keeps its own preferences in localStorage
+       (src/views/systemSetting.js), so it adds nothing here. */
   };
 
   var refs = {};
@@ -4890,7 +5566,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
       if (!view) return;
       var button = h(
         "button.nav-item",
-        { type: "button", onclick: function () { go(key); } },
+        { type: "button", title: view.label, onclick: function () { go(key); } },
         h("span.nav-chip", { html: App.ICONS[view.icon] }),
         h("span.nav-label", view.label),
         h("span.nav-dot", { style: "visibility:hidden;" })
@@ -4919,9 +5595,10 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
   function buildTopbar() {
     refs.title = h("h1");
     refs.subtitle = h("div.topbar-sub");
-    refs.clock = h("span", u.fmtClock(state.now));
+    refs.clock = h("span", App.prefs.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
     refs.freshness = h("span.freshness");
+    refs.idleNote = h("span.idle-note", { role: "status" });
     refs.userChip = h("span", state.userEmail || "");
 
     var signOut = h(
@@ -4934,6 +5611,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
       "header.topbar",
       h("div", refs.title, refs.subtitle),
       h("div.topbar-right",
+        refs.idleNote,
         refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
         refs.pill,
@@ -4973,6 +5651,7 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
 
     refs.title.textContent = view.title;
     refs.subtitle.textContent = view.subtitle;
+    refs.clock.textContent = App.prefs.fmtClock(state.now);
     refs.pill.textContent = pill.label;
     refs.pill.setAttribute(
       "style",
@@ -4983,8 +5662,8 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     refs.freshness.textContent = !state.lastUpdated
       ? ""
       : state.refreshError
-      ? "Live feed delayed — showing data from " + u.fmtClock(state.lastUpdated)
-      : "Updated " + u.fmtClock(state.lastUpdated);
+      ? "Live feed delayed — showing data from " + App.prefs.fmtClock(state.lastUpdated)
+      : "Updated " + App.prefs.fmtClock(state.lastUpdated);
 
     if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
 
@@ -5033,9 +5712,16 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
          content region every second would fight with scrolling and typing. */
       setInterval(function () {
         state.now = new Date();
-        refs.clock.textContent = u.fmtClock(state.now);
+        refs.clock.textContent = App.prefs.fmtClock(state.now);
+        checkIdle();
       }, 1000);
+
+      ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach(function (type) {
+        document.addEventListener(type, noteActivity, { passive: true, capture: true });
+      });
     }
+
+    noteActivity();
 
     render();
 
@@ -5331,11 +6017,45 @@ input[type="range"] { width: 100%; accent-color: var(--navy); }
     App.auth.logout().then(afterSignOut, afterSignOut);
   }
 
-  function afterSignOut() {
+  function afterSignOut(message) {
     state.userEmail = null;
     state.lastUpdated = null;
     state.refreshError = null;
-    renderLoginScreen();
+    renderLoginScreen(typeof message === "string" ? message : "");
+  }
+
+  /* ---- Inactivity sign-out --------------------------------------------- */
+
+  /* Signs the operator out after the idle time chosen under System Setting >
+     General, warning in the header for the last minute. Only runs while
+     signed in -- the offline copy (no App.auth) has no session to end. The
+     server's own session lifetime still applies on top of this. */
+  var IDLE_WARNING_MS = 60 * 1000;
+  var lastActivity = Date.now();
+
+  function noteActivity() {
+    lastActivity = Date.now();
+  }
+
+  function checkIdle() {
+    if (!App.auth || !state.userEmail) {
+      refs.idleNote.textContent = "";
+      return;
+    }
+    var limit = App.prefs.get("idleTimeoutMin") * 60 * 1000;
+    var remaining = limit - (Date.now() - lastActivity);
+    if (remaining <= 0) {
+      refs.idleNote.textContent = "";
+      var minutes = App.prefs.get("idleTimeoutMin");
+      var message = "Signed out after " + minutes + " minutes without activity — sign in again.";
+      state.userEmail = null; // stops further checks while logout is in flight
+      if (App.data.stopPolling) App.data.stopPolling();
+      App.auth.logout().then(function () { afterSignOut(message); }, function () { afterSignOut(message); });
+      return;
+    }
+    refs.idleNote.textContent = remaining <= IDLE_WARNING_MS
+      ? "Signing out in " + Math.ceil(remaining / 1000) + "s — move the mouse or press a key to stay"
+      : "";
   }
 
   /* Called by src/data/liveSource.js when a background poll gets a 401 --

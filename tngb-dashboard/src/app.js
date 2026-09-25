@@ -50,7 +50,7 @@
 
     /* Live activities */
     liveActivityFilter: null,
-    liveViewMode: "command",
+    liveViewMode: App.prefs.get("liveView"),
 
     /* Event history */
     ehSearch: "",
@@ -62,13 +62,8 @@
     /* Reports */
     reportType: "daily",
 
-    /* Settings */
-    notifChannels: {
-      critical: { email: true, sms: true },
-      warning: { email: true, sms: false },
-      info: { email: false, sms: false },
-    },
-    escalationThresholds: { alarm: 5, fault: 30, offline: 15 },
+    /* System Setting keeps its own preferences in localStorage
+       (src/views/systemSetting.js), so it adds nothing here. */
   };
 
   var refs = {};
@@ -127,7 +122,7 @@
       if (!view) return;
       var button = h(
         "button.nav-item",
-        { type: "button", onclick: function () { go(key); } },
+        { type: "button", title: view.label, onclick: function () { go(key); } },
         h("span.nav-chip", { html: App.ICONS[view.icon] }),
         h("span.nav-label", view.label),
         h("span.nav-dot", { style: "visibility:hidden;" })
@@ -156,9 +151,10 @@
   function buildTopbar() {
     refs.title = h("h1");
     refs.subtitle = h("div.topbar-sub");
-    refs.clock = h("span", u.fmtClock(state.now));
+    refs.clock = h("span", App.prefs.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
     refs.freshness = h("span.freshness");
+    refs.idleNote = h("span.idle-note", { role: "status" });
     refs.userChip = h("span", state.userEmail || "");
 
     var signOut = h(
@@ -171,6 +167,7 @@
       "header.topbar",
       h("div", refs.title, refs.subtitle),
       h("div.topbar-right",
+        refs.idleNote,
         refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
         refs.pill,
@@ -210,6 +207,7 @@
 
     refs.title.textContent = view.title;
     refs.subtitle.textContent = view.subtitle;
+    refs.clock.textContent = App.prefs.fmtClock(state.now);
     refs.pill.textContent = pill.label;
     refs.pill.setAttribute(
       "style",
@@ -220,8 +218,8 @@
     refs.freshness.textContent = !state.lastUpdated
       ? ""
       : state.refreshError
-      ? "Live feed delayed — showing data from " + u.fmtClock(state.lastUpdated)
-      : "Updated " + u.fmtClock(state.lastUpdated);
+      ? "Live feed delayed — showing data from " + App.prefs.fmtClock(state.lastUpdated)
+      : "Updated " + App.prefs.fmtClock(state.lastUpdated);
 
     if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
 
@@ -270,9 +268,16 @@
          content region every second would fight with scrolling and typing. */
       setInterval(function () {
         state.now = new Date();
-        refs.clock.textContent = u.fmtClock(state.now);
+        refs.clock.textContent = App.prefs.fmtClock(state.now);
+        checkIdle();
       }, 1000);
+
+      ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach(function (type) {
+        document.addEventListener(type, noteActivity, { passive: true, capture: true });
+      });
     }
+
+    noteActivity();
 
     render();
 
@@ -568,11 +573,45 @@
     App.auth.logout().then(afterSignOut, afterSignOut);
   }
 
-  function afterSignOut() {
+  function afterSignOut(message) {
     state.userEmail = null;
     state.lastUpdated = null;
     state.refreshError = null;
-    renderLoginScreen();
+    renderLoginScreen(typeof message === "string" ? message : "");
+  }
+
+  /* ---- Inactivity sign-out --------------------------------------------- */
+
+  /* Signs the operator out after the idle time chosen under System Setting >
+     General, warning in the header for the last minute. Only runs while
+     signed in -- the offline copy (no App.auth) has no session to end. The
+     server's own session lifetime still applies on top of this. */
+  var IDLE_WARNING_MS = 60 * 1000;
+  var lastActivity = Date.now();
+
+  function noteActivity() {
+    lastActivity = Date.now();
+  }
+
+  function checkIdle() {
+    if (!App.auth || !state.userEmail) {
+      refs.idleNote.textContent = "";
+      return;
+    }
+    var limit = App.prefs.get("idleTimeoutMin") * 60 * 1000;
+    var remaining = limit - (Date.now() - lastActivity);
+    if (remaining <= 0) {
+      refs.idleNote.textContent = "";
+      var minutes = App.prefs.get("idleTimeoutMin");
+      var message = "Signed out after " + minutes + " minutes without activity — sign in again.";
+      state.userEmail = null; // stops further checks while logout is in flight
+      if (App.data.stopPolling) App.data.stopPolling();
+      App.auth.logout().then(function () { afterSignOut(message); }, function () { afterSignOut(message); });
+      return;
+    }
+    refs.idleNote.textContent = remaining <= IDLE_WARNING_MS
+      ? "Signing out in " + Math.ceil(remaining / 1000) + "s — move the mouse or press a key to stay"
+      : "";
   }
 
   /* Called by src/data/liveSource.js when a background poll gets a 401 --

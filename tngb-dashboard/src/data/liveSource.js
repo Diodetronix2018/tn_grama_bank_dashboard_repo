@@ -29,9 +29,14 @@
     apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
   };
 
-  /* The upstream telemetry table gets a new record roughly every 5 minutes;
-     poll on the same cadence so the dashboard picks it up without a reload. */
+  /* The upstream telemetry table gets a new record roughly every 5 minutes,
+     so that is the default cadence. Operators can change it under System
+     Setting > General (App.prefs "refreshMs"). */
   var POLL_INTERVAL_MS = 5 * 60 * 1000;
+
+  function pollInterval() {
+    return (App.prefs && App.prefs.get("refreshMs")) || POLL_INTERVAL_MS;
+  }
   var pollTimer = null;
   var inFlight = false;
 
@@ -100,7 +105,15 @@
 
   function startPolling() {
     if (pollTimer) return;
-    pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+    pollTimer = setInterval(poll, pollInterval());
+  }
+
+  /* Picks up a changed refresh interval straight away; a no-op while
+     signed out, when there is no timer to restart. */
+  function restartPolling() {
+    if (!pollTimer) return;
+    stopPolling();
+    startPolling();
   }
 
   function stopPolling() {
@@ -110,7 +123,9 @@
   }
 
   App.data.apiBaseUrl = CONFIG.apiBaseUrl;
+  App.data.POLL_INTERVAL_MS = POLL_INTERVAL_MS;
   App.data.load = load;
   App.data.startPolling = startPolling;
   App.data.stopPolling = stopPolling;
+  App.data.restartPolling = restartPolling;
 })(window.App = window.App || {});

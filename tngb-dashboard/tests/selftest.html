@@ -9,6 +9,7 @@
 <div id="app"></div>
 
 <script src="../src/core/utils.js"></script>
+<script src="../src/core/prefs.js"></script>
 <script src="../src/core/icons.js"></script>
 <script src="../src/core/dom.js"></script>
 <script src="../src/core/widgets.js"></script>
@@ -76,6 +77,9 @@ function nonArialText() {
 
 setTimeout(function () {
   try {
+    // Display preferences persist across runs; start from defaults.
+    App.prefs.reset();
+
     // --- nav ---------------------------------------------------------------
     var labels = ["Overview","Branch Monitoring","Intrusion Status","Zone Status","Power Status",
       "Live Activities","Event History","Location Maps","Manager Details","Reports","System Setting"];
@@ -233,17 +237,74 @@ setTimeout(function () {
 
     // --- settings ------------------------------------------------------------
     navBtn("System Setting").click();
-    var tracks = content().querySelectorAll(".toggle-track");
-    ok("6 notification toggles", tracks.length === 6, tracks.length + "");
-    var wasOn = tracks[0].classList.contains("is-on");
-    content().querySelectorAll(".toggle-cell")[0].click();
-    var nowOn = content().querySelectorAll(".toggle-track")[0].classList.contains("is-on");
-    ok("toggle flips", wasOn !== nowOn, wasOn + " -> " + nowOn);
+    var ssTab = function (label) {
+      Array.prototype.find.call(content().querySelectorAll(".ss-rail .report-item"), function (t) {
+        return t.querySelector(".report-item-label").textContent === label;
+      }).click();
+    };
+    var root = document.documentElement;
+    ssTab("General");
+    ok("settings shows 5 sections", content().querySelectorAll(".ss-rail .report-item").length === 5);
+    ok("general says refresh needs the live feed", text().indexOf("Takes effect when connected to the live feed") !== -1 && text().indexOf("Sample data") !== -1);
+    findByText(".segmented button", "12-hour").click();
+    ok("12-hour clock applies to header", / (AM|PM)$/.test(document.querySelector(".clock span:last-child").textContent));
+    ok("change shows saved note", !!content().querySelector(".ss-save-note.is-ok"));
+    var pickOption = function (id, val) {
+      var sel = document.getElementById(id);
+      sel.value = val;
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    ok("refresh interval defaults to 5 minutes", document.getElementById("ss-refreshMs").value === "300000");
+    pickOption("ss-refreshMs", "60000");
+    ok("refresh interval saves", App.prefs.get("refreshMs") === 60000 &&
+      document.getElementById("ss-refreshMs").value === "60000");
+    pickOption("ss-idleTimeoutMin", "10");
+    ok("session timeout saves", App.prefs.get("idleTimeoutMin") === 10 &&
+      document.getElementById("ss-idleTimeoutMin").value === "10");
+
+    ssTab("Appearance");
+    ok("unavailable themes are disabled", findByText(".ss-theme", "Dark").disabled === true);
+    findByText(".ss-accent", "Teal").click();
+    ok("accent recolours the page", root.style.getPropertyValue("--navy") === "#0f766e");
     var range = content().querySelector('input[type="range"]');
-    range.value = "42";
+    range.value = "115";
     range.dispatchEvent(new Event("input", { bubbles: true }));
-    ok("threshold slider updates label", text().indexOf("42 min") !== -1);
+    range.dispatchEvent(new Event("change", { bubbles: true }));
+    ok("text size scales content", text().indexOf("115%") !== -1 && root.style.getPropertyValue("--ui-scale") === "1.15");
+    findByText(".segmented button", "Compact").click();
+    ok("compact density applies", root.classList.contains("pref-compact"));
+    var toggles = content().querySelectorAll(".ss-toggle");
+    toggles[0].click();
+    ok("collapse sidebar applies", root.classList.contains("pref-sidebar-collapsed"));
+    findByText(".segmented button", "Classic View").click();
+    ok("live view default is used", App.prefs.get("liveView") === "classic");
+    findByText(".ss-btn-quiet", "Reset").click();
+    ok("reset restores appearance defaults", App.prefs.get("accent") === "#002172" && !root.classList.contains("pref-compact"));
+    ok("appearance reset keeps general settings", App.prefs.get("idleTimeoutMin") === 10);
+
+    ssTab("Users & Access");
     ok("role matrix renders 4 roles", content().querySelectorAll("table.data tbody tr").length === 4);
+    ok("sign-in security is read only", content().querySelectorAll(".ss-toggle").length === 0);
+
+    ssTab("Support");
+    var realClick = HTMLAnchorElement.prototype.click, mailto = null;
+    HTMLAnchorElement.prototype.click = function () { mailto = this.href; };
+    findByText(".ss-btn", "Open email").click();
+    ok("empty ticket is rejected", !mailto && content().querySelectorAll(".ss-error").length === 1);
+    var branchInput = document.getElementById("ss-ticket-branch");
+    branchInput.value = "TNGB-2041";
+    branchInput.dispatchEvent(new Event("input", { bubbles: true }));
+    var desc = document.getElementById("ss-ticket-desc");
+    desc.value = "Zone 3 sensor keeps reporting a fault after reset.";
+    desc.dispatchEvent(new Event("input", { bubbles: true }));
+    findByText(".ss-btn", "Open email").click();
+    HTMLAnchorElement.prototype.click = realClick;
+    ok("ticket opens pre-filled email", !!mailto && mailto.indexOf("mailto:") === 0 && mailto.indexOf("TNGB-2041") !== -1, mailto);
+    ok("ticket confirmation is honest", text().indexOf("press Send") !== -1);
+
+    ssTab("About");
+    ok("about shows branch count", text().indexOf("680 across 38 districts") !== -1);
+    App.prefs.reset();
   } catch (err) {
     out.push("EXCEPTION " + err.message + "\n" + err.stack);
     fails++;

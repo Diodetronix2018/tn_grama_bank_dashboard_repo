@@ -11,6 +11,12 @@
 
   var FEED_LIMIT = 200;
 
+  /* Communication Restored is noise on the live feed; Event History still logs it. */
+  var HIDDEN_TYPES = ["Communication Restored"];
+  var LIVE_TYPES = App.data.EVENT_TYPES.filter(function (t) {
+    return HIDDEN_TYPES.indexOf(t) === -1;
+  });
+
   var VIEW_MODES = [
     { key: "command", label: "Command Center" },
     { key: "classic", label: "Classic View" },
@@ -77,9 +83,12 @@
   }
 
   function render(ctx) {
-    var all = App.data.allEvents();
+    var all = App.data.allEvents().filter(function (e) {
+      return HIDDEN_TYPES.indexOf(e.type) === -1;
+    });
     var counts = App.data.eventCounts();
     var filter = ctx.state.liveActivityFilter;
+    if (HIDDEN_TYPES.indexOf(filter) !== -1) filter = null;
     var mode = ctx.state.liveViewMode || "command";
 
     var filtered = filter
@@ -88,7 +97,7 @@
     var shown = filtered.slice(0, FEED_LIMIT);
 
     var chipOpts = {
-      types: App.data.EVENT_TYPES,
+      types: LIVE_TYPES,
       counts: counts,
       colors: App.data.EVENT_COLORS,
       active: filter,

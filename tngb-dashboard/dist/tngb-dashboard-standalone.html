@@ -1910,11 +1910,11 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     Alarm: ICONS.bell,
     Fault: ICONS.fault,
     "AC Fail": ICONS.power,
-    "AC Restore": ICONS.power,
+    "AC Normal": ICONS.power,
     "Battery Fail": ICONS.battery,
-    "Battery Restore": ICONS.battery,
+    "Battery Normal": ICONS.battery,
     "Tamper Activate": ICONS.tamper,
-    "Tamper Restore": ICONS.tamper,
+    "Tamper Normal": ICONS.tamper,
     "Communication Lost": ICONS.offline,
     "Communication Restored": ICONS.online,
   };
@@ -2611,8 +2611,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   var EVENT_TYPES = [
     "Arm", "Disarm", "Alarm", "Fault",
-    "AC Fail", "AC Restore", "Battery Fail", "Battery Restore",
-    "Tamper Activate", "Tamper Restore",
+    "AC Fail", "AC Normal", "Battery Fail", "Battery Normal",
+    "Tamper Activate", "Tamper Normal",
     "Communication Lost", "Communication Restored",
   ];
 
@@ -2622,11 +2622,11 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     Alarm: COLORS.red,
     Fault: COLORS.amber,
     "AC Fail": COLORS.red,
-    "AC Restore": COLORS.green,
+    "AC Normal": COLORS.green,
     "Battery Fail": COLORS.red,
-    "Battery Restore": COLORS.green,
+    "Battery Normal": COLORS.green,
     "Tamper Activate": COLORS.orange,
-    "Tamper Restore": COLORS.green,
+    "Tamper Normal": COLORS.green,
     "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
   };
@@ -2774,13 +2774,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       out.push({ type: "AC Fail", time: data.dayStamp(cr, 10, 9, 1) });
     }
     if (power.acRestoredToday) {
-      out.push({ type: "AC Restore", time: power.acRestoredAt });
+      out.push({ type: "AC Normal", time: power.acRestoredAt });
     }
     if (power.batteryStatus === "Fail") {
       out.push({ type: "Battery Fail", time: data.dayStamp(cr, 10, 9, 3) });
     }
     if (power.batteryRestoredToday) {
-      out.push({ type: "Battery Restore", time: power.batteryRestoredAt });
+      out.push({ type: "Battery Normal", time: power.batteryRestoredAt });
     }
 
     /* A zone still in tamper logs only its activation (tamperBranches lists
@@ -2797,7 +2797,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         };
         var tripped = Math.floor(cr() * 30);
         out.push({ type: "Tamper Activate", time: stamp(tripped), zone: z.name });
-        out.push({ type: "Tamper Restore", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
+        out.push({ type: "Tamper Normal", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
       }
     });
 
@@ -2868,9 +2868,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "bell" },
     { key: "fault", label: "Fault Report", desc: "Fault conditions network-wide", scope: "events", types: ["Fault"], color: COLORS.amber, icon: "fault" },
     { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
-    { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and restores", scope: "events", types: ["AC Fail", "AC Restore"], color: COLORS.red, icon: "power" },
-    { key: "battery", label: "Battery Report", desc: "Battery failures and restores", scope: "events", types: ["Battery Fail", "Battery Restore"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "tamper" },
+    { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and returns to normal", scope: "events", types: ["AC Fail", "AC Normal"], color: COLORS.red, icon: "power" },
+    { key: "battery", label: "Battery Report", desc: "Battery failures and returns to normal", scope: "events", types: ["Battery Fail", "Battery Normal"], color: COLORS.red, icon: "battery" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.orange, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first
@@ -4270,6 +4270,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   var FEED_LIMIT = 200;
 
+  /* Communication Restored is noise on the live feed; Event History still logs it. */
+  var HIDDEN_TYPES = ["Communication Restored"];
+  var LIVE_TYPES = App.data.EVENT_TYPES.filter(function (t) {
+    return HIDDEN_TYPES.indexOf(t) === -1;
+  });
+
   var VIEW_MODES = [
     { key: "command", label: "Command Center" },
     { key: "classic", label: "Classic View" },
@@ -4336,9 +4342,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   }
 
   function render(ctx) {
-    var all = App.data.allEvents();
+    var all = App.data.allEvents().filter(function (e) {
+      return HIDDEN_TYPES.indexOf(e.type) === -1;
+    });
     var counts = App.data.eventCounts();
     var filter = ctx.state.liveActivityFilter;
+    if (HIDDEN_TYPES.indexOf(filter) !== -1) filter = null;
     var mode = ctx.state.liveViewMode || "command";
 
     var filtered = filter
@@ -4347,7 +4356,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var shown = filtered.slice(0, FEED_LIMIT);
 
     var chipOpts = {
-      types: App.data.EVENT_TYPES,
+      types: LIVE_TYPES,
       counts: counts,
       colors: App.data.EVENT_COLORS,
       active: filter,

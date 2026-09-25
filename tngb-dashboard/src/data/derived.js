@@ -12,8 +12,8 @@
 
   var EVENT_TYPES = [
     "Arm", "Disarm", "Alarm", "Fault",
-    "AC Fail", "AC Restore", "Battery Fail", "Battery Restore",
-    "Tamper Activate", "Tamper Restore",
+    "AC Fail", "AC Normal", "Battery Fail", "Battery Normal",
+    "Tamper Activate", "Tamper Normal",
     "Communication Lost", "Communication Restored",
   ];
 
@@ -23,11 +23,11 @@
     Alarm: COLORS.red,
     Fault: COLORS.amber,
     "AC Fail": COLORS.red,
-    "AC Restore": COLORS.green,
+    "AC Normal": COLORS.green,
     "Battery Fail": COLORS.red,
-    "Battery Restore": COLORS.green,
+    "Battery Normal": COLORS.green,
     "Tamper Activate": COLORS.orange,
-    "Tamper Restore": COLORS.green,
+    "Tamper Normal": COLORS.green,
     "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
   };
@@ -175,13 +175,13 @@
       out.push({ type: "AC Fail", time: data.dayStamp(cr, 10, 9, 1) });
     }
     if (power.acRestoredToday) {
-      out.push({ type: "AC Restore", time: power.acRestoredAt });
+      out.push({ type: "AC Normal", time: power.acRestoredAt });
     }
     if (power.batteryStatus === "Fail") {
       out.push({ type: "Battery Fail", time: data.dayStamp(cr, 10, 9, 3) });
     }
     if (power.batteryRestoredToday) {
-      out.push({ type: "Battery Restore", time: power.batteryRestoredAt });
+      out.push({ type: "Battery Normal", time: power.batteryRestoredAt });
     }
 
     /* A zone still in tamper logs only its activation (tamperBranches lists
@@ -198,7 +198,7 @@
         };
         var tripped = Math.floor(cr() * 30);
         out.push({ type: "Tamper Activate", time: stamp(tripped), zone: z.name });
-        out.push({ type: "Tamper Restore", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
+        out.push({ type: "Tamper Normal", time: stamp(tripped + 5 + Math.floor(cr() * 20)), zone: z.name });
       }
     });
 
@@ -269,9 +269,9 @@
     { key: "alarm", label: "Alarm Report", desc: "Alarm activations network-wide", scope: "events", types: ["Alarm"], color: COLORS.red, icon: "bell" },
     { key: "fault", label: "Fault Report", desc: "Fault conditions network-wide", scope: "events", types: ["Fault"], color: COLORS.amber, icon: "fault" },
     { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
-    { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and restores", scope: "events", types: ["AC Fail", "AC Restore"], color: COLORS.red, icon: "power" },
-    { key: "battery", label: "Battery Report", desc: "Battery failures and restores", scope: "events", types: ["Battery Fail", "Battery Restore"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and restores", scope: "events", types: ["Tamper Activate", "Tamper Restore"], color: COLORS.orange, icon: "tamper" },
+    { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and returns to normal", scope: "events", types: ["AC Fail", "AC Normal"], color: COLORS.red, icon: "power" },
+    { key: "battery", label: "Battery Report", desc: "Battery failures and returns to normal", scope: "events", types: ["Battery Fail", "Battery Normal"], color: COLORS.red, icon: "battery" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.orange, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first

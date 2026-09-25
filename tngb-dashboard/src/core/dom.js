@@ -84,5 +84,11 @@
     return el;
   }
 
-  App.dom = { h: h, badge: badge, iconChip: iconChip, clear: clear };
+  /* An important value inside running text, e.g. the "12" in "12 offline".
+     Bold via the .val rule in styles.css. */
+  function val(value) {
+    return h("span.val", String(value));
+  }
+
+  App.dom = { h: h, badge: badge, iconChip: iconChip, clear: clear, val: val };
 })(window.App = window.App || {});

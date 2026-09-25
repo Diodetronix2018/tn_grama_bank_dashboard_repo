@@ -96,7 +96,7 @@
         ? h("div", {
             style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
               "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the first " + ROW_LIMIT + " of " + matches.length + " branches.")
+          }, "Showing the first ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length), " branches.")
         : null
     );
   }

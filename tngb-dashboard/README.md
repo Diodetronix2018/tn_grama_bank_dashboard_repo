@@ -36,7 +36,8 @@ chrome --headless=new --virtual-time-budget=20000 --dump-dom tests/selftest.html
 ```
 
 The last line of the report reads `RESULT: ALL PASS` when everything is green.
-It also checks that all text on every view is Arial Regular (no bold or italic).
+It also checks that all text on every view is Arial (no italic): important
+values and numbers in bold, everything else regular.
 
 ## Sending it to someone
 

@@ -4,6 +4,7 @@
 
   var h = App.dom.h;
   var badge = App.dom.badge;
+  var val = App.dom.val;
   var W = App.widgets;
   var u = App.utils;
   var COLORS = u.COLORS;
@@ -44,8 +45,8 @@
       h("div.pie-title", title),
       h(
         "div.pie-legend",
-        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " " + a.count),
-        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " " + b.count)
+        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " ", val(a.count)),
+        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " ", val(b.count))
       )
     );
   }
@@ -118,8 +119,8 @@
               "div",
               h("div.row-item-name", r.name),
               h("div.row-item-sub",
-                r.branchCount + " branches · " + s.offline + " offline · " +
-                s.alarm + " alarm · " + s.fault + " fault")
+                val(r.branchCount), " branches · ", val(s.offline), " offline · ",
+                val(s.alarm), " alarm · ", val(s.fault), " fault")
             ),
             badge(status, App.data.STATUS_COLORS[status])
           );

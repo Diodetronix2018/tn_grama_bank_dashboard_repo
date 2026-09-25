@@ -52,13 +52,22 @@ function findByText(sel, needle) {
     return n.textContent.indexOf(needle) !== -1;
   });
 }
+/* Important values and numbers are Arial Bold; everything else is Arial
+   Regular. Keep in sync with the bold rule in assets/styles.css. */
+var VALUE_SELECTOR = ".val, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num, " +
+  ".muted-count, .chip-count, .rail-count, .map-count, .map-tooltip b, " +
+  ".badge, .overall-pill, .time-pill, .clock-time, .mono, " +
+  ".event-line-time, .feed-time-dark, table.data tbody td.num, " +
+  ".kv-row span:last-child, .ss-kv span:last-child, .ss-value, .ss-strong, " +
+  ".ss-scale-label, .ss-yes, .ss-no";
 /* Text nodes, form controls and input placeholders under #app that aren't
-   Arial Regular: Arial first, weight 400, not italic. */
+   Arial, not italic, and bold (700) for values / regular (400) otherwise. */
 function nonArialText() {
   var problem = function (el, pseudo) {
     var s = getComputedStyle(el, pseudo);
     var family = s.fontFamily.split(",")[0].trim().replace(/["']/g, "");
-    if (family === "Arial" && s.fontWeight === "400" && s.fontStyle === "normal") return null;
+    var weight = !pseudo && el.matches(VALUE_SELECTOR) ? "700" : "400";
+    if (family === "Arial" && s.fontWeight === weight && s.fontStyle === "normal") return null;
     return family + " " + s.fontWeight + " " + s.fontStyle;
   };
   var bad = [];
@@ -91,7 +100,7 @@ setTimeout(function () {
         ok("nav renders: " + l, text().length > 500, text().length + " chars");
         ok("nav marks active: " + l, b.classList.contains("is-active"));
         var badFont = nonArialText();
-        ok("all text is Arial Regular: " + l, badFont.length === 0,
+        ok("text is Arial, values bold: " + l, badFont.length === 0,
           badFont.length ? badFont.length + " elements, e.g. " + badFont.slice(0, 3).join(" | ") : "");
       }
     });

@@ -73,6 +73,19 @@ body {
   font-style: normal !important;
 }
 
+/* The one exception: important values and numbers are Arial Bold on every
+   screen -- KPI figures, percentages, counts, status badges, codes, phone
+   numbers, times, key/value readouts, and .val (App.dom.val) for a number
+   inside running text. Keep in sync with VALUE_SELECTOR in tests/selftest.html. */
+.val, .kpi-value, .pie-pct, .donut-pct, .zone-hero-num, .zone-num,
+.muted-count, .chip-count, .rail-count, .map-count, .map-tooltip b,
+.badge, .overall-pill, .time-pill, .clock-time, .mono,
+.event-line-time, .feed-time-dark, table.data tbody td.num,
+.kv-row span:last-child, .ss-kv span:last-child, .ss-value, .ss-strong,
+.ss-scale-label, .ss-yes, .ss-no {
+  font-weight: 700 !important;
+}
+
 a { color: var(--navy); }
 a:hover { color: #00154f; }
 
@@ -1917,7 +1930,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     return el;
   }
 
-  App.dom = { h: h, badge: badge, iconChip: iconChip, clear: clear };
+  /* An important value inside running text, e.g. the "12" in "12 offline".
+     Bold via the .val rule in styles.css. */
+  function val(value) {
+    return h("span.val", String(value));
+  }
+
+  App.dom = { h: h, badge: badge, iconChip: iconChip, clear: clear, val: val };
 })(window.App = window.App || {});
 
 /* ==== src/core/widgets.js ==== */
@@ -3023,6 +3042,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   var h = App.dom.h;
   var badge = App.dom.badge;
+  var val = App.dom.val;
   var W = App.widgets;
   var u = App.utils;
   var COLORS = u.COLORS;
@@ -3063,8 +3083,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       h("div.pie-title", title),
       h(
         "div.pie-legend",
-        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " " + a.count),
-        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " " + b.count)
+        h("span.legend-item", h("span.dot", { style: "background:" + a.color + ";" }), a.label + " ", val(a.count)),
+        h("span.legend-item", h("span.dot", { style: "background:" + b.color + ";" }), b.label + " ", val(b.count))
       )
     );
   }
@@ -3137,8 +3157,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
               "div",
               h("div.row-item-name", r.name),
               h("div.row-item-sub",
-                r.branchCount + " branches · " + s.offline + " offline · " +
-                s.alarm + " alarm · " + s.fault + " fault")
+                val(r.branchCount), " branches · ", val(s.offline), " offline · ",
+                val(s.alarm), " alarm · ", val(s.fault), " fault")
             ),
             badge(status, App.data.STATUS_COLORS[status])
           );
@@ -3354,7 +3374,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       h("div.card-head",
         h("div",
           h("div.card-title", "District-wise Summary"),
-          h("div.card-sub", rows.length + " districts · click a row to open its branches"))),
+          h("div.card-sub", App.dom.val(rows.length), " districts · click a row to open its branches"))),
       h("div.table-scroll", { style: "max-height:420px;" }, W.dataTable([
         { label: "District", key: "name", className: "name" },
         { label: "Code", key: "code", className: "mono" },
@@ -3821,7 +3841,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             badge(z.status, z.statusColor, "sm"),
             badge(z.fault, z.faultColor, "sm"),
             badge(z.tamper, z.tamperColor, "sm")),
-          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+          h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
       }))
     );
@@ -3829,8 +3849,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   function showcaseView(branch, zones) {
     var hero = heroStats(zones);
-    var legend = function (color, text) {
-      return h("div", h("span.dot.md", { style: "background:" + color + ";" }), h("span", text));
+    var legend = function (color, count, label) {
+      return h("div", h("span.dot.md", { style: "background:" + color + ";" }),
+        h("span", App.dom.val(count), " " + label));
     };
     var darkBadge = function (text) {
       return h("span.badge", {
@@ -3868,9 +3889,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             h("div.donut-pct", hero.healthPct + "%"),
             h("div.donut-cap", "NORMAL"))),
           h("div.showcase-legend",
-            legend("#f87171", hero.alarm + " Alarm"),
-            legend("#fbbf24", hero.fault + " Fault"),
-            legend("#fb923c", hero.tamper + " Tamper"))
+            legend("#f87171", hero.alarm, "Alarm"),
+            legend("#fbbf24", hero.fault, "Fault"),
+            legend("#fb923c", hero.tamper, "Tamper"))
         )
       ),
       h("div.grid.grid-4", { style: "gap:18px;" }, zones.map(function (z) {
@@ -3891,7 +3912,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
             h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
               z.dominantLabel)),
-          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+          h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
       }))
     );
@@ -4041,7 +4062,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         ? h("div", {
             style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
               "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the first " + ROW_LIMIT + " of " + matches.length + " branches.")
+          }, "Showing the first ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length), " branches.")
         : null
     );
   }
@@ -4201,8 +4222,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             "div",
             h("div.command-title", "Live Activity Feed"),
             h("div.command-sub", filter
-              ? filtered.length + " " + filter + " events · " + all.length + " total today"
-              : all.length + " events across the network today")
+              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total today"]
+              : [App.dom.val(all.length), " events across the network today"])
           ),
           W.chipRow(Object.assign({}, chipOpts, { dark: true }))
         ),
@@ -4225,7 +4246,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       filtered.length > FEED_LIMIT
         ? h("div", {
             style: "text-align:center;font-size:11.5px;color:var(--ink-faint);margin-top:12px;",
-          }, "Showing the newest " + FEED_LIMIT + " of " + filtered.length +
+          }, "Showing the newest ", App.dom.val(FEED_LIMIT), " of ", App.dom.val(filtered.length),
              " events. Use Event History for the full log.")
         : null
     );
@@ -4330,7 +4351,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         ? h("div", {
             style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
               "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the newest " + ROW_LIMIT + " of " + matches.length +
+          }, "Showing the newest ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length),
              " matching events. Narrow the search or export the report for the rest.")
         : null
     );
@@ -4500,6 +4521,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         "font-size": "10",
         "font-weight": "700",
         fill: "#ffffff",
+        class: "map-count",
       });
       count.textContent = String(p.stats.total);
       group.appendChild(count);
@@ -4508,8 +4530,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         var rect = wrap.getBoundingClientRect();
         tooltip.innerHTML =
           "<b>" + p.name + "</b><br>" +
-          p.stats.total + " branches · " + p.stats.online + " online<br>" +
-          p.stats.offline + " offline · " + p.stats.alarm + " alarm · " + p.stats.fault + " fault";
+          "<b>" + p.stats.total + "</b> branches · <b>" + p.stats.online + "</b> online<br>" +
+          "<b>" + p.stats.offline + "</b> offline · <b>" + p.stats.alarm + "</b> alarm · <b>" +
+          p.stats.fault + "</b> fault";
         tooltip.style.left = e.clientX - rect.left + "px";
         tooltip.style.top = e.clientY - rect.top + "px";
         tooltip.classList.add("is-visible");
@@ -4557,10 +4580,10 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var headline = h(
       "div.card",
       { style: "padding:16px;" },
-      h("div.card-title", { style: "font-size:13px;margin-bottom:4px;" }, normalPct + "% Normal"),
+      h("div.card-title", { style: "font-size:13px;margin-bottom:4px;" }, App.dom.val(normalPct + "%"), " Normal"),
       h("div", { style: "font-size:11.5px;color:var(--ink-soft);" },
-        "Across " + stats.totalDistricts + " districts and " +
-        stats.totalBranches + " branches network-wide.")
+        "Across ", App.dom.val(stats.totalDistricts), " districts and ",
+        App.dom.val(stats.totalBranches), " branches network-wide.")
     );
 
     var watchlist = h(
@@ -4581,7 +4604,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           h("div",
             h("div.row-item-name", p.name),
             h("div.row-item-sub",
-              p.stats.alarm + " alarm · " + p.stats.fault + " fault · " + p.stats.offline + " offline")),
+              App.dom.val(p.stats.alarm), " alarm · ", App.dom.val(p.stats.fault), " fault · ",
+              App.dom.val(p.stats.offline), " offline")),
           App.dom.badge(String(p.stats.total), COLORS.navy)
         );
       }))
@@ -4651,7 +4675,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         color: "#4338ca",
         title: "Branch Manager Directory",
         count: matches.length,
-        subtitle: "One manager record per branch · showing " + shown.length,
+        subtitle: ["One manager record per branch · showing ", App.dom.val(shown.length)],
         controls: W.searchInput({
           id: "mgr-search",
           value: ctx.state.mgrSearch,
@@ -4832,8 +4856,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       h(
         "div.flex-center",
         { style: "gap:14px;" },
-        h("div.report-stamp", "Generated " + latestDate(all) + " " +
-          u.fmtClock(ctx.state.now).slice(0, 5)),
+        h("div.report-stamp", "Generated ",
+          App.dom.val(latestDate(all) + " " + u.fmtClock(ctx.state.now).slice(0, 5))),
         h("button.btn-primary", {
           type: "button",
           onclick: function () {
@@ -4929,8 +4953,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           ? h("div", {
               style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
                 "font-size:11.5px;color:var(--ink-faint);",
-            }, "Preview shows the first " + ROW_LIMIT + " rows. The CSV export contains all " +
-               totalCount + ".")
+            }, "Preview shows the first ", App.dom.val(ROW_LIMIT), " rows. The CSV export contains all ",
+               App.dom.val(totalCount), ".")
           : null
       )
     );
@@ -5301,7 +5325,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         h("div.ss-success",
           h("div.ss-success-title", "Your email app should now be open"),
           h("p", "Check the message and press Send to raise “" + ui.ticketSent + "”. " +
-            "If nothing opened, email " + CONTACTS[0].email + " directly."),
+            "If nothing opened, email ", App.dom.val(CONTACTS[0].email), " directly."),
           h("button.ss-link", {
             type: "button",
             onclick: function () {
@@ -5320,7 +5344,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       },
       h("div.ss-callout",
         h("span.ss-callout-icon", { html: App.ICONS.alerts }),
-        h("span", "Active alarm or intruder? Call the SOC on " + CONTACTS[0].phone + " now — don't wait on a ticket.")),
+        h("span", "Active alarm or intruder? Call the SOC on ", App.dom.val(CONTACTS[0].phone), " now — don't wait on a ticket.")),
       h("div.ss-grid2",
         h("label.ss-field", h("span", "Category"),
           h("select.text-input", {
@@ -5404,7 +5428,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   function saveNote() {
     if (!ui.saved) return h("span.ss-save-note", "Display preferences are saved in this browser");
     if (!ui.saved.ok) return h("span.ss-save-note.is-warn", "Couldn't save — this change lasts until you close the tab");
-    return h("span.ss-save-note.is-ok", "Saved · " + App.prefs.fmtClock(ui.saved.at));
+    return h("span.ss-save-note.is-ok", "Saved · ", App.dom.val(App.prefs.fmtClock(ui.saved.at)));
   }
 
   function render(ctx) {
@@ -5595,7 +5619,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   function buildTopbar() {
     refs.title = h("h1");
     refs.subtitle = h("div.topbar-sub");
-    refs.clock = h("span", App.prefs.fmtClock(state.now));
+    refs.clock = h("span.clock-time", App.prefs.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
     refs.freshness = h("span.freshness");
     refs.idleNote = h("span.idle-note", { role: "status" });
@@ -5659,11 +5683,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     );
 
     refs.freshness.classList.toggle("is-stale", !!state.refreshError);
-    refs.freshness.textContent = !state.lastUpdated
-      ? ""
-      : state.refreshError
-      ? "Live feed delayed — showing data from " + App.prefs.fmtClock(state.lastUpdated)
-      : "Updated " + App.prefs.fmtClock(state.lastUpdated);
+    App.dom.clear(refs.freshness);
+    if (state.lastUpdated) {
+      refs.freshness.appendChild(document.createTextNode(state.refreshError
+        ? "Live feed delayed — showing data from " : "Updated "));
+      refs.freshness.appendChild(App.dom.val(App.prefs.fmtClock(state.lastUpdated)));
+    }
 
     if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
 

@@ -109,8 +109,8 @@
             "div",
             h("div.command-title", "Live Activity Feed"),
             h("div.command-sub", filter
-              ? filtered.length + " " + filter + " events · " + all.length + " total today"
-              : all.length + " events across the network today")
+              ? [App.dom.val(filtered.length), " " + filter + " events · ", App.dom.val(all.length), " total today"]
+              : [App.dom.val(all.length), " events across the network today"])
           ),
           W.chipRow(Object.assign({}, chipOpts, { dark: true }))
         ),
@@ -133,7 +133,7 @@
       filtered.length > FEED_LIMIT
         ? h("div", {
             style: "text-align:center;font-size:11.5px;color:var(--ink-faint);margin-top:12px;",
-          }, "Showing the newest " + FEED_LIMIT + " of " + filtered.length +
+          }, "Showing the newest ", App.dom.val(FEED_LIMIT), " of ", App.dom.val(filtered.length),
              " events. Use Event History for the full log.")
         : null
     );

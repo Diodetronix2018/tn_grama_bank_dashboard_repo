@@ -350,7 +350,7 @@
         h("div.ss-success",
           h("div.ss-success-title", "Your email app should now be open"),
           h("p", "Check the message and press Send to raise “" + ui.ticketSent + "”. " +
-            "If nothing opened, email " + CONTACTS[0].email + " directly."),
+            "If nothing opened, email ", App.dom.val(CONTACTS[0].email), " directly."),
           h("button.ss-link", {
             type: "button",
             onclick: function () {
@@ -369,7 +369,7 @@
       },
       h("div.ss-callout",
         h("span.ss-callout-icon", { html: App.ICONS.alerts }),
-        h("span", "Active alarm or intruder? Call the SOC on " + CONTACTS[0].phone + " now — don't wait on a ticket.")),
+        h("span", "Active alarm or intruder? Call the SOC on ", App.dom.val(CONTACTS[0].phone), " now — don't wait on a ticket.")),
       h("div.ss-grid2",
         h("label.ss-field", h("span", "Category"),
           h("select.text-input", {
@@ -453,7 +453,7 @@
   function saveNote() {
     if (!ui.saved) return h("span.ss-save-note", "Display preferences are saved in this browser");
     if (!ui.saved.ok) return h("span.ss-save-note.is-warn", "Couldn't save — this change lasts until you close the tab");
-    return h("span.ss-save-note.is-ok", "Saved · " + App.prefs.fmtClock(ui.saved.at));
+    return h("span.ss-save-note.is-ok", "Saved · ", App.dom.val(App.prefs.fmtClock(ui.saved.at)));
   }
 
   function render(ctx) {

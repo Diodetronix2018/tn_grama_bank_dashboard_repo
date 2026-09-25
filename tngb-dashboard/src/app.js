@@ -151,7 +151,7 @@
   function buildTopbar() {
     refs.title = h("h1");
     refs.subtitle = h("div.topbar-sub");
-    refs.clock = h("span", App.prefs.fmtClock(state.now));
+    refs.clock = h("span.clock-time", App.prefs.fmtClock(state.now));
     refs.pill = h("div.overall-pill");
     refs.freshness = h("span.freshness");
     refs.idleNote = h("span.idle-note", { role: "status" });
@@ -215,11 +215,12 @@
     );
 
     refs.freshness.classList.toggle("is-stale", !!state.refreshError);
-    refs.freshness.textContent = !state.lastUpdated
-      ? ""
-      : state.refreshError
-      ? "Live feed delayed — showing data from " + App.prefs.fmtClock(state.lastUpdated)
-      : "Updated " + App.prefs.fmtClock(state.lastUpdated);
+    App.dom.clear(refs.freshness);
+    if (state.lastUpdated) {
+      refs.freshness.appendChild(document.createTextNode(state.refreshError
+        ? "Live feed delayed — showing data from " : "Updated "));
+      refs.freshness.appendChild(App.dom.val(App.prefs.fmtClock(state.lastUpdated)));
+    }
 
     if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
 

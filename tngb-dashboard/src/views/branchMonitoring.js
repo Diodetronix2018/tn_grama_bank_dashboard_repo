@@ -55,7 +55,7 @@
       h("div.card-head",
         h("div",
           h("div.card-title", "District-wise Summary"),
-          h("div.card-sub", rows.length + " districts · click a row to open its branches"))),
+          h("div.card-sub", App.dom.val(rows.length), " districts · click a row to open its branches"))),
       h("div.table-scroll", { style: "max-height:420px;" }, W.dataTable([
         { label: "District", key: "name", className: "name" },
         { label: "Code", key: "code", className: "mono" },

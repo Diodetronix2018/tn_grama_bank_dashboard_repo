@@ -149,6 +149,7 @@
         "font-size": "10",
         "font-weight": "700",
         fill: "#ffffff",
+        class: "map-count",
       });
       count.textContent = String(p.stats.total);
       group.appendChild(count);
@@ -157,8 +158,9 @@
         var rect = wrap.getBoundingClientRect();
         tooltip.innerHTML =
           "<b>" + p.name + "</b><br>" +
-          p.stats.total + " branches · " + p.stats.online + " online<br>" +
-          p.stats.offline + " offline · " + p.stats.alarm + " alarm · " + p.stats.fault + " fault";
+          "<b>" + p.stats.total + "</b> branches · <b>" + p.stats.online + "</b> online<br>" +
+          "<b>" + p.stats.offline + "</b> offline · <b>" + p.stats.alarm + "</b> alarm · <b>" +
+          p.stats.fault + "</b> fault";
         tooltip.style.left = e.clientX - rect.left + "px";
         tooltip.style.top = e.clientY - rect.top + "px";
         tooltip.classList.add("is-visible");
@@ -206,10 +208,10 @@
     var headline = h(
       "div.card",
       { style: "padding:16px;" },
-      h("div.card-title", { style: "font-size:13px;margin-bottom:4px;" }, normalPct + "% Normal"),
+      h("div.card-title", { style: "font-size:13px;margin-bottom:4px;" }, App.dom.val(normalPct + "%"), " Normal"),
       h("div", { style: "font-size:11.5px;color:var(--ink-soft);" },
-        "Across " + stats.totalDistricts + " districts and " +
-        stats.totalBranches + " branches network-wide.")
+        "Across ", App.dom.val(stats.totalDistricts), " districts and ",
+        App.dom.val(stats.totalBranches), " branches network-wide.")
     );
 
     var watchlist = h(
@@ -230,7 +232,8 @@
           h("div",
             h("div.row-item-name", p.name),
             h("div.row-item-sub",
-              p.stats.alarm + " alarm · " + p.stats.fault + " fault · " + p.stats.offline + " offline")),
+              App.dom.val(p.stats.alarm), " alarm · ", App.dom.val(p.stats.fault), " fault · ",
+              App.dom.val(p.stats.offline), " offline")),
           App.dom.badge(String(p.stats.total), COLORS.navy)
         );
       }))

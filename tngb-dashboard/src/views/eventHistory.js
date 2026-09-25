@@ -85,7 +85,7 @@
         ? h("div", {
             style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
               "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the newest " + ROW_LIMIT + " of " + matches.length +
+          }, "Showing the newest ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length),
              " matching events. Narrow the search or export the report for the rest.")
         : null
     );

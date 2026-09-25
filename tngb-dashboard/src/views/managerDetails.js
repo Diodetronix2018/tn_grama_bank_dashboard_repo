@@ -40,7 +40,7 @@
         color: "#4338ca",
         title: "Branch Manager Directory",
         count: matches.length,
-        subtitle: "One manager record per branch · showing " + shown.length,
+        subtitle: ["One manager record per branch · showing ", App.dom.val(shown.length)],
         controls: W.searchInput({
           id: "mgr-search",
           value: ctx.state.mgrSearch,

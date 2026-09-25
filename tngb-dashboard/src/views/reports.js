@@ -126,8 +126,8 @@
       h(
         "div.flex-center",
         { style: "gap:14px;" },
-        h("div.report-stamp", "Generated " + latestDate(all) + " " +
-          u.fmtClock(ctx.state.now).slice(0, 5)),
+        h("div.report-stamp", "Generated ",
+          App.dom.val(latestDate(all) + " " + u.fmtClock(ctx.state.now).slice(0, 5))),
         h("button.btn-primary", {
           type: "button",
           onclick: function () {
@@ -223,8 +223,8 @@
           ? h("div", {
               style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
                 "font-size:11.5px;color:var(--ink-faint);",
-            }, "Preview shows the first " + ROW_LIMIT + " rows. The CSV export contains all " +
-               totalCount + ".")
+            }, "Preview shows the first ", App.dom.val(ROW_LIMIT), " rows. The CSV export contains all ",
+               App.dom.val(totalCount), ".")
           : null
       )
     );

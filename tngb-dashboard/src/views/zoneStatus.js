@@ -172,7 +172,7 @@
             badge(z.status, z.statusColor, "sm"),
             badge(z.fault, z.faultColor, "sm"),
             badge(z.tamper, z.tamperColor, "sm")),
-          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+          h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
       }))
     );
@@ -180,8 +180,9 @@
 
   function showcaseView(branch, zones) {
     var hero = heroStats(zones);
-    var legend = function (color, text) {
-      return h("div", h("span.dot.md", { style: "background:" + color + ";" }), h("span", text));
+    var legend = function (color, count, label) {
+      return h("div", h("span.dot.md", { style: "background:" + color + ";" }),
+        h("span", App.dom.val(count), " " + label));
     };
     var darkBadge = function (text) {
       return h("span.badge", {
@@ -219,9 +220,9 @@
             h("div.donut-pct", hero.healthPct + "%"),
             h("div.donut-cap", "NORMAL"))),
           h("div.showcase-legend",
-            legend("#f87171", hero.alarm + " Alarm"),
-            legend("#fbbf24", hero.fault + " Fault"),
-            legend("#fb923c", hero.tamper + " Tamper"))
+            legend("#f87171", hero.alarm, "Alarm"),
+            legend("#fbbf24", hero.fault, "Fault"),
+            legend("#fb923c", hero.tamper, "Tamper"))
         )
       ),
       h("div.grid.grid-4", { style: "gap:18px;" }, zones.map(function (z) {
@@ -242,7 +243,7 @@
           h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
             h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
               z.dominantLabel)),
-          h("div.zone-card-foot", "Last trigger: " + z.lastTrigger)
+          h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
       }))
     );

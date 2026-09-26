@@ -10,6 +10,14 @@
   var u = App.utils;
   var COLORS = u.COLORS;
 
+  /* Reports list tamper like battery and AC events: a panel-level condition
+     with no zone column, so the zone they carry is not shown here. */
+  var NO_ZONE_TYPES = ["Tamper Activate", "Tamper Normal"];
+
+  function reportZone(e) {
+    return NO_ZONE_TYPES.indexOf(e.type) === -1 ? e.zone || "" : "";
+  }
+
   var ROW_LIMIT = 400;
 
   /* The most recent day present in the log; every range is measured from it. */
@@ -117,7 +125,7 @@
           return [r.name, r.district, r.total, r.alarm, r.fault, r.tamper, r.status];
         })
       : eventRows.map(function (e) {
-          return [e.time, e.branch, e.district, e.type, e.zone || ""];
+          return [e.time, e.branch, e.district, e.type, reportZone(e)];
         });
     var exportHeader = isBranchwise
       ? ["Branch", "District", "Total Events", "Alarm", "Fault", "Tamper", "Status"]
@@ -147,8 +155,8 @@
       ? [
           { label: "Branches Covered", value: branchRows.length, color: COLORS.navy, iconHtml: App.ICONS.branches },
           {
-            label: "Branches Needing Attention",
-            value: branchRows.filter(function (r) { return r.status === "Attention"; }).length,
+            label: "Branches with Issues",
+            value: branchRows.filter(function (r) { return r.status !== "Normal"; }).length,
             color: COLORS.amber,
             iconHtml: App.ICONS.alerts,
           },
@@ -195,7 +203,7 @@
           {
             label: "Status",
             render: function (r) {
-              return badge(r.status, r.status === "Attention" ? COLORS.amber : COLORS.green);
+              return badge(r.status, App.data.STATUS_COLORS[r.status]);
             },
           },
         ], branchRows.slice(0, ROW_LIMIT))
@@ -204,7 +212,7 @@
           { label: "Branch", key: "branch", className: "name" },
           { label: "District", key: "district", className: "sub" },
           { label: "Event", render: function (e) { return badge(e.type, App.data.EVENT_COLORS[e.type]); } },
-          { label: "Zone", className: "sub", render: function (e) { return e.zone || "--"; } },
+          { label: "Zone", className: "sub", render: function (e) { return reportZone(e) || "--"; } },
         ], eventRows.slice(0, ROW_LIMIT));
 
     var totalCount = isBranchwise ? branchRows.length : eventRows.length;

@@ -9,6 +9,7 @@
   var DEFAULTS = {
     accent: "#002172",
     density: "comfortable",
+    badgeStyle: "signal",
     fontScale: 100,
     liveView: "command",
     sidebarCollapsed: false,
@@ -21,6 +22,7 @@
   /* Keys limited to a fixed set of values; anything else found in storage
      (hand-edited, or left by an older build) falls back to the default. */
   var CHOICES = {
+    badgeStyle: ["signal", "tag", "dot"],
     refreshMs: [30 * 1000, 60 * 1000, 2 * 60 * 1000, 5 * 60 * 1000, 10 * 60 * 1000, 15 * 60 * 1000],
     idleTimeoutMin: [5, 10, 15, 30],
   };
@@ -68,6 +70,7 @@
     root.style.setProperty("--navy", values.accent);
     root.style.setProperty("--ui-scale", String(values.fontScale / 100));
     root.classList.toggle("pref-compact", values.density === "compact");
+    root.setAttribute("data-badge-style", values.badgeStyle);
     root.classList.toggle("pref-reduce-motion", values.reduceMotion);
     root.classList.toggle("pref-sidebar-collapsed", values.sidebarCollapsed);
   }

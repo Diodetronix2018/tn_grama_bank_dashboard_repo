@@ -131,11 +131,11 @@
   }
 
   function buildEvents(r, panelStatus, connectivity) {
-    var needsAttention = panelStatus === "Alarm Active" || panelStatus === "Fault";
+    var hasIncident = panelStatus === "Alarm Active" || panelStatus === "Fault";
     var events = [];
     if (connectivity === "Offline") {
       events.push({ type: "Communication Lost", time: dayStamp(r, 10, 9, 2) });
-      if (needsAttention) {
+      if (hasIncident) {
         events.push({
           type: panelStatus === "Alarm Active" ? "Alarm" : "Fault",
           zone: "Zone " + (1 + Math.floor(r() * 8)) + " - " + u.pick(r, SAMPLE_ZONES),
@@ -151,11 +151,20 @@
     return events;
   }
 
+  /* One rule for a branch's headline status (Branch-wise Report, network
+     normal / abnormal counts): the most serious of alarm, fault and offline,
+     else Normal. Mirrors headline_status in the backend's app/models.py. */
+  function branchHeadline(panelStatus, connectivity) {
+    if (panelStatus === "Alarm Active") return "Alarm";
+    if (panelStatus === "Fault") return "Fault";
+    if (connectivity === "Offline") return "Offline";
+    return "Normal";
+  }
+
   function buildBranch(district, i, category) {
     var r = u.seededRnd(district + "#" + i);
     var panelStatus = category.panelStatus;
     var connectivity = category.connectivity;
-    var needsAttention = panelStatus === "Alarm Active" || panelStatus === "Fault";
     var managerName = u.pick(r, FIRST_NAMES) + " " + u.pick(r, LAST_NAMES);
     var events = buildEvents(r, panelStatus, connectivity);
     var emailUser = managerName.replace(/[^a-zA-Z]/g, "").toLowerCase() || "manager";
@@ -167,7 +176,7 @@
       district: district,
       panelStatus: panelStatus,
       connectivity: connectivity,
-      status: needsAttention || connectivity === "Offline" ? "Attention" : "Normal",
+      status: branchHeadline(panelStatus, connectivity),
       manager: {
         name: managerName,
         id: "BM-" + (1000 + Math.floor(r() * 8999)),
@@ -207,8 +216,12 @@
      function in this module and in src/data/derived.js reads branches
      through allBranches(), so pointing that one function at fetched data is
      enough to make the whole dashboard live -- nothing else changes. */
+  /* The headline status is re-derived here, so a feed that still sends the
+     old "Attention" value (or none) shows the same labels as sample data. */
   function setBranches(list) {
-    _externalCache = list;
+    _externalCache = list.map(function (b) {
+      return Object.assign({}, b, { status: branchHeadline(b.panelStatus, b.connectivity) });
+    });
     _cache = null;
     _stats = null;
     if (App.data.invalidateDerived) App.data.invalidateDerived();
@@ -242,9 +255,7 @@
       });
       donor.panelStatus = displaced.panelStatus;
       donor.connectivity = displaced.connectivity;
-      donor.status =
-        donor.panelStatus === "Alarm Active" || donor.panelStatus === "Fault" ||
-        donor.connectivity === "Offline" ? "Attention" : "Normal";
+      donor.status = branchHeadline(donor.panelStatus, donor.connectivity);
       donor.events = buildEvents(
         u.seededRnd(donor.id + "-recategorised"),
         donor.panelStatus,
@@ -289,14 +300,14 @@
   function districtStatus(stats) {
     if (stats.alarm > 0) return "Alarm";
     if (stats.fault > 0) return "Fault";
-    if (stats.offline > 0) return "Attention";
+    if (stats.offline > 0) return "Offline";
     return "Normal";
   }
 
   var STATUS_COLORS = {
     Alarm: u.COLORS.red,
     Fault: u.COLORS.amber,
-    Attention: u.COLORS.slate,
+    Offline: u.COLORS.red,
     Normal: u.COLORS.green,
   };
 
@@ -314,8 +325,7 @@
       else if (b.panelStatus === "Fault") s.fault++;
       /* One count per branch: an alarm or fault panel is usually offline
          too, so summing offline + alarm + fault would count it twice. */
-      if (b.connectivity === "Offline" || b.panelStatus === "Alarm Active" ||
-          b.panelStatus === "Fault") s.abnormal++;
+      if (b.status !== "Normal") s.abnormal++;
     });
     s.totalBranches = all.length;
     s.totalDistricts = REGIONS.length;

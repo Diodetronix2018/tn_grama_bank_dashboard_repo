@@ -182,8 +182,7 @@
             h("span.zone-num", "ZONE " + z.num)),
           h("div.zone-card-name", z.name),
           h("div", { style: "margin-top:10px;" },
-            h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
-              z.dominantLabel)),
+            badge(z.dominantLabel, z.dominant, "lg")),
           h("div.flex.gap-6.flex-wrap", { style: "margin-top:10px;" },
             badge(z.status, z.statusColor, "sm"),
             badge(z.fault, z.faultColor, "sm"),
@@ -203,7 +202,7 @@
         h("span.zone-num", "TAMPER")),
       h("div.zone-card-name", t.name),
       h("div", { style: "margin-top:10px;" },
-        h("span.badge", { style: u.badgeStyle(t.color) + "font-size:12px;padding:4px 12px;" }, t.label)),
+        badge(t.label, t.color, "lg")),
       h("div.flex.gap-6.flex-wrap", { style: "margin-top:10px;" }, badge(t.detail, t.color, "sm")),
       h("div.zone-card-foot", "Last trigger: ", App.dom.val(t.lastTrigger))
     );
@@ -272,8 +271,7 @@
           }),
           h("div.zone-card-name", z.name),
           h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
-            h("span.badge", { style: u.badgeStyle(z.dominant) + "font-size:12px;padding:4px 12px;" },
-              z.dominantLabel)),
+            badge(z.dominantLabel, z.dominant, "lg")),
           h("div.zone-card-foot", "Last trigger: ", App.dom.val(z.lastTrigger))
         );
       }).concat(showcaseTamperCard(panelTamper(zones))))
@@ -296,7 +294,7 @@
       }),
       h("div.zone-card-name", t.name),
       h("div", { style: "margin-top:8px;position:relative;z-index:1;" },
-        h("span.badge", { style: u.badgeStyle(t.color) + "font-size:12px;padding:4px 12px;" }, t.label)),
+        badge(t.label, t.color, "lg")),
       h("div.zone-card-foot", t.detail, " · ", App.dom.val(t.lastTrigger))
     );
   }

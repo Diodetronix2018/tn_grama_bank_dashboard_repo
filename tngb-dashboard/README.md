@@ -129,7 +129,8 @@ only on the shape it exports:
 ```
 
 `panelStatus` is one of `Armed`, `Disarmed`, `Alarm Active`, `Fault`, `Offline`;
-`connectivity` is `Online` or `Offline`; `time` is `YYYY-MM-DD HH:MM`, which
+`connectivity` is `Online` or `Offline`; `status` is `Normal`, `Alarm`,
+`Fault` or `Offline` (re-derived from the other two on load); `time` is `YYYY-MM-DD HH:MM`, which
 sorts lexicographically and is what the range filters in Reports rely on.
 
 Keep the exported helpers (`allBranches`, `branchById`, `branchesIn`,

@@ -10,10 +10,10 @@
 
   var ROW_LIMIT = 400;
 
-  /* This screen reads a branch as Normal or Fault. Fault is the roster's
-     "Attention" status: an alarm, a panel fault, or a panel gone offline. */
+  /* This screen reads a branch as Normal or Fault. Fault covers any headline
+     status other than Normal: an alarm, a panel fault, or a panel gone offline. */
   function branchStatus(b) {
-    return b.status === "Attention" ? "Fault" : "Normal";
+    return b.status !== "Normal" ? "Fault" : "Normal";
   }
 
   function render(ctx) {

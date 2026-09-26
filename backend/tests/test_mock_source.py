@@ -12,7 +12,7 @@ def test_shape_matches_dashboard_contract():
     assert branch.district
     assert branch.panelStatus in ("Armed", "Disarmed", "Alarm Active", "Fault", "Offline")
     assert branch.connectivity in ("Online", "Offline")
-    assert branch.status in ("Normal", "Attention")
+    assert branch.status in ("Normal", "Alarm", "Fault", "Offline")
     assert branch.manager.name
     assert branch.manager.email
     assert isinstance(branch.events, list)
@@ -26,8 +26,15 @@ def test_deterministic_across_calls():
 
 def test_status_reflects_panel_and_connectivity():
     for branch in MockDataSource().list_branches():
-        needs_attention = branch.panelStatus in ("Alarm Active", "Fault") or branch.connectivity == "Offline"
-        assert branch.status == ("Attention" if needs_attention else "Normal")
+        if branch.panelStatus == "Alarm Active":
+            expected = "Alarm"
+        elif branch.panelStatus == "Fault":
+            expected = "Fault"
+        elif branch.connectivity == "Offline":
+            expected = "Offline"
+        else:
+            expected = "Normal"
+        assert branch.status == expected
 
 
 def test_covers_every_district():

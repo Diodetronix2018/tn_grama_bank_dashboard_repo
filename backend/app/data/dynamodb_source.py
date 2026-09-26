@@ -26,7 +26,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from app.data.base import DataSource
-from app.models import Branch, BranchEvent, Connectivity, Manager, PanelStatus
+from app.models import Branch, BranchEvent, Connectivity, Manager, PanelStatus, headline_status
 
 logger = logging.getLogger("app.data.dynamodb")
 
@@ -194,7 +194,6 @@ def _build_branch(thing_name: str, rows: list[dict], now: datetime) -> Branch:
     latest_ts_ms = int(rows_sorted[-1]["timestamp"])
     connectivity = _derive_connectivity(latest_ts_ms, now)
     panel_status = _derive_panel_status(state, connectivity)
-    needs_attention = panel_status in ("Alarm Active", "Fault") or connectivity == "Offline"
 
     branch = state.get("branch")
     district = state.get("district")
@@ -212,7 +211,7 @@ def _build_branch(thing_name: str, rows: list[dict], now: datetime) -> Branch:
         district=district or "Unassigned",
         panelStatus=panel_status,
         connectivity=connectivity,
-        status="Attention" if needs_attention else "Normal",
+        status=headline_status(panel_status, connectivity),
         manager=Manager(
             name=manager_name or "Unassigned",
             id=brcode or "UNASSIGNED",

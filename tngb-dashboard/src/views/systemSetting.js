@@ -183,7 +183,7 @@
   /* ---- Appearance ------------------------------------------------------- */
 
   /* What "Reset to defaults" on this tab covers -- not General's settings. */
-  var APPEARANCE_KEYS = ["accent", "density", "fontScale", "liveView", "sidebarCollapsed", "reduceMotion"];
+  var APPEARANCE_KEYS = ["accent", "density", "badgeStyle", "fontScale", "liveView", "sidebarCollapsed", "reduceMotion"];
 
   function appearancePanel(ctx) {
     var scale = App.prefs.get("fontScale");
@@ -223,6 +223,18 @@
         row("Density", "Row height in tables",
           segmented([{ key: "comfortable", label: "Comfortable" }, { key: "compact", label: "Compact" }],
             App.prefs.get("density"), function (k) { setPref(ctx, "density", k); })),
+        row("Status badges", "How statuses such as Armed or Alarm Active look in every table and list",
+          h("div.ss-badge-pick",
+            segmented([
+              { key: "signal", label: "Signal" },
+              { key: "tag", label: "Tag" },
+              { key: "dot", label: "Dot" },
+            ], App.prefs.get("badgeStyle"), function (k) { setPref(ctx, "badgeStyle", k); }),
+            h("div.ss-badge-samples",
+              App.dom.badge("Alarm Active", App.utils.COLORS.red),
+              App.dom.badge("Fault", App.utils.COLORS.amber),
+              App.dom.badge("Armed", App.utils.COLORS.navy),
+              App.dom.badge("Normal", App.utils.COLORS.green)))),
         row("Text size", "Scales the main content area",
           h("div.ss-range",
             h("input", {
@@ -296,7 +308,7 @@
     return h("div.card.ss-contact",
       h("div.ss-contact-head",
         h("div.card-title", c.title),
-        App.dom.badge(c.hours, App.utils.COLORS.green)),
+        App.dom.badge(c.hours, App.utils.COLORS.green, "no-dot")),
       h("div.card-sub", c.desc),
       h("a.ss-kv", { href: "tel:" + c.phone.replace(/\s+/g, "") },
         h("span", "Phone"), h("span", c.phone)),

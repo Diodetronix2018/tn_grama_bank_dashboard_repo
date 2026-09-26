@@ -1,5 +1,5 @@
 /* Location Maps: every district plotted by its centroid, sized by branch
-   count and coloured by whether it needs attention. */
+   count and coloured by whether it has an open incident. */
 (function (App) {
   "use strict";
 
@@ -185,7 +185,7 @@
     var stats = App.data.networkStats();
     var points = districtPoints();
     var normalPct = Math.round((stats.normal / (stats.totalBranches || 1)) * 100);
-    var attention = points.filter(function (p) { return p.highlight; })
+    var incidents = points.filter(function (p) { return p.highlight; })
       .sort(function (a, b) {
         return (b.stats.alarm * 10 + b.stats.fault) - (a.stats.alarm * 10 + a.stats.fault);
       });
@@ -218,8 +218,8 @@
       "div.card",
       { style: "padding:16px;min-height:0;" },
       h("div.card-title", { style: "font-size:13px;margin-bottom:10px;" },
-        "Open Incidents by District ", h("span.muted-count", "(" + attention.length + ")")),
-      h("div.list-scroll", { style: "max-height:280px;" }, attention.map(function (p) {
+        "Open Incidents by District ", h("span.muted-count", "(" + incidents.length + ")")),
+      h("div.list-scroll", { style: "max-height:280px;" }, incidents.map(function (p) {
         return h(
           "button.row-item",
           {
@@ -234,7 +234,7 @@
             h("div.row-item-sub",
               App.dom.val(p.stats.alarm), " alarm · ", App.dom.val(p.stats.fault), " fault · ",
               App.dom.val(p.stats.offline), " offline")),
-          App.dom.badge(String(p.stats.total), COLORS.navy)
+          App.dom.badge(String(p.stats.total), COLORS.navy, "no-dot")
         );
       }))
     );

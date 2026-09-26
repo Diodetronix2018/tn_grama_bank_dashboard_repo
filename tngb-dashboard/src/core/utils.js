@@ -46,7 +46,8 @@
 
   function badgeStyle(color) {
     return (
-      "background:" + color + "14;color:" + color + ";border-color:" + color + "33;"
+      "--c:" + color + ";background:" + color + "12;color:" + color +
+      ";border-color:" + color + "3d;"
     );
   }
 

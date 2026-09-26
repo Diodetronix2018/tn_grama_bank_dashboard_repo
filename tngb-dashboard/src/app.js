@@ -143,12 +143,15 @@
 
   function overallPill(stats) {
     if (stats.alarm > 0) {
-      return { label: "ALERT — ALARM ACTIVE", bg: "#fdeeee", color: COLORS.red, border: "#f3c9c9" };
+      return { label: "ALERT — ALARM ACTIVE", icon: App.ICONS.bell, bg: "#fdeeee", color: COLORS.red, border: "#f3c9c9" };
     }
     if (stats.fault > 0) {
-      return { label: "WARNING — FAULT PRESENT", bg: "#fdf3e4", color: COLORS.amber, border: "#f0dcb3" };
+      return { label: "WARNING — FAULT PRESENT", icon: App.ICONS.fault, bg: "#fdf3e4", color: COLORS.amber, border: "#f0dcb3" };
     }
-    return { label: "SECURE — ALL NORMAL", bg: "#e9f6ee", color: COLORS.green, border: "#bfe3cc" };
+    if (stats.offline > 0) {
+      return { label: "WARNING — PANELS OFFLINE", icon: App.ICONS.offline, bg: "#fdeeee", color: COLORS.red, border: "#f3c9c9" };
+    }
+    return { label: "SECURE — ALL NORMAL", icon: App.ICONS.shield, bg: "#e9f6ee", color: COLORS.green, border: "#bfe3cc" };
   }
 
   function buildTopbar() {
@@ -213,7 +216,9 @@
     refs.title.textContent = view.title;
     refs.subtitle.textContent = view.subtitle;
     refs.clock.textContent = App.prefs.fmtClock(state.now);
-    refs.pill.textContent = pill.label;
+    App.dom.clear(refs.pill);
+    refs.pill.appendChild(h("span.overall-pill-ic", { html: pill.icon, "aria-hidden": "true" }));
+    refs.pill.appendChild(document.createTextNode(pill.label));
     refs.pill.setAttribute(
       "style",
       "background:" + pill.bg + ";color:" + pill.color + ";border-color:" + pill.border + ";"

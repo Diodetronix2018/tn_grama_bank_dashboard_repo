@@ -10,7 +10,7 @@ own generator.
 import random
 
 from app.data.base import DataSource
-from app.models import Branch, BranchEvent, Manager
+from app.models import Branch, BranchEvent, Manager, headline_status
 
 DISTRICTS = [
     "Ariyalur", "Chengalpattu", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul",
@@ -89,7 +89,6 @@ class MockDataSource(DataSource):
                 branch_rng = random.Random(f"{district}#{i}#{self._seed}")
                 manager_name = f"{branch_rng.choice(FIRST_NAMES)} {branch_rng.choice(LAST_NAMES)}"
                 email_user = "".join(c for c in manager_name if c.isalpha()).lower() or "manager"
-                needs_attention = panel_status in ("Alarm Active", "Fault")
 
                 branches.append(
                     Branch(
@@ -99,7 +98,7 @@ class MockDataSource(DataSource):
                         district=district,
                         panelStatus=panel_status,
                         connectivity=connectivity,
-                        status="Attention" if (needs_attention or connectivity == "Offline") else "Normal",
+                        status=headline_status(panel_status, connectivity),
                         manager=Manager(
                             name=manager_name,
                             id=f"BM-{1000 + branch_rng.randint(0, 8999)}",

@@ -170,7 +170,8 @@
           stat("Active", hero.active),
           stat("Alarm", hero.alarm, "#fca5a5"),
           stat("Fault", hero.fault, "#fcd34d"),
-          stat("Tamper", hero.tamper, "#fdba74"))
+          /* Lime, not orange: tamper is olive everywhere else. */
+          stat("Tamper", hero.tamper, "#bef264"))
       ),
       h("div.grid.grid-3", zones.map(function (z) {
         return h(
@@ -250,9 +251,9 @@
             h("div.donut-pct", hero.healthPct + "%"),
             h("div.donut-cap", "NORMAL"))),
           h("div.showcase-legend",
-            legend("#f87171", hero.alarm, "Alarm"),
-            legend("#fbbf24", hero.fault, "Fault"),
-            legend("#fb923c", hero.tamper, "Tamper"))
+            legend(u.onDark(COLORS.red), hero.alarm, "Alarm"),
+            legend(u.onDark(COLORS.amber), hero.fault, "Fault"),
+            legend(u.onDark(COLORS.olive), hero.tamper, "Tamper"))
         )
       ),
       h("div.grid.grid-3", { style: "gap:18px;" }, zones.map(function (z) {

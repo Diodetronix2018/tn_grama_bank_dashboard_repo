@@ -82,7 +82,8 @@ body {
 }
 
 a { color: var(--navy); }
-a:hover { color: #00154f; }
+/* Darkened from the live accent so hovers follow System Setting > Accent. */
+a:hover { color: color-mix(in srgb, var(--navy) 75%, #000); }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #cbd4e0; border-radius: 4px; }
@@ -430,7 +431,7 @@ a:hover { color: #00154f; }
   cursor: pointer;
 }
 
-.btn-primary:hover { background: #00154f; }
+.btn-primary:hover { background: color-mix(in srgb, var(--navy) 75%, #000); }
 
 /* Segmented control used for every view-mode switch. */
 .segmented { display: flex; background: var(--line-faint); border-radius: 10px; padding: 3px; gap: 2px; }
@@ -1541,10 +1542,35 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   .grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .spotlight-grid { grid-template-columns: 1fr; }
   .spotlight-left { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+  /* Half a laptop screen is too narrow for three donuts side by side, so
+     Overall System Status takes the full width with the regions below. */
+  .grid.split.status-split { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+@media (max-width: 600px) {
+  .pies { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 900px) {
-  .sidebar { display: none; }
+  /* The sidebar becomes a scrollable strip above the page rather than
+     disappearing, so every screen stays reachable on a phone. */
+  .shell { flex-direction: column; }
+  .sidebar {
+    width: auto;
+    flex: 0 0 auto;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .brand { padding: 0 8px 0 0; margin: 0; border-bottom: 0; }
+  .brand-mark { width: 40px; height: 40px; flex-basis: 40px; }
+  .brand > div, .nav-heading, .nav-dot, .sidebar-note { display: none; }
+  .nav-item { width: auto; flex: 0 0 auto; white-space: nowrap; }
   .content { padding: 20px 16px 48px; }
   .topbar { padding: 16px; flex-wrap: wrap; }
   .topbar-right { flex-wrap: wrap; gap: 10px; }

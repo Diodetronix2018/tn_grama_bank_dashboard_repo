@@ -28,7 +28,7 @@
 
   /* Three severity tiers. A flat normal/abnormal split would paint almost
      every district amber, because 50 alarms and 20 faults spread thinly
-     across 38 districts - the tiers keep the map worth reading. */
+     across 37 districts - the tiers keep the map worth reading. */
   var TIERS = [
     { key: "critical", label: "2 or more alarms", color: COLORS.red, test: function (s) { return s.alarm >= 2; } },
     { key: "watch", label: "1 alarm or any fault", color: COLORS.amber, test: function (s) { return s.alarm > 0 || s.fault > 0; } },

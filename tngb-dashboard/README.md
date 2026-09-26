@@ -1,6 +1,6 @@
 # TN Grama Bank — Security Operations Dashboard
 
-A branch-security operations console for a 680-branch, 38-district bank network:
+A branch-security operations console for a 680-branch, 37-district bank network:
 panel arm state, intrusion and tamper conditions, 8-zone panel detail, power
 health, a live event feed, event history, a geographic view, a manager
 directory, ten exportable reports, and system configuration.
@@ -45,7 +45,7 @@ values and numbers in bold, everything else regular.
 python build/bundle.py
 ```
 
-writes `dist/tngb-dashboard-standalone.html`, a single ~210 KB file with the
+writes `dist/tngb-dashboard-standalone.html`, a single ~330 KB file with the
 stylesheet and all twenty-one scripts inlined. The recipient double-clicks it and
 the whole dashboard runs. Send that when you just need someone to see the thing
 working.

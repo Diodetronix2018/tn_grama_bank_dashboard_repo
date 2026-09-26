@@ -15,7 +15,7 @@
     "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur",
     "Pudukottai", "Ramanathapuram", "Ranipettai", "Salem", "Sivagangai", "Tenkasi",
     "Thanjavur", "Theni", "Thiruvallur", "Thiruvarur", "Thoothukudi", "Tiruchirappalli",
-    "Tirunelveli", "Tirupathur", "Tirupattur", "Tiruppur", "Tiruvannamalai", "Vellore",
+    "Tirunelveli", "Tirupattur", "Tiruppur", "Tiruvannamalai", "Vellore",
     "Villupuram", "Virudhunagar",
   ];
 
@@ -31,7 +31,7 @@
     Salem: [11.66, 78.15], Sivagangai: [9.85, 78.48], Tenkasi: [8.96, 77.31],
     Thanjavur: [10.79, 79.14], Theni: [10.01, 77.48], Thiruvallur: [13.14, 79.91],
     Thiruvarur: [10.77, 79.64], Thoothukudi: [8.76, 78.13], Tiruchirappalli: [10.79, 78.70],
-    Tirunelveli: [8.71, 77.76], Tirupathur: [9.85, 78.60], Tirupattur: [12.50, 78.57],
+    Tirunelveli: [8.71, 77.76], Tirupattur: [12.50, 78.57],
     Tiruppur: [11.10, 77.34], Tiruvannamalai: [12.23, 79.07], Vellore: [12.92, 79.13],
     Villupuram: [11.94, 79.49], Virudhunagar: [9.57, 77.96],
   };

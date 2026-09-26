@@ -76,6 +76,9 @@
      bumps the freshness timestamp and clears any earlier error; failure
      leaves the last-good data on screen and just flags it as delayed. */
   function reportRefresh(ok, message) {
+    /* A poll already in flight when the operator signed out still settles;
+       there is no dashboard left to update. */
+    if (!dashboardShown) return;
     if (ok) {
       state.lastUpdated = new Date();
       state.refreshError = null;
@@ -157,7 +160,9 @@
     refs.idleNote = h("span.idle-note", { role: "status" });
     refs.userChip = h("span", state.userEmail || "");
 
-    var signOut = h(
+    /* Named apart from signOut() -- a local `signOut` here would shadow the
+       function and leave the button's onclick undefined. */
+    refs.userBox = h(
       "div.user-chip",
       refs.userChip,
       h("button.sign-out-btn", { type: "button", onclick: signOut }, "Sign out")
@@ -171,7 +176,7 @@
         refs.freshness,
         h("div.clock", h("span.clock-dot"), refs.clock),
         refs.pill,
-        signOut)
+        refs.userBox)
     );
   }
 
@@ -222,7 +227,10 @@
       refs.freshness.appendChild(App.dom.val(App.prefs.fmtClock(state.lastUpdated)));
     }
 
-    if (refs.userChip) refs.userChip.textContent = state.userEmail || "";
+    /* Sample-data copies (preview, file://, selftest) have no session, so
+       there is nothing to sign out of. */
+    refs.userChip.textContent = state.userEmail || "";
+    refs.userBox.classList.toggle("hidden", !(App.auth && state.userEmail));
 
     Object.keys(refs.navButtons).forEach(function (key) {
       var isActive = key === state.active;
@@ -239,9 +247,14 @@
 
   var chromeInitialized = false;
 
+  /* True while the dashboard shell is on screen; the boot and sign-in
+     screens clear it. */
+  var dashboardShown = false;
+
   function boot() {
     var root = document.getElementById("app");
     App.dom.clear(root);
+    dashboardShown = true;
     refs.content = h("main.content");
 
     var main = h("div.main", buildTopbar(), refs.content);
@@ -290,6 +303,7 @@
   function renderBootState(title, detail, isError, onRetry) {
     var root = document.getElementById("app");
     App.dom.clear(root);
+    dashboardShown = false;
     var card = h(
       "div.boot-card",
       isError ? null : h("div.boot-spinner"),
@@ -341,6 +355,7 @@
 
     var root = document.getElementById("app");
     App.dom.clear(root);
+    dashboardShown = false;
 
     var usernameInput = h("input.text-input", {
       type: "text", id: "login-username", placeholder: "Email", autocomplete: "username",
@@ -620,6 +635,7 @@
      (reportRefresh's low-key "feed delayed" indicator): this needs the
      operator to sign in again, not just a retry. */
   function onSessionExpired() {
+    if (!dashboardShown) return;
     state.userEmail = null;
     renderLoginScreen("Your session expired — sign in again.");
   }
@@ -632,8 +648,9 @@
      before -- unauthenticated dashboard views are never part of that path. */
   function start() {
     /* Opened straight from disk (index.html or the emailed standalone build)
-       there is no API to sign in against, so run on the bundled sample data. */
-    if (!App.data.load || !App.auth || window.location.protocol === "file:") {
+       liveSource.js and authSource.js don't register, so this runs on the
+       bundled sample data. */
+    if (!App.data.load || !App.auth) {
       boot();
       return;
     }

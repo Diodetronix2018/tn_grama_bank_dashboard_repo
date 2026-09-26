@@ -69,14 +69,18 @@
     );
   }
 
-  /* Every branch by panel state in one bar, so alarm and fault panels that
-     the armed / disarmed donut leaves out are still accounted for. */
+  /* Every branch by panel state in one bar, so alarm, fault and offline
+     panels that the armed / disarmed donut leaves out are still accounted
+     for and the segments add up to the branch total. Offline takes slate
+     rather than its badge red so it can't be mistaken for Alarm Active. */
   function stateBar(stats) {
+    var offline = stats.totalBranches - stats.armed - stats.disarmed - stats.alarm - stats.fault;
     var segs = [
       { label: "Armed", count: stats.armed, color: COLORS.navy },
       { label: "Disarmed", count: stats.disarmed, color: COLORS.grey },
       { label: "Alarm Active", count: stats.alarm, color: COLORS.red },
       { label: "Fault", count: stats.fault, color: COLORS.amber },
+      { label: "Offline", count: offline, color: COLORS.slate },
     ];
     var total = stats.totalBranches || 1;
     return h(
@@ -224,7 +228,7 @@
         h(
           "div.spotlight-left",
           h("div.section-label", "Recent Panel Events"),
-          h("div.flex-col", { style: "gap:9px;" }, branch.events.map(function (e) {
+          h("div.flex-col", { style: "gap:9px;" }, (branch.events || []).map(function (e) {
             var color = App.data.EVENT_COLORS[e.type] || COLORS.grey;
             return h(
               "div.event-line",
@@ -254,7 +258,7 @@
 
     var kpiDefs = [
       { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
-      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.yellow, iconHtml: App.ICONS.map, go: "locationMaps" },
+      { key: "totalRegions", label: "Total Regions", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.yellow, iconHtml: App.ICONS.map, go: "locationMaps" },
       { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
       { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.offline },
       { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.arm },
@@ -319,7 +323,7 @@
       W.kpiRow(kpis, 4),
       panel ? h("div.mt-md", panel) : null,
       /* Not align-start: the region list stretches to the status card's height. */
-      h("div.grid.split.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
+      h("div.grid.split.status-split.mt-lg", { style: "grid-template-columns:1.1fr 1fr;" },
         statusCard(stats), regionCard(ctx)),
       branchArea
     );

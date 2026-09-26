@@ -35,7 +35,7 @@
 
     var summary = W.summaryCards([
       { label: "Total Branches", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.branches },
-      { label: "Region Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
+      { label: "Regions Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       {
         label: "Online / Offline", color: COLORS.green,
         pair: [

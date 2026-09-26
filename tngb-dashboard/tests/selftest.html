@@ -110,6 +110,12 @@ setTimeout(function () {
     var kpis = content().querySelectorAll(".kpi");
     ok("overview has 8 KPIs", kpis.length === 8, kpis.length + "");
     ok("total branches = 680", text().indexOf("680") !== -1);
+    var mixTotal = Array.prototype.reduce.call(
+      content().querySelectorAll(".state-legend-item .val"),
+      function (s, v) { return s + Number(v.textContent); }, 0);
+    ok("panel state mix accounts for every branch", mixTotal === 680, mixTotal + "");
+    ok("sign-out hidden without a session",
+      document.querySelector(".user-chip").classList.contains("hidden"));
 
     kpis[2].click(); // Online Panels
     var panelTitle = findByText(".card-title", "Online Panels");
@@ -131,7 +137,7 @@ setTimeout(function () {
     }
     function regionItems() { return regionCard().querySelectorAll(".row-item"); }
     var regionRows = regionItems();
-    ok("region list has 38 districts", regionRows.length === 38, regionRows.length + "");
+    ok("region list has 37 districts", regionRows.length === 37, regionRows.length + "");
     regionRows[2].click();
     ok("spotlight follows region", text().indexOf("Branch Manager Details") !== -1);
 
@@ -145,7 +151,7 @@ setTimeout(function () {
       document.activeElement ? document.activeElement.id : "none");
     search.value = "";
     search.dispatchEvent(new Event("input", { bubbles: true }));
-    ok("clearing search restores list", regionItems().length === 38, regionItems().length + "");
+    ok("clearing search restores list", regionItems().length === 37, regionItems().length + "");
 
     // --- intrusion ----------------------------------------------------------
     navBtn("Intrusion Status").click();
@@ -243,7 +249,7 @@ setTimeout(function () {
     // --- maps ----------------------------------------------------------------
     navBtn("Location Maps").click();
     var pins = content().querySelectorAll(".map-pin").length;
-    ok("map draws a pin per district", pins === 38, pins + "");
+    ok("map draws a pin per district", pins === 37, pins + "");
     ok("watchlist present", text().indexOf("Open Incidents by District") !== -1);
 
     // --- settings ------------------------------------------------------------
@@ -314,7 +320,7 @@ setTimeout(function () {
     ok("ticket confirmation is honest", text().indexOf("press Send") !== -1);
 
     ssTab("About");
-    ok("about shows branch count", text().indexOf("680 across 38 districts") !== -1);
+    ok("about shows branch count", text().indexOf("680 across 37 districts") !== -1);
     App.prefs.reset();
   } catch (err) {
     out.push("EXCEPTION " + err.message + "\n" + err.stack);

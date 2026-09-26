@@ -5,6 +5,10 @@
 (function (App) {
   "use strict";
 
+  /* No sign-in from disk: the file:// copy runs on sample data with no
+     session (see liveSource.js). */
+  if (window.location.protocol === "file:") return;
+
   function apiBaseUrl() {
     // Not "||" -- App.data.apiBaseUrl is deliberately "" for a same-origin
     // deployment (see liveSource.js), and "" is falsy in JS, so "||" would

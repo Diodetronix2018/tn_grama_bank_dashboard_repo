@@ -168,7 +168,7 @@
             iconHtml: App.ICONS.branches,
           },
           {
-            label: "Region Involved",
+            label: "Regions Involved",
             value: new Set(eventRows.map(function (e) { return e.district; })).size,
             color: COLORS.yellow,
             iconHtml: App.ICONS.map,

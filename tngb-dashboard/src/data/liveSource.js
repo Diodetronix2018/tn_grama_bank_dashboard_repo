@@ -19,6 +19,12 @@
 (function (App) {
   "use strict";
 
+  /* Opened straight from disk (index.html or the emailed standalone build)
+     there is no API to reach, so stay unregistered and let the dashboard
+     run on master.js's sample data -- otherwise it would poll a backend
+     that can't exist and report a feed that never connects. */
+  if (window.location.protocol === "file:") return;
+
   /* Port 8000 is this repo's documented local-dev static-file-server port
      (see README): frontend and backend run as two separate processes there,
      so the API needs an absolute URL. Anywhere else (a single combined
@@ -50,6 +56,11 @@
     });
   }
 
+  /* YYYY-MM-DD in local time, the same form as the feed's timestamps. */
+  function localDate(d) {
+    return d.getFullYear() + "-" + App.utils.pad2(d.getMonth() + 1) + "-" + App.utils.pad2(d.getDate());
+  }
+
   function load() {
     return fetch(CONFIG.apiBaseUrl + "/api/branches", {
       credentials: "include",
@@ -70,6 +81,11 @@
         if (!branches.length) {
           throw new Error("Branch data service returned zero branches");
         }
+        /* TODAY is the sample data's fixed date; on the live feed "today"
+           is the operator's own calendar day. Set before setBranches so
+           the derived caches it clears are rebuilt against the new date,
+           and refreshed on every poll so it rolls over at midnight. */
+        App.data.TODAY = localDate(new Date());
         App.data.setBranches(branches);
         applyRegionCounts(branches);
         return branches;

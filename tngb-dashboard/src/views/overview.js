@@ -254,7 +254,7 @@
 
     var kpiDefs = [
       { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
-      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.navy, iconHtml: App.ICONS.map, go: "locationMaps" },
+      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.yellow, iconHtml: App.ICONS.map, go: "locationMaps" },
       { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
       { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.offline },
       { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.arm },

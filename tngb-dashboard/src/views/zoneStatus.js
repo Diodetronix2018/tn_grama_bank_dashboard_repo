@@ -37,7 +37,7 @@
     return {
       name: "Tamper",
       label: tripped ? "Tamper" : "Normal",
-      color: tripped ? COLORS.orange : COLORS.green,
+      color: tripped ? COLORS.olive : COLORS.green,
       detail: tripped ? tripped.name : "All 8 zones secure",
       lastTrigger: tripped ? tripped.lastTrigger : "--",
     };

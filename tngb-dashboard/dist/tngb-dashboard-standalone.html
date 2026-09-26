@@ -1708,7 +1708,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     navy: "#002172",
     grey: "#64748b",
     slate: "#475569",
-    orange: "#ea580c",
+    olive: "#4d7c0f",
+    yellow: "#ca8a04",
+    teal: "#0f766e",
+    sky: "#0369a1",
+    indigo: "#4338ca",
+    pink: "#be185d",
   };
 
   /* Deterministic 32-bit PRNG. Same seed always yields the same dashboard,
@@ -1749,7 +1754,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     if (status === "Disarmed") return COLORS.grey;
     if (status === "Alarm Active") return COLORS.red;
     if (status === "Fault") return COLORS.amber;
-    if (status === "Tamper Active") return COLORS.orange;
+    if (status === "Tamper Active") return COLORS.olive;
     if (status === "Offline") return COLORS.red;
     return COLORS.slate;
   }
@@ -1762,7 +1767,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   ON_DARK[COLORS.green] = "#4ade80";
   ON_DARK[COLORS.red] = "#f87171";
   ON_DARK[COLORS.amber] = "#fbbf24";
-  ON_DARK[COLORS.orange] = "#fb923c";
+  ON_DARK[COLORS.olive] = "#a3e635";
+  ON_DARK[COLORS.yellow] = "#facc15";
+  ON_DARK[COLORS.teal] = "#2dd4bf";
+  ON_DARK[COLORS.sky] = "#38bdf8";
+  ON_DARK[COLORS.indigo] = "#a5b4fc";
+  ON_DARK[COLORS.pink] = "#f472b6";
   ON_DARK[COLORS.grey] = "#94a3b8";
   ON_DARK[COLORS.slate] = "#94a3b8";
 
@@ -2724,7 +2734,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     "AC Normal": COLORS.green,
     "Battery Fail": COLORS.red,
     "Battery Normal": COLORS.green,
-    "Tamper Activate": COLORS.orange,
+    "Tamper Activate": COLORS.olive,
     "Tamper Normal": COLORS.green,
     "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
@@ -2764,7 +2774,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       else if (armEvt) lastTrigger = armEvt.time;
 
       var dominantLabel = isTamper ? "Tamper" : isAlarm ? "Alarm" : isFault ? "Fault" : "Normal";
-      var dominant = isTamper ? COLORS.orange
+      var dominant = isTamper ? COLORS.olive
         : isAlarm ? COLORS.red
         : isFault ? COLORS.amber
         : COLORS.green;
@@ -2782,7 +2792,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         fault: isFault ? "Fault" : "OK",
         faultColor: isFault ? COLORS.amber : COLORS.green,
         tamper: isTamper ? "Tamper" : "OK",
-        tamperColor: isTamper ? COLORS.orange : COLORS.green,
+        tamperColor: isTamper ? COLORS.olive : COLORS.green,
         lastTrigger: lastTrigger,
         dominant: dominant,
         dominantLabel: dominantLabel,
@@ -2969,7 +2979,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
     { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and returns to normal", scope: "events", types: ["AC Fail", "AC Normal"], color: COLORS.red, icon: "power" },
     { key: "battery", label: "Battery Report", desc: "Battery failures and returns to normal", scope: "events", types: ["Battery Fail", "Battery Normal"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.orange, icon: "tamper" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.olive, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first
@@ -3486,7 +3496,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     var kpiDefs = [
       { key: "totalBranches", label: "Total Branches", value: stats.totalBranches, hint: "Click to view all branches", color: COLORS.navy, iconHtml: App.ICONS.branches, go: "branchMonitoring" },
-      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.navy, iconHtml: App.ICONS.map, go: "locationMaps" },
+      { key: "totalRegions", label: "Total Region", value: stats.totalDistricts, hint: "Click to view map", color: COLORS.yellow, iconHtml: App.ICONS.map, go: "locationMaps" },
       { key: "online", label: "Online Panels", value: stats.online, hint: "Click to view list", color: COLORS.green, iconHtml: App.ICONS.online },
       { key: "offline", label: "Offline Panels", value: stats.offline, hint: "Click to view list", color: COLORS.red, iconHtml: App.ICONS.offline },
       { key: "armed", label: "Armed Panels", value: stats.armed, hint: "Click to view list", color: COLORS.navy, iconHtml: App.ICONS.arm },
@@ -3605,7 +3615,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     var summary = W.summaryCards([
       { label: "Total Branches", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.branches },
-      { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
+      { label: "Region Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       {
         label: "Online / Offline", color: COLORS.green,
         pair: [
@@ -3833,7 +3843,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       { key: "disarmed", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
       { key: "alarm", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
       { key: "fault", label: "Fault Active", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
-      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.tamper },
+      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.olive, iconHtml: App.ICONS.tamper },
     ];
 
     var cards = cardDefs.map(function (d) {
@@ -3929,7 +3939,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     return {
       name: "Tamper",
       label: tripped ? "Tamper" : "Normal",
-      color: tripped ? COLORS.orange : COLORS.green,
+      color: tripped ? COLORS.olive : COLORS.green,
       detail: tripped ? tripped.name : "All 8 zones secure",
       lastTrigger: tripped ? tripped.lastTrigger : "--",
     };
@@ -4599,11 +4609,11 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     })[0];
 
     var summary = W.summaryCards([
-      { label: "Total Events Logged", value: all.length, color: COLORS.navy, iconHtml: App.ICONS.history },
+      { label: "Total Events Logged", value: all.length, color: COLORS.indigo, iconHtml: App.ICONS.history },
       {
         label: "Events Today",
         value: all.filter(function (e) { return e.time.indexOf(App.data.TODAY) === 0; }).length,
-        color: COLORS.navy,
+        color: COLORS.pink,
         iconHtml: App.ICONS.activities,
       },
       { label: "Most Frequent Event", value: busiest, color: App.data.EVENT_COLORS[busiest], iconHtml: App.EVENT_ICONS[busiest] },
@@ -4967,8 +4977,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var attention = App.data.allBranches().filter(function (b) { return b.status === "Attention"; }).length;
 
     var summary = W.summaryCards([
-      { label: "Total Managers", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.managers },
-      { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
+      { label: "Total Managers", value: stats.totalBranches, color: COLORS.sky, iconHtml: App.ICONS.managers },
+      { label: "Region Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       { label: "Branches Needing Attention", value: attention, color: COLORS.amber, iconHtml: App.ICONS.alerts },
     ], 3);
 
@@ -5182,29 +5192,33 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     var summary = isBranchwise
       ? [
-          { label: "Branches Covered", value: branchRows.length, color: COLORS.navy },
+          { label: "Branches Covered", value: branchRows.length, color: COLORS.navy, iconHtml: App.ICONS.branches },
           {
             label: "Branches Needing Attention",
             value: branchRows.filter(function (r) { return r.status === "Attention"; }).length,
             color: COLORS.amber,
+            iconHtml: App.ICONS.alerts,
           },
           {
             label: "Total Events Logged",
             value: branchRows.reduce(function (s, r) { return s + r.total; }, 0),
             color: COLORS.navy,
+            iconHtml: App.ICONS.history,
           },
         ]
       : [
-          { label: "Total Records", value: eventRows.length, color: def.color },
+          { label: "Total Records", value: eventRows.length, color: COLORS.teal, iconHtml: App.ICONS[def.icon] },
           {
             label: "Branches Involved",
             value: new Set(eventRows.map(function (e) { return e.branchId; })).size,
             color: COLORS.navy,
+            iconHtml: App.ICONS.branches,
           },
           {
-            label: "Districts Involved",
+            label: "Region Involved",
             value: new Set(eventRows.map(function (e) { return e.district; })).size,
-            color: COLORS.navy,
+            color: COLORS.yellow,
+            iconHtml: App.ICONS.map,
           },
         ];
 
@@ -5223,7 +5237,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           },
           {
             label: "Tamper", align: "right",
-            render: function (r) { return h("span.val", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.olive + ";" }, String(r.tamper)); },
           },
           {
             label: "Status",
@@ -5249,7 +5263,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       h("div.grid.gap-sm.grid-3", summary.map(function (c) {
         return h("div.kpi.compact",
           h("span.kpi-rail", { style: "background:" + c.color + ";" }),
-          h("div.kpi-label", { style: "margin-top:0;" }, c.label),
+          iconChip(c.iconHtml, c.color, { class: "sm" }),
+          h("div.kpi-label", c.label),
           h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value)));
       })),
       h(

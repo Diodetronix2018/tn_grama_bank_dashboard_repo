@@ -102,7 +102,7 @@
       { key: "disarmed", label: "Disarmed", value: stats.disarmed, color: COLORS.grey, iconHtml: App.ICONS.disarm },
       { key: "alarm", label: "Alarm Active", value: stats.alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
       { key: "fault", label: "Fault Active", value: stats.fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
-      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.orange, iconHtml: App.ICONS.tamper },
+      { key: "tamper", label: "Tamper Active", value: tamperActive, color: COLORS.olive, iconHtml: App.ICONS.tamper },
     ];
 
     var cards = cardDefs.map(function (d) {

@@ -26,8 +26,8 @@
     var attention = App.data.allBranches().filter(function (b) { return b.status === "Attention"; }).length;
 
     var summary = W.summaryCards([
-      { label: "Total Managers", value: stats.totalBranches, color: COLORS.navy, iconHtml: App.ICONS.managers },
-      { label: "Districts Covered", value: stats.totalDistricts, color: COLORS.navy, iconHtml: App.ICONS.map },
+      { label: "Total Managers", value: stats.totalBranches, color: COLORS.sky, iconHtml: App.ICONS.managers },
+      { label: "Region Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       { label: "Branches Needing Attention", value: attention, color: COLORS.amber, iconHtml: App.ICONS.alerts },
     ], 3);
 

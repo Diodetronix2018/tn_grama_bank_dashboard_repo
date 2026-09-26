@@ -26,7 +26,7 @@
     "AC Normal": COLORS.green,
     "Battery Fail": COLORS.red,
     "Battery Normal": COLORS.green,
-    "Tamper Activate": COLORS.orange,
+    "Tamper Activate": COLORS.olive,
     "Tamper Normal": COLORS.green,
     "Communication Lost": COLORS.red,
     "Communication Restored": COLORS.green,
@@ -66,7 +66,7 @@
       else if (armEvt) lastTrigger = armEvt.time;
 
       var dominantLabel = isTamper ? "Tamper" : isAlarm ? "Alarm" : isFault ? "Fault" : "Normal";
-      var dominant = isTamper ? COLORS.orange
+      var dominant = isTamper ? COLORS.olive
         : isAlarm ? COLORS.red
         : isFault ? COLORS.amber
         : COLORS.green;
@@ -84,7 +84,7 @@
         fault: isFault ? "Fault" : "OK",
         faultColor: isFault ? COLORS.amber : COLORS.green,
         tamper: isTamper ? "Tamper" : "OK",
-        tamperColor: isTamper ? COLORS.orange : COLORS.green,
+        tamperColor: isTamper ? COLORS.olive : COLORS.green,
         lastTrigger: lastTrigger,
         dominant: dominant,
         dominantLabel: dominantLabel,
@@ -271,7 +271,7 @@
     { key: "armdisarm", label: "Arm / Disarm Report", desc: "Panel arm and disarm activity", scope: "events", types: ["Arm", "Disarm"], color: COLORS.navy, icon: "arm" },
     { key: "acfail", label: "AC Fail Report", desc: "AC mains failures and returns to normal", scope: "events", types: ["AC Fail", "AC Normal"], color: COLORS.red, icon: "power" },
     { key: "battery", label: "Battery Report", desc: "Battery failures and returns to normal", scope: "events", types: ["Battery Fail", "Battery Normal"], color: COLORS.red, icon: "battery" },
-    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.orange, icon: "tamper" },
+    { key: "tamper", label: "Tamper Report", desc: "Tamper activations and returns to normal", scope: "events", types: ["Tamper Activate", "Tamper Normal"], color: COLORS.olive, icon: "tamper" },
   ];
 
   /* Every cache above is keyed off the branch roster at the time it was first

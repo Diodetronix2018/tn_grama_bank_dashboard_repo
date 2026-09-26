@@ -145,29 +145,33 @@
 
     var summary = isBranchwise
       ? [
-          { label: "Branches Covered", value: branchRows.length, color: COLORS.navy },
+          { label: "Branches Covered", value: branchRows.length, color: COLORS.navy, iconHtml: App.ICONS.branches },
           {
             label: "Branches Needing Attention",
             value: branchRows.filter(function (r) { return r.status === "Attention"; }).length,
             color: COLORS.amber,
+            iconHtml: App.ICONS.alerts,
           },
           {
             label: "Total Events Logged",
             value: branchRows.reduce(function (s, r) { return s + r.total; }, 0),
             color: COLORS.navy,
+            iconHtml: App.ICONS.history,
           },
         ]
       : [
-          { label: "Total Records", value: eventRows.length, color: def.color },
+          { label: "Total Records", value: eventRows.length, color: COLORS.teal, iconHtml: App.ICONS[def.icon] },
           {
             label: "Branches Involved",
             value: new Set(eventRows.map(function (e) { return e.branchId; })).size,
             color: COLORS.navy,
+            iconHtml: App.ICONS.branches,
           },
           {
-            label: "Districts Involved",
+            label: "Region Involved",
             value: new Set(eventRows.map(function (e) { return e.district; })).size,
-            color: COLORS.navy,
+            color: COLORS.yellow,
+            iconHtml: App.ICONS.map,
           },
         ];
 
@@ -186,7 +190,7 @@
           },
           {
             label: "Tamper", align: "right",
-            render: function (r) { return h("span.val", { style: "color:" + COLORS.orange + ";" }, String(r.tamper)); },
+            render: function (r) { return h("span.val", { style: "color:" + COLORS.olive + ";" }, String(r.tamper)); },
           },
           {
             label: "Status",
@@ -212,7 +216,8 @@
       h("div.grid.gap-sm.grid-3", summary.map(function (c) {
         return h("div.kpi.compact",
           h("span.kpi-rail", { style: "background:" + c.color + ";" }),
-          h("div.kpi-label", { style: "margin-top:0;" }, c.label),
+          iconChip(c.iconHtml, c.color, { class: "sm" }),
+          h("div.kpi-label", c.label),
           h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value)));
       })),
       h(

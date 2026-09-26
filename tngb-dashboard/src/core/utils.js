@@ -9,7 +9,12 @@
     navy: "#002172",
     grey: "#64748b",
     slate: "#475569",
-    orange: "#ea580c",
+    olive: "#4d7c0f",
+    yellow: "#ca8a04",
+    teal: "#0f766e",
+    sky: "#0369a1",
+    indigo: "#4338ca",
+    pink: "#be185d",
   };
 
   /* Deterministic 32-bit PRNG. Same seed always yields the same dashboard,
@@ -50,7 +55,7 @@
     if (status === "Disarmed") return COLORS.grey;
     if (status === "Alarm Active") return COLORS.red;
     if (status === "Fault") return COLORS.amber;
-    if (status === "Tamper Active") return COLORS.orange;
+    if (status === "Tamper Active") return COLORS.olive;
     if (status === "Offline") return COLORS.red;
     return COLORS.slate;
   }
@@ -63,7 +68,12 @@
   ON_DARK[COLORS.green] = "#4ade80";
   ON_DARK[COLORS.red] = "#f87171";
   ON_DARK[COLORS.amber] = "#fbbf24";
-  ON_DARK[COLORS.orange] = "#fb923c";
+  ON_DARK[COLORS.olive] = "#a3e635";
+  ON_DARK[COLORS.yellow] = "#facc15";
+  ON_DARK[COLORS.teal] = "#2dd4bf";
+  ON_DARK[COLORS.sky] = "#38bdf8";
+  ON_DARK[COLORS.indigo] = "#a5b4fc";
+  ON_DARK[COLORS.pink] = "#f472b6";
   ON_DARK[COLORS.grey] = "#94a3b8";
   ON_DARK[COLORS.slate] = "#94a3b8";
 

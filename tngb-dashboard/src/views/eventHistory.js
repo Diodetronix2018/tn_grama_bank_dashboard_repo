@@ -27,11 +27,11 @@
     })[0];
 
     var summary = W.summaryCards([
-      { label: "Total Events Logged", value: all.length, color: COLORS.navy, iconHtml: App.ICONS.history },
+      { label: "Total Events Logged", value: all.length, color: COLORS.indigo, iconHtml: App.ICONS.history },
       {
         label: "Events Today",
         value: all.filter(function (e) { return e.time.indexOf(App.data.TODAY) === 0; }).length,
-        color: COLORS.navy,
+        color: COLORS.pink,
         iconHtml: App.ICONS.activities,
       },
       { label: "Most Frequent Event", value: busiest, color: App.data.EVENT_COLORS[busiest], iconHtml: App.EVENT_ICONS[busiest] },

@@ -132,16 +132,14 @@
       : ["Time", "Branch", "District", "Event", "Zone"];
 
     var toolbar = h(
-      "div.card",
-      { style: "padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;" },
+      "div.card.page-header",
       h("div",
         h("div.report-title", def.label),
         h("div.report-desc", def.desc)),
       h(
         "div.flex-center",
         { style: "gap:14px;" },
-        h("div.report-stamp", "Generated ",
-          App.dom.val(latestDate(all) + " " + u.fmtClock(ctx.state.now).slice(0, 5))),
+        h("div.report-stamp", "Records up to ", App.dom.val(latestDate(all))),
         h("button.btn-primary", {
           type: "button",
           onclick: function () {
@@ -236,14 +234,10 @@
             h("span.muted-count", "(" + totalCount + ")"))),
         totalCount
           ? h("div.table-scroll", { style: "max-height:520px;" }, table)
-          : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-              "No records fall inside this report's range."),
+          : W.emptyNote("No records fall inside this report's range."),
         totalCount > ROW_LIMIT
-          ? h("div", {
-              style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
-                "font-size:11.5px;color:var(--ink-faint);",
-            }, "Preview shows the first ", App.dom.val(ROW_LIMIT), " rows. The CSV export contains all ",
-               App.dom.val(totalCount), ".")
+          ? h("div.table-note", "Preview shows the first ", App.dom.val(ROW_LIMIT),
+              " rows. The CSV export contains all ", App.dom.val(totalCount), ".")
           : null
       )
     );

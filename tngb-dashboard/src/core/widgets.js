@@ -96,11 +96,17 @@
     );
   }
 
-  /* Footer for a list cut short for speed, so its header count still adds up. */
-  function truncationNote(shown, total, noun) {
-    return h("div", {
-      style: "padding:12px 22px;border-top:1px solid var(--line-faint);font-size:12px;color:var(--ink-soft);",
-    }, "Showing the first ", App.dom.val(shown), " of ", App.dom.val(total), " " + noun + ".");
+  /* Footer for a list cut short for speed, so its header count still adds up.
+     `tail` replaces the default closing words, e.g. a hint on how to narrow it. */
+  function truncationNote(shown, total, noun, tail) {
+    return h("div.table-note",
+      "Showing the first ", App.dom.val(shown), " of ", App.dom.val(total), " " + noun +
+        (tail ? ". " + tail : "."));
+  }
+
+  /* The message a list or table shows when nothing matches. */
+  function emptyNote(text) {
+    return h("div.empty-note", text);
   }
 
   /* A filter chip row driven by a counts map. */
@@ -170,8 +176,9 @@
   }
 
   /* Small summary tiles used at the top of secondary views. A tile that
-     pairs two counts ("Online / Offline") passes `pair`: one {value, color,
-     iconHtml} per side, so each number sits under its own coloured icon. */
+     groups several counts ("Online / Offline") passes `pair`: one {value,
+     color, iconHtml} per count, so each number sits under its own coloured
+     icon, separated by slashes. */
   function summaryCards(cards, columns) {
     return h("div.grid.gap-sm.grid-" + (columns || 3) + ".mb-lg", cards.map(function (c) {
       var icons, value;
@@ -179,10 +186,12 @@
         icons = h("div.flex.gap-6", c.pair.map(function (p) {
           return iconChip(p.iconHtml, p.color, { class: "sm" });
         }));
-        value = h("div.kpi-value.sm",
-          h("span.val", { style: "color:" + c.pair[0].color + ";" }, String(c.pair[0].value)),
-          h("span.kpi-sep", " / "),
-          h("span.val", { style: "color:" + c.pair[1].color + ";" }, String(c.pair[1].value)));
+        value = h("div.kpi-value.sm", c.pair.map(function (p, i) {
+          return [
+            i ? h("span.kpi-sep", " / ") : null,
+            h("span.val", { style: "color:" + p.color + ";" }, String(p.value)),
+          ];
+        }));
       } else {
         icons = c.iconHtml ? iconChip(c.iconHtml, c.color, { class: "sm" }) : null;
         value = h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value));
@@ -213,6 +222,7 @@
     dataTable: dataTable,
     filterPanel: filterPanel,
     truncationNote: truncationNote,
+    emptyNote: emptyNote,
     chipRow: chipRow,
     listHeader: listHeader,
     segmented: segmented,

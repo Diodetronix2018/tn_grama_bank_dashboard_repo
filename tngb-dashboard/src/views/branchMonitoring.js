@@ -123,25 +123,16 @@
                   ctx.go("overview");
                 },
               },
-              h(
-                "div.flex-between",
-                { style: "align-items:flex-start;" },
-                h("div", { style: "min-width:0;" },
-                  h("div.branch-card-name", b.name),
-                  h("div.branch-card-district", b.district)),
-                h("span.dot.md", {
-                  style: "margin-top:4px;background:" + u.connectivityColor(b.connectivity) + ";",
-                })
-              ),
+              h("div.branch-card-name", b.name),
+              h("div.branch-card-district", b.district),
               h("div.flex.gap-6", { style: "margin-top:10px;" },
                 W.panelBadge(b.panelStatus, "sm"),
                 W.connBadge(b.connectivity, "sm"))
             );
           }))
-        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No branch matches that search."),
+        : W.emptyNote("No branch matches that search."),
       matches.length > GRID_LIMIT
-        ? W.truncationNote(GRID_LIMIT, matches.length, "branches · search to narrow the list")
+        ? W.truncationNote(GRID_LIMIT, matches.length, "branches", "Search to narrow the list.")
         : null
     );
 

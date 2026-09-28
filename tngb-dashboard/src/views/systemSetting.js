@@ -10,17 +10,10 @@
 
   var SECTIONS = [
     { key: "general", label: "General", desc: "Region, time and data feed", icon: "settings" },
-    { key: "appearance", label: "Appearance", desc: "Theme, accent and layout", icon: "overview" },
+    { key: "appearance", label: "Appearance", desc: "Accent colour and layout", icon: "overview" },
     { key: "access", label: "Users & Access", desc: "Roles and sign-in security", icon: "lockClosed" },
-    { key: "support", label: "Support", desc: "Helpdesk, tickets and guides", icon: "bell" },
+    { key: "support", label: "Support", desc: "Helpdesk and tickets", icon: "managers" },
     { key: "about", label: "About", desc: "System and deployment details", icon: "info" },
-  ];
-
-  var THEMES = [
-    { key: "light", label: "Light", available: true, bg: "#f5f7fa", side: "#fff", bar: "var(--navy)", card: "#fff" },
-    { key: "dark", label: "Dark", available: false, bg: "#0b1220", side: "#111a2e", bar: "#6d8bff", card: "#1a2438" },
-    { key: "system", label: "Match system", available: false, bg: "linear-gradient(90deg,#f5f7fa 50%,#0b1220 50%)",
-      side: "#e6e9ef", bar: "var(--navy)", card: "rgba(255,255,255,.55)" },
   ];
 
   var ACCENTS = [["#002172", "Navy"], ["#0f766e", "Teal"], ["#7c2d12", "Rust"], ["#334155", "Slate"]];
@@ -40,7 +33,8 @@
       phone: "1800 000 0001", email: "amc@vendor.example" },
   ];
 
-  // Set each url once the document is published; until then it shows as pending.
+  // Set each url once the document is published; the Guides card lists only
+  // published ones and stays hidden until there is at least one.
   var DOCS = [
     { title: "Operator user manual", kind: "PDF", url: "" },
     { title: "Branch arming / disarming guide", kind: "PDF", url: "" },
@@ -91,14 +85,12 @@
     return h("span.ss-tag", text);
   }
 
-  /* The shared .segmented control, plus disabled options for things that
-     aren't built yet. */
+  /* The shared .segmented control with radio-group semantics. */
   function segmented(options, active, onPick) {
     return h("div.segmented.ss-segmented", { role: "radiogroup" }, options.map(function (o) {
       var on = o.key === active;
       return h("button" + (on ? ".is-active" : ""), {
         type: "button", role: "radio", "aria-checked": String(on),
-        disabled: o.disabled, title: o.disabled ? o.disabled : null,
         onclick: function () { onPick(o.key); },
       }, o.label);
     }));
@@ -152,11 +144,7 @@
     var feed = feedStatus(ctx);
     return [
       section("Regional", "Language and how times are shown", [
-        row("Language", "Interface language",
-          segmented([
-            { key: "en", label: "English" },
-            { key: "ta", label: "தமிழ்", disabled: "Tamil interface is not available yet" },
-          ], "en", function () {})),
+        row("Language", "Interface language", value("English")),
         row("Time zone", "Every branch timestamp is recorded in this zone",
           value("India Standard Time (UTC+5:30)")),
         row("Clock format", "Header clock and last-updated time; reports stay 24-hour",
@@ -191,25 +179,6 @@
     var accent = App.prefs.get("accent");
 
     return [
-      section("Theme", "Colour scheme for the dashboard",
-        h("div.ss-themes", THEMES.map(function (t) {
-          var on = t.key === "light";
-          return h("button.ss-theme" + (on ? ".on" : ""), {
-            type: "button", disabled: !t.available, "aria-pressed": String(on),
-            title: t.available ? null : t.label + " theme is not available yet",
-          },
-          h("div.ss-preview", { style: "background:" + t.bg },
-            h("div.ss-preview-side", { style: "background:" + t.side }),
-            h("div.ss-preview-main",
-              h("div.ss-preview-bar", { style: "background:" + t.bar }),
-              h("div.ss-preview-cards",
-                h("div", { style: "background:" + t.card }),
-                h("div", { style: "background:" + t.card })))),
-          h("div.ss-theme-foot",
-            h("span", t.label),
-            t.available ? h("span.ss-dot") : tag("Coming soon")));
-        }))),
-
       section("Accent colour", "Buttons, active items and highlights across every screen",
         h("div.ss-accents", ACCENTS.map(function (a) {
           var on = accent === a[0];
@@ -415,6 +384,7 @@
     var feed = feedStatus(ctx);
     var signIn = !App.auth ? { text: "Not used (offline copy)", tone: "muted" }
       : ctx.state.userEmail ? { text: "Signed in", tone: "ok" } : { text: "Signed out", tone: "muted" };
+    var docs = DOCS.filter(function (d) { return d.url; });
 
     return [
       h("div.ss-auto-grid", CONTACTS.map(contactCard)),
@@ -425,12 +395,12 @@
             h("div.ss-list-row", h("span", "Branch data feed"), value(feed.text, feed.tone)),
             h("div.ss-list-row", h("span", "Sign-in service"), value(signIn.text, signIn.tone)),
           ]),
-          section("Guides", "For operators and branch staff", DOCS.map(function (d) {
-            return d.url
-              ? h("a.ss-list-row.is-link", { href: d.url, target: "_blank", rel: "noopener" },
-                h("span", d.title), h("span.ss-faint", d.kind))
-              : h("div.ss-list-row", h("span.ss-faint", d.title), tag("Not published"));
-          })))),
+          docs.length
+            ? section("Guides", "For operators and branch staff", docs.map(function (d) {
+                return h("a.ss-list-row.is-link", { href: d.url, target: "_blank", rel: "noopener" },
+                  h("span", d.title), h("span.ss-faint", d.kind));
+              }))
+            : null)),
     ];
   }
 
@@ -484,7 +454,7 @@
         h("div.report-item-desc", s.desc)));
     }));
 
-    var header = h("div.card.ss-header",
+    var header = h("div.card.page-header",
       h("div", h("div.report-title", current.label), h("div.report-desc", current.desc)),
       current.key === "appearance" || current.key === "general" ? saveNote() : null);
 

@@ -87,21 +87,27 @@
               W.panelBadge(b.panelStatus, "sm")
             );
           })
-        : h("div.row-item-sub", "No branch in this district matches that search."));
+        : W.emptyNote("No branch in " + railDistrict + " matches that search."));
 
       body = h("div.grid.split", { style: "grid-template-columns:230px minmax(0,1fr);gap:0;" }, rail, tiles);
     } else {
       var all = App.data.allBranches().filter(function (b) {
         return !search || u.includesCI(b.name, search) || u.includesCI(b.district, search);
       });
-      body = h("div.picker-compact", all.map(function (b) {
-        return h(
-          "button.picker-chip" + (b.id === selectedId ? ".is-selected" : ""),
-          { type: "button", onclick: function () { ctx.setState({ zoneSelectedBranchId: b.id }); } },
-          h("span.dot", { style: "background:" + u.panelStatusColor(b.panelStatus) + ";" }),
-          h("span", b.name)
-        );
-      }));
+      body = all.length
+        ? h("div.picker-compact", all.map(function (b) {
+            return h(
+              "button.picker-chip" + (b.id === selectedId ? ".is-selected" : ""),
+              {
+                type: "button",
+                title: b.name + " · " + b.district + " · " + b.panelStatus,
+                onclick: function () { ctx.setState({ zoneSelectedBranchId: b.id }); },
+              },
+              h("span.dot", { style: "background:" + u.panelStatusColor(b.panelStatus) + ";" }),
+              h("span", b.name)
+            );
+          }))
+        : W.emptyNote("No branch matches that search.");
     }
 
     return h(
@@ -122,7 +128,7 @@
           W.searchInput({
             id: "zone-search",
             value: ctx.state.zoneSearch,
-            placeholder: "Search branch or district…",
+            placeholder: pickerMode === "district" ? "Search branch…" : "Search branch or district…",
             width: "220px",
             onInput: function (v) { ctx.setState({ zoneSearch: v }); },
           })

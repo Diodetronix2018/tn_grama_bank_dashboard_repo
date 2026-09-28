@@ -134,10 +134,6 @@
       nav.appendChild(button);
     });
 
-    nav.appendChild(h("div.sidebar-note",
-      "Structure follows the bank's security-ops mind map, cross-checked against " +
-      "the Tamil Nadu district list. Sample data — point src/data at the real feed."));
-
     return nav;
   }
 
@@ -346,7 +342,7 @@
       renderBootState(
         "Could not reach the branch data service",
         (err && err.message ? err.message : "Request failed") +
-          ". Confirm the backend is running (see backend/README.md), then retry.",
+          ". Check the network connection and retry. If it keeps failing, contact the Security Operations Centre.",
         true,
         loadThenBoot
       );
@@ -400,7 +396,9 @@
 
     var card = h(
       "div.boot-card.login-card",
+      h("span.brand-mark.login-logo", h("img", { src: "assets/logo.png", alt: "TN Grama Bank logo" })),
       h("div.boot-title", "TN Grama Bank — Sign in"),
+      h("div.boot-detail", "Security Operations Dashboard"),
       h("div.login-field", h("label", { for: "login-username" }, "Email"), usernameInput),
       h("div.login-field", h("label", { for: "login-password" }, "Password"), passwordInput),
       errorBox,

@@ -142,10 +142,10 @@
       h(
         "div.flex-between",
         { style: "margin-bottom:12px;" },
-        h("div.card-title", "All Regions ",
-          h("span.muted-count", "(" + App.data.REGIONS.length + ")")),
-        h("div", { style: "font-size:10px;color:var(--ink-faint);font-weight:600;letter-spacing:.03em;" },
-          "CLICK TO VIEW")
+        h("div",
+          h("div.card-title", "All Regions ",
+            h("span.muted-count", "(" + App.data.REGIONS.length + ")")),
+          h("div.card-sub", "Pick a district to see its branches below"))
       ),
       h("div", { style: "margin-bottom:12px;" }, W.searchInput({
         id: "region-search",
@@ -177,7 +177,7 @@
             ),
             badge(status, App.data.STATUS_COLORS[status])
           );
-        }) : h("div.row-item-sub", { style: "padding:12px;" }, "No district matches that search.")
+        }) : W.emptyNote("No district matches that search.")
       )
     );
   }
@@ -315,8 +315,7 @@
       ? h("div.grid.split.align-start.mt-lg", { style: "grid-template-columns:270px minmax(0,1fr);" },
           branchListCard(ctx, branches, selectedId),
           spotlightCard(selected))
-      : h("div.card.mt-lg", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-          "No branches reported in " + ctx.state.selectedRegion + " yet.");
+      : h("div.card.mt-lg", W.emptyNote("No branches reported in " + ctx.state.selectedRegion + " yet."));
 
     return h(
       "div",

@@ -10,12 +10,6 @@
 
   var ROW_LIMIT = 400;
 
-  /* This screen reads a branch as Normal or Fault. Fault covers any headline
-     status other than Normal: an alarm, a panel fault, or a panel gone offline. */
-  function branchStatus(b) {
-    return b.status !== "Normal" ? "Fault" : "Normal";
-  }
-
   function render(ctx) {
     var stats = App.data.networkStats();
     var search = (ctx.state.mgrSearch || "").toLowerCase();
@@ -29,16 +23,19 @@
     });
 
     // Network-wide, like the two cards beside it, not just the search results.
-    var faulty = App.data.allBranches().filter(function (b) { return branchStatus(b) === "Fault"; }).length;
+    var byStatus = { Normal: 0, Offline: 0, Alarm: 0, Fault: 0 };
+    App.data.allBranches().forEach(function (b) { byStatus[b.status] = (byStatus[b.status] || 0) + 1; });
 
     var summary = W.summaryCards([
       { label: "Total Managers", value: stats.totalBranches, color: COLORS.sky, iconHtml: App.ICONS.managers },
       { label: "Regions Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       {
-        label: "Branch Status (Normal / Fault)", color: COLORS.green,
+        label: "Branch Status (Normal / Offline / Alarm / Fault)", color: COLORS.green,
         pair: [
-          { value: stats.totalBranches - faulty, color: COLORS.green, iconHtml: App.ICONS.shield },
-          { value: faulty, color: COLORS.amber, iconHtml: App.ICONS.fault },
+          { value: byStatus.Normal, color: COLORS.green, iconHtml: App.ICONS.shield },
+          { value: byStatus.Offline, color: COLORS.slate, iconHtml: App.ICONS.offline },
+          { value: byStatus.Alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
+          { value: byStatus.Fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
         ],
       },
     ], 3);
@@ -53,7 +50,7 @@
         color: COLORS.indigo,
         title: "Branch Manager Directory",
         count: matches.length,
-        subtitle: ["One manager record per branch · showing ", App.dom.val(shown.length)],
+        subtitle: "One manager record per branch · click a row to open the branch",
         controls: W.searchInput({
           id: "mgr-search",
           value: ctx.state.mgrSearch,
@@ -67,21 +64,12 @@
             { label: "Branch Code", key: "branchIdCode", className: "mono" },
             { label: "District", key: "district", className: "sub" },
             { label: "Branch Name", key: "name", className: "name" },
-            {
-              label: "Manager Name",
-              className: "sub",
-              render: function (b) {
-                return h("span", { style: "color:var(--ink-body);font-weight:600;" }, b.manager.name);
-              },
-            },
+            { label: "Manager Name", className: "name", render: function (b) { return b.manager.name; } },
             { label: "Phone Number", className: "mono", render: function (b) { return b.manager.contact; } },
             { label: "Email ID", className: "sub", render: function (b) { return b.manager.email; } },
             {
               label: "Branch Status",
-              render: function (b) {
-                var status = branchStatus(b);
-                return badge(status, status === "Fault" ? COLORS.amber : COLORS.green);
-              },
+              render: function (b) { return badge(b.status, App.data.STATUS_COLORS[b.status]); },
             },
           ], shown, {
             onRowClick: function (b) {
@@ -89,8 +77,10 @@
               ctx.go("overview");
             },
           }))
-        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No manager matches that search.")
+        : W.emptyNote("No manager matches that search."),
+      matches.length > ROW_LIMIT
+        ? W.truncationNote(ROW_LIMIT, matches.length, "managers", "Search to narrow the list.")
+        : null
     );
 
     return h("div", summary, table);

@@ -125,14 +125,18 @@
           ),
           W.chipRow(Object.assign({}, chipOpts, { dark: true }))
         ),
-        h("div", { style: "max-height:560px;overflow-y:auto;" },
-          shown.map(function (e) { return feedRow(e, true); }))
+        shown.length
+          ? h("div", { style: "max-height:560px;overflow-y:auto;" },
+              shown.map(function (e) { return feedRow(e, true); }))
+          : h("div.empty-note.dark", "No " + filter + " events on the feed right now.")
       );
     } else {
       body = h(
         "div",
         W.chipRow(chipOpts),
-        h("div.feed", shown.map(function (e) { return feedRow(e, false); }))
+        shown.length
+          ? h("div.feed", shown.map(function (e) { return feedRow(e, false); }))
+          : h("div.card", W.emptyNote("No " + filter + " events on the feed right now."))
       );
     }
 
@@ -142,14 +146,11 @@
       switcher,
       body,
       filtered.length > FEED_LIMIT
-        ? h("div", {
-            style: "text-align:center;font-size:11.5px;color:var(--ink-faint);margin-top:12px;",
-          }, "Showing the newest ", App.dom.val(FEED_LIMIT), " of ", App.dom.val(filtered.length),
-             " events. Use Event History for the full log.")
+        ? h("div.table-note.is-centered", "Showing the newest ", App.dom.val(FEED_LIMIT), " of ",
+            App.dom.val(filtered.length), " events. Use Event History for the full log.")
         : null
     );
   }
-
 
   App.views = App.views || {};
   App.views.liveActivities = {

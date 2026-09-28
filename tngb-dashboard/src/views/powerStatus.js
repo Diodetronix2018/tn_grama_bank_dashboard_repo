@@ -90,13 +90,9 @@
               ctx.go("overview");
             },
           }))
-        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No branch matches that search."),
+        : W.emptyNote("No branch matches that search."),
       matches.length > ROW_LIMIT
-        ? h("div", {
-            style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
-              "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the first ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length), " branches.")
+        ? W.truncationNote(ROW_LIMIT, matches.length, "branches", "Search to narrow the list.")
         : null
     );
   }
@@ -117,7 +113,7 @@
         compact: true,
         label: d.label,
         value: d.value,
-        hint: "Click to verify",
+        hint: "Click to view list",
         color: d.color,
         iconHtml: d.iconHtml,
         selected: ctx.state.powerFilter === d.key,

@@ -111,7 +111,7 @@
         compact: true,
         label: d.label,
         value: d.value,
-        hint: "Click to verify",
+        hint: "Click to view list",
         color: d.color,
         iconHtml: d.iconHtml,
         selected: selected,
@@ -135,15 +135,17 @@
             h("div.card-title", "Branches Currently in Alarm / Fault / Tamper ",
               h("span.muted-count", "(" + incidents.length + ")")),
             h("div.card-sub", "Click a row to view the full branch detail"))),
-        h("div.table-scroll", { style: "max-height:460px;" }, W.dataTable([
-          { label: "Branch", key: "name", className: "name" },
-          { label: "District", key: "district", className: "sub" },
-          { label: "Status", render: function (r) { return W.panelBadge(r.panelStatus); } },
-          { label: "Zone", key: "zone", className: "sub" },
-          { label: "Since", key: "since", className: "mono" },
-        ], incidents, {
-          onRowClick: function (r) { openBranch(ctx, r.branch); },
-        }))
+        incidents.length
+          ? h("div.table-scroll", { style: "max-height:460px;" }, W.dataTable([
+              { label: "Branch", key: "name", className: "name" },
+              { label: "District", key: "district", className: "sub" },
+              { label: "Status", render: function (r) { return W.panelBadge(r.panelStatus); } },
+              { label: "Zone", key: "zone", className: "sub" },
+              { label: "Since", key: "since", className: "mono" },
+            ], incidents, {
+              onRowClick: function (r) { openBranch(ctx, r.branch); },
+            }))
+          : W.emptyNote("No branch is in alarm, fault or tamper right now.")
       )
     );
   }

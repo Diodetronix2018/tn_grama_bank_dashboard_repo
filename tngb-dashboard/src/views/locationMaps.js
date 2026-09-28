@@ -133,7 +133,6 @@
           x: p.pos.x, y: p.pos.y + p.radius + 13,
           "text-anchor": "middle",
           "font-size": "11",
-          "font-weight": "600",
           fill: "#334155",
           stroke: "#f2f5fa",
           "stroke-width": "3.5",
@@ -147,7 +146,6 @@
         x: p.pos.x, y: p.pos.y + 3.5,
         "text-anchor": "middle",
         "font-size": "10",
-        "font-weight": "700",
         fill: "#ffffff",
         class: "map-count",
       });

@@ -114,6 +114,7 @@ setTimeout(function () {
       content().querySelectorAll(".state-legend-item .val"),
       function (s, v) { return s + Number(v.textContent); }, 0);
     ok("panel state mix accounts for every branch", mixTotal === 680, mixTotal + "");
+    ok("no developer note in the sidebar", !document.querySelector(".sidebar-note"));
     ok("sign-out hidden without a session",
       document.querySelector(".user-chip").classList.contains("hidden"));
 
@@ -223,6 +224,8 @@ setTimeout(function () {
     // --- managers ------------------------------------------------------------
     navBtn("Manager Details").click();
     ok("manager table renders", content().querySelectorAll("table.data tbody tr").length > 0);
+    ok("manager status shows the real branch status",
+      !!findByText("table.data .badge", "Alarm") || !!findByText("table.data .badge", "Offline"));
     var mgr = document.getElementById("mgr-search");
     mgr.value = "zzzzzz";
     mgr.dispatchEvent(new Event("input", { bubbles: true }));
@@ -280,7 +283,8 @@ setTimeout(function () {
       document.getElementById("ss-idleTimeoutMin").value === "10");
 
     ssTab("Appearance");
-    ok("unavailable themes are disabled", findByText(".ss-theme", "Dark").disabled === true);
+    ok("no placeholder controls for unbuilt features",
+      !content().querySelector(".ss-theme") && !content().querySelector(".segmented button:disabled"));
     findByText(".ss-accent", "Teal").click();
     ok("accent recolours the page", root.style.getPropertyValue("--navy") === "#0f766e");
     var range = content().querySelector('input[type="range"]');

@@ -50,6 +50,8 @@
       "div.card",
       { style: "overflow:hidden;" },
       W.listHeader({
+        iconHtml: App.ICONS.history,
+        color: COLORS.indigo,
         title: "Event Log",
         count: matches.length,
         subtitle: "Newest first · click a chip to filter by event type",
@@ -79,14 +81,10 @@
               ctx.go("overview");
             },
           }))
-        : h("div", { style: "padding:40px;text-align:center;color:var(--ink-soft);" },
-            "No event matches those filters."),
+        : W.emptyNote("No event matches those filters."),
       matches.length > ROW_LIMIT
-        ? h("div", {
-            style: "padding:12px 22px;border-top:1px solid var(--line-faint);" +
-              "font-size:11.5px;color:var(--ink-faint);",
-          }, "Showing the newest ", App.dom.val(ROW_LIMIT), " of ", App.dom.val(matches.length),
-             " matching events. Narrow the search or export the report for the rest.")
+        ? h("div.table-note", "Showing the newest ", App.dom.val(ROW_LIMIT), " of ",
+            App.dom.val(matches.length), " matching events. Narrow the search, or use Reports to export the rest.")
         : null
     );
 

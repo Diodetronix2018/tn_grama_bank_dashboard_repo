@@ -34,6 +34,11 @@
     Tirunelveli: [8.71, 77.76], Tirupattur: [12.50, 78.57],
     Tiruppur: [11.10, 77.34], Tiruvannamalai: [12.23, 79.07], Vellore: [12.92, 79.13],
     Villupuram: [11.94, 79.49], Virudhunagar: [9.57, 77.96],
+    /* Not one of the 37 sample-generator districts above (that fixed list
+       and TARGET_TOTAL_BRANCHES below are the *offline demo's* network only
+       -- see setBranches/regions()), but a real live branch can report
+       "CHENNAI" as its district, and the map needs somewhere to plot it. */
+    Chennai: [13.08, 80.27],
   };
 
   var TARGET_TOTAL_BRANCHES = 680;
@@ -212,6 +217,45 @@
   var _cache = null;
   var _externalCache = null;
 
+  /* Case-insensitive lookup for map coordinates -- the real feed reports
+     districts upper-case ("MADURAI"), DISTRICT_COORDS above is keyed Title
+     Case. Names shown on screen are never remapped, only this lookup. */
+  var _coordsByLower = {};
+  Object.keys(DISTRICT_COORDS).forEach(function (name) {
+    _coordsByLower[name.toLowerCase()] = DISTRICT_COORDS[name];
+  });
+
+  function isLive() {
+    return !!_externalCache;
+  }
+
+  /* Regions to show on screen. Live: only districts with at least one real
+     branch, counted from the real data -- never the fixed 37-district
+     sample roster, and never a district with zero real branches. Offline
+     (no external data -- selftest.html, the file:// standalone build):
+     unchanged, the generated 37-district/680-branch sample network. */
+  function regions() {
+    if (!_externalCache) return REGIONS;
+    var counts = {};
+    _externalCache.forEach(function (b) {
+      if (!b.district || b.district === "Unassigned") return; // not a real district
+      counts[b.district] = (counts[b.district] || 0) + 1;
+    });
+    return Object.keys(counts).sort().map(function (name) {
+      return { name: name, branchCount: counts[name], coords: _coordsByLower[name.toLowerCase()] };
+    });
+  }
+
+  /* The region selected on first boot. Live: whichever real district
+     actually has a branch (there is always at least one, or load() itself
+     would have failed) -- never the sample network's hard-coded home
+     district. Offline: unchanged. */
+  function defaultRegion() {
+    if (!_externalCache) return HOME_DISTRICT;
+    var live = regions();
+    return live.length ? live[0].name : null;
+  }
+
   /* Called by src/data/liveSource.js once the backend responds. Every other
      function in this module and in src/data/derived.js reads branches
      through allBranches(), so pointing that one function at fetched data is
@@ -328,7 +372,7 @@
       if (b.status !== "Normal") s.abnormal++;
     });
     s.totalBranches = all.length;
-    s.totalDistricts = REGIONS.length;
+    s.totalDistricts = regions().length;
     s.normal = s.totalBranches - s.abnormal;
     _stats = s;
     return s;
@@ -349,6 +393,9 @@
     dayStamp: dayStamp,
     allBranches: allBranches,
     setBranches: setBranches,
+    isLive: isLive,
+    regions: regions,
+    defaultRegion: defaultRegion,
     branchById: branchById,
     branchesIn: branchesIn,
     districtStats: districtStats,

@@ -36,7 +36,10 @@
   ];
 
   function districtPoints() {
-    return App.data.REGIONS.map(function (r) {
+    /* A live district with no known centroid (an unexpected/new district
+       name) has nowhere to plot -- it still counts everywhere else, just
+       not on this map. */
+    return App.data.regions().filter(function (r) { return r.coords; }).map(function (r) {
       var s = App.data.districtStats(r.name);
       var tier = TIERS.find(function (t) { return t.test(s); });
       return {

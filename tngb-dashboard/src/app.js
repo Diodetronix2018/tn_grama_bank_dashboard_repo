@@ -26,7 +26,10 @@
 
     /* Overview */
     regionSearch: "",
-    selectedRegion: App.data.HOME_DISTRICT,
+    /* Set in boot(), from App.data.defaultRegion() -- not known until the
+       branch feed has actually loaded (live mode has no fixed home
+       district; see master.js). */
+    selectedRegion: null,
     selectedBranchId: null,
     kpiFilter: null,
 
@@ -82,6 +85,13 @@
     if (ok) {
       state.lastUpdated = new Date();
       state.refreshError = null;
+      /* The selected district can drop out of a later poll (its one real
+         branch reassigned or removed) -- fall back rather than get stuck
+         showing a district that no longer exists. */
+      if (state.selectedRegion && !App.data.regions().some(function (r) { return r.name === state.selectedRegion; })) {
+        state.selectedRegion = App.data.defaultRegion();
+        state.selectedBranchId = null;
+      }
     } else {
       state.refreshError = message || "Background refresh failed";
     }
@@ -257,6 +267,13 @@
     App.dom.clear(root);
     dashboardShown = true;
     refs.content = h("main.content");
+
+    /* Re-derived on every boot (including a fresh sign-in after a session
+       expired), and reset if it no longer names a region that currently has
+       a branch -- e.g. a district's one real branch drops out of the feed. */
+    if (!state.selectedRegion || !App.data.regions().some(function (r) { return r.name === state.selectedRegion; })) {
+      state.selectedRegion = App.data.defaultRegion();
+    }
 
     var main = h("div.main", buildTopbar(), refs.content);
     root.appendChild(h("div.shell", buildSidebar(), main));

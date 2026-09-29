@@ -35,26 +35,17 @@
     apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
   };
 
-  /* The upstream telemetry table gets a new record roughly every 5 minutes,
-     so that is the default cadence. Operators can change it under System
-     Setting > General (App.prefs "refreshMs"). */
-  var POLL_INTERVAL_MS = 5 * 60 * 1000;
+  /* Fallback only -- App.prefs (loaded before this file, see index.html)
+     always provides the real default; see prefs.js for why it's 30s, not
+     the telemetry table's own ~5-minute per-device cadence. Operators can
+     change it under System Setting > General (App.prefs "refreshMs"). */
+  var POLL_INTERVAL_MS = 30 * 1000;
 
   function pollInterval() {
     return (App.prefs && App.prefs.get("refreshMs")) || POLL_INTERVAL_MS;
   }
   var pollTimer = null;
   var inFlight = false;
-
-  function applyRegionCounts(branches) {
-    var counts = {};
-    branches.forEach(function (b) {
-      counts[b.district] = (counts[b.district] || 0) + 1;
-    });
-    (App.data.REGIONS || []).forEach(function (r) {
-      r.branchCount = counts[r.name] || 0;
-    });
-  }
 
   /* YYYY-MM-DD in local time, the same form as the feed's timestamps. */
   function localDate(d) {
@@ -87,7 +78,6 @@
            and refreshed on every poll so it rolls over at midnight. */
         App.data.TODAY = localDate(new Date());
         App.data.setBranches(branches);
-        applyRegionCounts(branches);
         return branches;
       });
   }

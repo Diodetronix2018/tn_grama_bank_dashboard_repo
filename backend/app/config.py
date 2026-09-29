@@ -53,10 +53,12 @@ class Settings(BaseSettings):
     trust_proxy_headers: bool = False
 
     # How long list_branches() results are cached in-process before the
-    # data source is re-queried. 60s leaves a large margin under the
-    # dashboard's 5-minute poll cadence while collapsing bursts of
-    # concurrent/rapid requests into a single scan.
-    branches_cache_ttl_seconds: float = 60.0
+    # data source is re-queried. Kept under the dashboard's 30s poll cadence
+    # (see tngb-dashboard/src/core/prefs.js's refreshMs default) so a poll
+    # actually gets a fresh scan rather than the same cached result every
+    # time, while still collapsing bursts of concurrent/rapid requests
+    # within that window into a single scan.
+    branches_cache_ttl_seconds: float = 20.0
 
     # Cognito identity provider. Empty by default -- local dev and the test
     # suite never touch Cognito (see app/auth/cognito.py's module docstring).

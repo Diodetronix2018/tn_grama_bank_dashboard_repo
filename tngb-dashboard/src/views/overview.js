@@ -133,7 +133,8 @@
 
   function regionCard(ctx) {
     var search = (ctx.state.regionSearch || "").toLowerCase();
-    var regions = App.data.REGIONS.filter(function (r) {
+    var allRegions = App.data.regions();
+    var regions = allRegions.filter(function (r) {
       return !search || u.includesCI(r.name, search);
     });
 
@@ -144,7 +145,7 @@
         { style: "margin-bottom:12px;" },
         h("div",
           h("div.card-title", "All Regions ",
-            h("span.muted-count", "(" + App.data.REGIONS.length + ")")),
+            h("span.muted-count", "(" + allRegions.length + ")")),
           h("div.card-sub", "Pick a district to see its branches below"))
       ),
       h("div", { style: "margin-bottom:12px;" }, W.searchInput({

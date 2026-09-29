@@ -9,13 +9,30 @@
 
   var GRID_LIMIT = 400;
 
-  /* District rows carry their own manager contact, drawn from a stable seed
-     so the same district always shows the same regional contact. */
+  /* Sample mode: a district's manager contact is generated from a stable
+     seed, same as every other sample figure. Live mode has no such thing as
+     a "regional manager" in the real data -- only per-branch managers exist
+     -- so a district row shows its one real branch's manager when it has
+     exactly one, and a dash when it has several (which one would be
+     ambiguous, so showing any single name would be misleading, not real). */
   function districtRows() {
-    return App.data.REGIONS.map(function (r, i) {
+    var live = App.data.isLive();
+    return App.data.regions().map(function (r, i) {
       var s = App.data.districtStats(r.name);
-      var dr = u.seededRnd(r.name + "-regional-manager");
       var status = App.data.districtStatus(s);
+      var managerName = "—";
+      var contact = "—";
+      if (live) {
+        var branches = App.data.branchesIn(r.name);
+        if (branches.length === 1) {
+          managerName = branches[0].manager.name;
+          contact = branches[0].manager.contact;
+        }
+      } else {
+        var dr = u.seededRnd(r.name + "-regional-manager");
+        managerName = u.pick(dr, App.data.FIRST_NAMES) + " " + u.pick(dr, App.data.LAST_NAMES);
+        contact = "+91 9" + String(400000000 + Math.floor(dr() * 99999999)).slice(0, 9);
+      }
       return {
         name: r.name,
         code: "TNGB-D" + u.pad2(i + 1),
@@ -24,8 +41,8 @@
         online: s.online, offline: s.offline,
         alarm: s.alarm, fault: s.fault,
         status: status,
-        managerName: u.pick(dr, App.data.FIRST_NAMES) + " " + u.pick(dr, App.data.LAST_NAMES),
-        contact: "+91 9" + String(400000000 + Math.floor(dr() * 99999999)).slice(0, 9),
+        managerName: managerName,
+        contact: contact,
       };
     });
   }

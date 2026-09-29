@@ -274,7 +274,7 @@ setTimeout(function () {
       sel.value = val;
       sel.dispatchEvent(new Event("change", { bubbles: true }));
     };
-    ok("refresh interval defaults to 5 minutes", document.getElementById("ss-refreshMs").value === "300000");
+    ok("refresh interval defaults to 30 seconds", document.getElementById("ss-refreshMs").value === "30000");
     pickOption("ss-refreshMs", "60000");
     ok("refresh interval saves", App.prefs.get("refreshMs") === 60000 &&
       document.getElementById("ss-refreshMs").value === "60000");

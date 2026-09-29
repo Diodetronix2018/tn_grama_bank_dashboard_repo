@@ -15,7 +15,12 @@
     sidebarCollapsed: false,
     reduceMotion: false,
     clock: "24h",
-    refreshMs: 5 * 60 * 1000,
+    /* 30s (the fastest of the choices below): a security-alarm dashboard
+       showing an active alarm up to 5 minutes late defeats the point, and
+       with several devices staggered across their own ~5-minute report
+       cycles, a short poll catches whichever one just reported. Operators
+       can still pick a slower interval under System Setting > General. */
+    refreshMs: 30 * 1000,
     idleTimeoutMin: 30,
   };
 

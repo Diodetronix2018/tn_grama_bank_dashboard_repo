@@ -1275,7 +1275,6 @@ table.data tbody tr.is-clickable:hover { background: #f6f8fd; }
 
 .ss-segmented { display: inline-flex; }
 .ss-select.text-input { width: auto; min-width: 220px; padding: 8px 12px; cursor: pointer; }
-.segmented button:disabled { cursor: not-allowed; color: var(--ink-faint); opacity: .7; }
 
 .ss-toggle {
   display: inline-flex;
@@ -1877,7 +1876,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     sidebarCollapsed: false,
     reduceMotion: false,
     clock: "24h",
-    refreshMs: 5 * 60 * 1000,
+    /* 30s (the fastest of the choices below): a security-alarm dashboard
+       showing an active alarm up to 5 minutes late defeats the point, and
+       with several devices staggered across their own ~5-minute report
+       cycles, a short poll catches whichever one just reported. Operators
+       can still pick a slower interval under System Setting > General. */
+    refreshMs: 30 * 1000,
     idleTimeoutMin: 30,
   };
 
@@ -2404,8 +2408,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   }
 
   /* Small summary tiles used at the top of secondary views. A tile that
-     pairs two counts ("Online / Offline") passes `pair`: one {value, color,
-     iconHtml} per side, so each number sits under its own coloured icon. */
+     groups several counts ("Online / Offline") passes `pair`: one {value,
+     color, iconHtml} per count, so each number sits under its own coloured
+     icon, separated by slashes. */
   function summaryCards(cards, columns) {
     return h("div.grid.gap-sm.grid-" + (columns || 3) + ".mb-lg", cards.map(function (c) {
       var icons, value;
@@ -2413,10 +2418,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         icons = h("div.flex.gap-6", c.pair.map(function (p) {
           return iconChip(p.iconHtml, p.color, { class: "sm" });
         }));
-        value = h("div.kpi-value.sm",
-          h("span.val", { style: "color:" + c.pair[0].color + ";" }, String(c.pair[0].value)),
-          h("span.kpi-sep", " / "),
-          h("span.val", { style: "color:" + c.pair[1].color + ";" }, String(c.pair[1].value)));
+        value = h("div.kpi-value.sm", c.pair.map(function (p, i) {
+          return [
+            i ? h("span.kpi-sep", " / ") : null,
+            h("span.val", { style: "color:" + p.color + ";" }, String(p.value)),
+          ];
+        }));
       } else {
         icons = c.iconHtml ? iconChip(c.iconHtml, c.color, { class: "sm" }) : null;
         value = h("div.kpi-value.sm", { style: "color:" + c.color + ";" }, String(c.value));
@@ -2494,6 +2501,11 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     Tirunelveli: [8.71, 77.76], Tirupattur: [12.50, 78.57],
     Tiruppur: [11.10, 77.34], Tiruvannamalai: [12.23, 79.07], Vellore: [12.92, 79.13],
     Villupuram: [11.94, 79.49], Virudhunagar: [9.57, 77.96],
+    /* Not one of the 37 sample-generator districts above (that fixed list
+       and TARGET_TOTAL_BRANCHES below are the *offline demo's* network only
+       -- see setBranches/regions()), but a real live branch can report
+       "CHENNAI" as its district, and the map needs somewhere to plot it. */
+    Chennai: [13.08, 80.27],
   };
 
   var TARGET_TOTAL_BRANCHES = 680;
@@ -2672,6 +2684,45 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   var _cache = null;
   var _externalCache = null;
 
+  /* Case-insensitive lookup for map coordinates -- the real feed reports
+     districts upper-case ("MADURAI"), DISTRICT_COORDS above is keyed Title
+     Case. Names shown on screen are never remapped, only this lookup. */
+  var _coordsByLower = {};
+  Object.keys(DISTRICT_COORDS).forEach(function (name) {
+    _coordsByLower[name.toLowerCase()] = DISTRICT_COORDS[name];
+  });
+
+  function isLive() {
+    return !!_externalCache;
+  }
+
+  /* Regions to show on screen. Live: only districts with at least one real
+     branch, counted from the real data -- never the fixed 37-district
+     sample roster, and never a district with zero real branches. Offline
+     (no external data -- selftest.html, the file:// standalone build):
+     unchanged, the generated 37-district/680-branch sample network. */
+  function regions() {
+    if (!_externalCache) return REGIONS;
+    var counts = {};
+    _externalCache.forEach(function (b) {
+      if (!b.district || b.district === "Unassigned") return; // not a real district
+      counts[b.district] = (counts[b.district] || 0) + 1;
+    });
+    return Object.keys(counts).sort().map(function (name) {
+      return { name: name, branchCount: counts[name], coords: _coordsByLower[name.toLowerCase()] };
+    });
+  }
+
+  /* The region selected on first boot. Live: whichever real district
+     actually has a branch (there is always at least one, or load() itself
+     would have failed) -- never the sample network's hard-coded home
+     district. Offline: unchanged. */
+  function defaultRegion() {
+    if (!_externalCache) return HOME_DISTRICT;
+    var live = regions();
+    return live.length ? live[0].name : null;
+  }
+
   /* Called by src/data/liveSource.js once the backend responds. Every other
      function in this module and in src/data/derived.js reads branches
      through allBranches(), so pointing that one function at fetched data is
@@ -2788,7 +2839,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
       if (b.status !== "Normal") s.abnormal++;
     });
     s.totalBranches = all.length;
-    s.totalDistricts = REGIONS.length;
+    s.totalDistricts = regions().length;
     s.normal = s.totalBranches - s.abnormal;
     _stats = s;
     return s;
@@ -2809,6 +2860,9 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     dayStamp: dayStamp,
     allBranches: allBranches,
     setBranches: setBranches,
+    isLive: isLive,
+    regions: regions,
+    defaultRegion: defaultRegion,
     branchById: branchById,
     branchesIn: branchesIn,
     districtStats: districtStats,
@@ -3161,26 +3215,17 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     apiBaseUrl: window.location.port === "8000" ? "http://localhost:8787" : "",
   };
 
-  /* The upstream telemetry table gets a new record roughly every 5 minutes,
-     so that is the default cadence. Operators can change it under System
-     Setting > General (App.prefs "refreshMs"). */
-  var POLL_INTERVAL_MS = 5 * 60 * 1000;
+  /* Fallback only -- App.prefs (loaded before this file, see index.html)
+     always provides the real default; see prefs.js for why it's 30s, not
+     the telemetry table's own ~5-minute per-device cadence. Operators can
+     change it under System Setting > General (App.prefs "refreshMs"). */
+  var POLL_INTERVAL_MS = 30 * 1000;
 
   function pollInterval() {
     return (App.prefs && App.prefs.get("refreshMs")) || POLL_INTERVAL_MS;
   }
   var pollTimer = null;
   var inFlight = false;
-
-  function applyRegionCounts(branches) {
-    var counts = {};
-    branches.forEach(function (b) {
-      counts[b.district] = (counts[b.district] || 0) + 1;
-    });
-    (App.data.REGIONS || []).forEach(function (r) {
-      r.branchCount = counts[r.name] || 0;
-    });
-  }
 
   /* YYYY-MM-DD in local time, the same form as the feed's timestamps. */
   function localDate(d) {
@@ -3213,7 +3258,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
            and refreshed on every poll so it rolls over at midnight. */
         App.data.TODAY = localDate(new Date());
         App.data.setBranches(branches);
-        applyRegionCounts(branches);
         return branches;
       });
   }
@@ -3508,7 +3552,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   function regionCard(ctx) {
     var search = (ctx.state.regionSearch || "").toLowerCase();
-    var regions = App.data.REGIONS.filter(function (r) {
+    var allRegions = App.data.regions();
+    var regions = allRegions.filter(function (r) {
       return !search || u.includesCI(r.name, search);
     });
 
@@ -3519,7 +3564,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         { style: "margin-bottom:12px;" },
         h("div",
           h("div.card-title", "All Regions ",
-            h("span.muted-count", "(" + App.data.REGIONS.length + ")")),
+            h("span.muted-count", "(" + allRegions.length + ")")),
           h("div.card-sub", "Pick a district to see its branches below"))
       ),
       h("div", { style: "margin-bottom:12px;" }, W.searchInput({
@@ -3725,13 +3770,30 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
   var GRID_LIMIT = 400;
 
-  /* District rows carry their own manager contact, drawn from a stable seed
-     so the same district always shows the same regional contact. */
+  /* Sample mode: a district's manager contact is generated from a stable
+     seed, same as every other sample figure. Live mode has no such thing as
+     a "regional manager" in the real data -- only per-branch managers exist
+     -- so a district row shows its one real branch's manager when it has
+     exactly one, and a dash when it has several (which one would be
+     ambiguous, so showing any single name would be misleading, not real). */
   function districtRows() {
-    return App.data.REGIONS.map(function (r, i) {
+    var live = App.data.isLive();
+    return App.data.regions().map(function (r, i) {
       var s = App.data.districtStats(r.name);
-      var dr = u.seededRnd(r.name + "-regional-manager");
       var status = App.data.districtStatus(s);
+      var managerName = "—";
+      var contact = "—";
+      if (live) {
+        var branches = App.data.branchesIn(r.name);
+        if (branches.length === 1) {
+          managerName = branches[0].manager.name;
+          contact = branches[0].manager.contact;
+        }
+      } else {
+        var dr = u.seededRnd(r.name + "-regional-manager");
+        managerName = u.pick(dr, App.data.FIRST_NAMES) + " " + u.pick(dr, App.data.LAST_NAMES);
+        contact = "+91 9" + String(400000000 + Math.floor(dr() * 99999999)).slice(0, 9);
+      }
       return {
         name: r.name,
         code: "TNGB-D" + u.pad2(i + 1),
@@ -3740,8 +3802,8 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         online: s.online, offline: s.offline,
         alarm: s.alarm, fault: s.fault,
         status: status,
-        managerName: u.pick(dr, App.data.FIRST_NAMES) + " " + u.pick(dr, App.data.LAST_NAMES),
-        contact: "+91 9" + String(400000000 + Math.floor(dr() * 99999999)).slice(0, 9),
+        managerName: managerName,
+        contact: contact,
       };
     });
   }
@@ -4092,11 +4154,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     var body;
 
     if (pickerMode === "district") {
+      var liveRegions = App.data.regions();
       var railDistrict = ctx.state.zonePickerDistrict ||
         (App.data.branchById(selectedId) || {}).district ||
-        App.data.REGIONS[0].name;
+        (liveRegions[0] || {}).name;
 
-      var rail = h("div.district-rail", App.data.REGIONS.map(function (r) {
+      var rail = h("div.district-rail", liveRegions.map(function (r) {
         return h(
           "button.rail-row" + (r.name === railDistrict ? ".is-selected" : ""),
           { type: "button", onclick: function () { ctx.setState({ zonePickerDistrict: r.name }); } },
@@ -4853,7 +4916,10 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
   ];
 
   function districtPoints() {
-    return App.data.REGIONS.map(function (r) {
+    /* A live district with no known centroid (an unexpected/new district
+       name) has nowhere to plot -- it still counts everywhere else, just
+       not on this map. */
+    return App.data.regions().filter(function (r) { return r.coords; }).map(function (r) {
       var s = App.data.districtStats(r.name);
       var tier = TIERS.find(function (t) { return t.test(s); });
       return {
@@ -4950,7 +5016,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
           x: p.pos.x, y: p.pos.y + p.radius + 13,
           "text-anchor": "middle",
           "font-size": "11",
-          "font-weight": "600",
           fill: "#334155",
           stroke: "#f2f5fa",
           "stroke-width": "3.5",
@@ -4964,7 +5029,6 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
         x: p.pos.x, y: p.pos.y + 3.5,
         "text-anchor": "middle",
         "font-size": "10",
-        "font-weight": "700",
         fill: "#ffffff",
         class: "map-count",
       });
@@ -5103,14 +5167,19 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     });
 
     // Network-wide, like the two cards beside it, not just the search results.
+    var byStatus = { Normal: 0, Offline: 0, Alarm: 0, Fault: 0 };
+    App.data.allBranches().forEach(function (b) { byStatus[b.status] = (byStatus[b.status] || 0) + 1; });
+
     var summary = W.summaryCards([
       { label: "Total Managers", value: stats.totalBranches, color: COLORS.sky, iconHtml: App.ICONS.managers },
       { label: "Regions Covered", value: stats.totalDistricts, color: COLORS.yellow, iconHtml: App.ICONS.map },
       {
-        label: "Branch Status (Normal / Abnormal)", color: COLORS.green,
+        label: "Branch Status (Normal / Offline / Alarm / Fault)", color: COLORS.green,
         pair: [
-          { value: stats.normal, color: COLORS.green, iconHtml: App.ICONS.shield },
-          { value: stats.abnormal, color: COLORS.red, iconHtml: App.ICONS.alerts },
+          { value: byStatus.Normal, color: COLORS.green, iconHtml: App.ICONS.shield },
+          { value: byStatus.Offline, color: COLORS.slate, iconHtml: App.ICONS.offline },
+          { value: byStatus.Alarm, color: COLORS.red, iconHtml: App.ICONS.bell },
+          { value: byStatus.Fault, color: COLORS.amber, iconHtml: App.ICONS.fault },
         ],
       },
     ], 3);
@@ -5139,13 +5208,7 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
             { label: "Branch Code", key: "branchIdCode", className: "mono" },
             { label: "District", key: "district", className: "sub" },
             { label: "Branch Name", key: "name", className: "name" },
-            {
-              label: "Manager Name",
-              className: "sub",
-              render: function (b) {
-                return h("span", { style: "color:var(--ink-body);font-weight:600;" }, b.manager.name);
-              },
-            },
+            { label: "Manager Name", className: "name", render: function (b) { return b.manager.name; } },
             { label: "Phone Number", className: "mono", render: function (b) { return b.manager.contact; } },
             { label: "Email ID", className: "sub", render: function (b) { return b.manager.email; } },
             {
@@ -5523,14 +5586,12 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     return h("span.ss-tag", text);
   }
 
-  /* The shared .segmented control, plus disabled options for things that
-     aren't built yet. */
+  /* The shared .segmented control with radio-group semantics. */
   function segmented(options, active, onPick) {
     return h("div.segmented.ss-segmented", { role: "radiogroup" }, options.map(function (o) {
       var on = o.key === active;
       return h("button" + (on ? ".is-active" : ""), {
         type: "button", role: "radio", "aria-checked": String(on),
-        disabled: o.disabled, title: o.disabled ? o.disabled : null,
         onclick: function () { onPick(o.key); },
       }, o.label);
     }));
@@ -5941,7 +6002,10 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
 
     /* Overview */
     regionSearch: "",
-    selectedRegion: App.data.HOME_DISTRICT,
+    /* Set in boot(), from App.data.defaultRegion() -- not known until the
+       branch feed has actually loaded (live mode has no fixed home
+       district; see master.js). */
+    selectedRegion: null,
     selectedBranchId: null,
     kpiFilter: null,
 
@@ -5997,6 +6061,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     if (ok) {
       state.lastUpdated = new Date();
       state.refreshError = null;
+      /* The selected district can drop out of a later poll (its one real
+         branch reassigned or removed) -- fall back rather than get stuck
+         showing a district that no longer exists. */
+      if (state.selectedRegion && !App.data.regions().some(function (r) { return r.name === state.selectedRegion; })) {
+        state.selectedRegion = App.data.defaultRegion();
+        state.selectedBranchId = null;
+      }
     } else {
       state.refreshError = message || "Background refresh failed";
     }
@@ -6172,6 +6243,13 @@ button:focus-visible, a:focus-visible, .text-input:focus-visible, input[type="ra
     App.dom.clear(root);
     dashboardShown = true;
     refs.content = h("main.content");
+
+    /* Re-derived on every boot (including a fresh sign-in after a session
+       expired), and reset if it no longer names a region that currently has
+       a branch -- e.g. a district's one real branch drops out of the feed. */
+    if (!state.selectedRegion || !App.data.regions().some(function (r) { return r.name === state.selectedRegion; })) {
+      state.selectedRegion = App.data.defaultRegion();
+    }
 
     var main = h("div.main", buildTopbar(), refs.content);
     root.appendChild(h("div.shell", buildSidebar(), main));

@@ -61,11 +61,12 @@
     var body;
 
     if (pickerMode === "district") {
+      var liveRegions = App.data.regions();
       var railDistrict = ctx.state.zonePickerDistrict ||
         (App.data.branchById(selectedId) || {}).district ||
-        App.data.REGIONS[0].name;
+        (liveRegions[0] || {}).name;
 
-      var rail = h("div.district-rail", App.data.REGIONS.map(function (r) {
+      var rail = h("div.district-rail", liveRegions.map(function (r) {
         return h(
           "button.rail-row" + (r.name === railDistrict ? ".is-selected" : ""),
           { type: "button", onclick: function () { ctx.setState({ zonePickerDistrict: r.name }); } },
